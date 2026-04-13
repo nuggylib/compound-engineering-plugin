@@ -1,12 +1,12 @@
 ---
 name: orchestrating-swarms
-description: This skill should be used when orchestrating multi-agent swarms using Claude Code's TeammateTool and Task system. It applies when coordinating multiple agents, running parallel code reviews, creating pipeline workflows with dependencies, building self-organizing task queues, or any task benefiting from divide-and-conquer patterns.
+description: Orchestrate multi-agent swarms using Claude Code's TeammateTool and Task system. Use when coordinating multiple agents, running parallel code reviews, creating pipeline workflows with dependencies, building self-organizing task queues, or applying divide-and-conquer patterns.
 disable-model-invocation: true
 ---
 
 # Claude Code Swarm Orchestration
 
-Master multi-agent orchestration using Claude Code's TeammateTool and Task system.
+Multi-agent orchestration reference for Claude Code's TeammateTool and Task system.
 
 ---
 
@@ -14,7 +14,7 @@ Master multi-agent orchestration using Claude Code's TeammateTool and Task syste
 
 | Primitive | What It Is | File Location |
 |-----------|-----------|---------------|
-| **Agent** | A Claude instance that can use tools. You are an agent. Subagents are agents you spawn. | N/A (process) |
+| **Agent** | A Claude instance that can use tools. The orchestrator is an agent; spawned instances are subagents. | N/A (process) |
 | **Team** | A named group of agents working together. One leader, multiple teammates. | `~/.claude/teams/{name}/config.json` |
 | **Teammate** | An agent that joined a team. Has a name, color, inbox. Spawned via Task with `team_name` + `name`. | Listed in team config |
 | **Leader** | The agent that created the team. Receives teammate messages, approves plans/shutdowns. | First member in config |
@@ -113,13 +113,12 @@ sequenceDiagram
 
 ## Core Architecture
 
-### How Swarms Work
+### Swarm Components
 
-A swarm consists of:
-- **Leader** (you) - Creates team, spawns workers, coordinates work
-- **Teammates** (spawned agents) - Execute tasks, report back
-- **Task List** - Shared work queue with dependencies
-- **Inboxes** - JSON files for inter-agent messaging
+- **Leader** (orchestrator) -- creates team, spawns workers, coordinates work
+- **Teammates** (spawned agents) -- execute tasks, report back
+- **Task List** -- shared work queue with dependencies
+- **Inboxes** -- JSON files for inter-agent messaging
 
 ### File Structure
 
@@ -177,7 +176,7 @@ A swarm consists of:
 
 ### Method 1: Task Tool (Subagents)
 
-Use Task for **short-lived, focused work** that returns a result:
+For **short-lived, focused work** that returns a result:
 
 ```javascript
 Task({
@@ -190,15 +189,16 @@ Task({
 
 **Characteristics:**
 - Runs synchronously (blocks until complete) or async with `run_in_background: true`
-- Returns result directly to you
+- Returns result directly to the caller
 - No team membership required
 - Best for: searches, analysis, focused research
 
-**Permission mode:** Omit the `mode` parameter unless you need a specific mode like `mode: "plan"`. Passing `mode: "auto"` overrides the user's configured permission settings (e.g., `bypassPermissions`). Omitting it lets the user's own `defaultMode` apply.
+<!-- why: mode: "auto" overrides user's bypassPermissions config, which is never the intended behavior -->
+**Permission mode:** Omit the `mode` parameter unless a specific mode is needed (e.g., `mode: "plan"`). Omitting lets the user's own `defaultMode` apply.
 
 ### Method 2: Task Tool + team_name + name (Teammates)
 
-Use Task with `team_name` and `name` to **spawn persistent teammates**:
+For **persistent teammates**, add `team_name` and `name` to Task:
 
 ```javascript
 // First create a team
@@ -217,7 +217,7 @@ Task({
 **Characteristics:**
 - Joins team, appears in `config.json`
 - Communicates via inbox messages
-- Can claim tasks from shared task list
+- Claims tasks from shared task list
 - Persists until shutdown
 - Best for: parallel work, ongoing collaboration, pipeline stages
 
@@ -235,7 +235,7 @@ Task({
 
 ## Built-in Agent Types
 
-These are always available without plugins:
+Always available without plugins:
 
 ### Bash
 ```javascript
@@ -436,7 +436,7 @@ Teammate({
 **Creates:**
 - `~/.claude/teams/feature-auth/config.json`
 - `~/.claude/tasks/feature-auth/` directory
-- You become the team leader
+- Caller becomes the team leader
 
 ### 2. discoverTeams - List Available Teams
 
@@ -444,7 +444,7 @@ Teammate({
 Teammate({ operation: "discoverTeams" })
 ```
 
-**Returns:** List of teams you can join (not already a member of)
+**Returns:** List of joinable teams (not already a member of)
 
 ### 3. requestJoin - Request to Join Team
 
@@ -459,7 +459,7 @@ Teammate({
 
 ### 4. approveJoin - Accept Join Request (Leader Only)
 
-When you receive a `join_request` message:
+On receiving a `join_request` message:
 ```json
 {"type": "join_request", "proposedName": "helper", "requestId": "join-123", ...}
 ```
@@ -494,7 +494,7 @@ Teammate({
 })
 ```
 
-**Important for teammates:** Your text output is NOT visible to the team. You MUST use `write` to communicate.
+**Important:** Teammate text output is NOT visible to the team. Teammates MUST use `write` to communicate.
 
 ### 7. broadcast - Message ALL Teammates
 
@@ -506,16 +506,11 @@ Teammate({
 })
 ```
 
-**WARNING:** Broadcasting is expensive - sends N separate messages for N teammates. Prefer `write` to specific teammates.
+**WARNING:** Broadcasting sends N separate messages for N teammates. Prefer `write` to specific teammates.
 
-**When to broadcast:**
+**Broadcast only for:**
 - Critical issues requiring immediate attention
-- Major announcements affecting everyone
-
-**When NOT to broadcast:**
-- Responding to one teammate
-- Normal back-and-forth
-- Information relevant to only some teammates
+- Major announcements affecting all teammates
 
 ### 8. requestShutdown - Ask Teammate to Exit (Leader Only)
 
@@ -529,7 +524,7 @@ Teammate({
 
 ### 9. approveShutdown - Accept Shutdown (Teammate Only)
 
-When you receive a `shutdown_request` message:
+On receiving a `shutdown_request` message:
 ```json
 {"type": "shutdown_request", "requestId": "shutdown-123", "from": "team-lead", "reason": "Done"}
 ```
@@ -542,7 +537,7 @@ Teammate({
 })
 ```
 
-This sends confirmation and terminates your process.
+Sends confirmation and terminates the teammate process.
 
 ### 10. rejectShutdown - Decline Shutdown (Teammate Only)
 
@@ -556,7 +551,7 @@ Teammate({
 
 ### 11. approvePlan - Approve Teammate's Plan (Leader Only)
 
-When teammate with `plan_mode_required` sends a plan:
+On receiving a plan from a teammate with `plan_mode_required`:
 ```json
 {"type": "plan_approval_request", "from": "architect", "requestId": "plan-456", ...}
 ```
@@ -591,7 +586,7 @@ Teammate({ operation: "cleanup" })
 - `~/.claude/teams/{team-name}/` directory
 - `~/.claude/tasks/{team-name}/` directory
 
-**IMPORTANT:** Will fail if teammates are still active. Use `requestShutdown` first.
+**IMPORTANT:** Fails if teammates are still active. Call `requestShutdown` on all teammates first.
 
 ---
 
@@ -646,7 +641,7 @@ TaskUpdate({ taskId: "3", addBlockedBy: ["1", "2"] })
 
 ### Task Dependencies
 
-When a blocking task is completed, blocked tasks are automatically unblocked:
+Blocked tasks auto-unblock when their blocking task completes:
 
 ```javascript
 // Create pipeline
@@ -1046,7 +1041,7 @@ Task({
 
 ## Environment Variables
 
-Spawned teammates automatically receive these:
+Automatically set on spawned teammates:
 
 ```bash
 CLAUDE_CODE_TEAM_NAME="my-project"
@@ -1072,7 +1067,7 @@ Task({
 
 ## Spawn Backends
 
-A **backend** determines how teammate Claude instances actually run. Claude Code supports three backends, and **auto-detects** the best one based on your environment.
+Three spawn backends. Claude Code **auto-detects** the best one based on the environment.
 
 ### Backend Comparison
 
@@ -1084,7 +1079,7 @@ A **backend** determines how teammate Claude instances actually run. Claude Code
 
 ### Auto-Detection Logic
 
-Claude Code automatically selects a backend using this decision tree:
+Backend selection decision tree:
 
 ```mermaid
 flowchart TD
@@ -1109,15 +1104,9 @@ flowchart TD
 
 ### in-process (Default for non-tmux)
 
-Teammates run as async tasks within the same Node.js process.
+Async tasks within the same Node.js process. No new process spawned; communication via in-memory queues.
 
-**How it works:**
-- No new process spawned
-- Teammates share the same Node.js event loop
-- Communication via in-memory queues (fast)
-- You don't see teammate output directly
-
-**When it's used:**
+**Selected when:**
 - Not running inside tmux session
 - Non-interactive mode (CI, scripts)
 - Explicitly set via `CLAUDE_CODE_SPAWN_BACKEND=in-process`
@@ -1159,22 +1148,16 @@ Task({
 
 ### tmux
 
-Teammates run as separate Claude instances in tmux panes/windows.
+Separate Claude instances in tmux panes/windows. Each teammate gets its own pane and process; communication via inbox files.
 
-**How it works:**
-- Each teammate gets its own tmux pane
-- Separate process per teammate
-- You can switch panes to see teammate output
-- Communication via inbox files
-
-**When it's used:**
+**Selected when:**
 - Running inside a tmux session (`$TMUX` is set)
 - tmux available and not in iTerm2
 - Explicitly set via `CLAUDE_CODE_SPAWN_BACKEND=tmux`
 
 **Layout modes:**
 
-1. **Inside tmux (native):** Splits your current window
+1. **Inside tmux (native):** Splits the current window
 ```
 ┌─────────────────┬─────────────────┐
 │                 │    Worker 1     │
@@ -1233,15 +1216,9 @@ tmux select-layout tiled
 
 ### iterm2 (macOS only)
 
-Teammates run as split panes within your iTerm2 window.
+Split panes within the iTerm2 window via `it2` CLI. Each teammate visible side-by-side; communication via inbox files.
 
-**How it works:**
-- Uses iTerm2's Python API via `it2` CLI
-- Splits your current window into panes
-- Each teammate visible side-by-side
-- Communication via inbox files
-
-**When it's used:**
+**Selected when:**
 - Running in iTerm2 (`$TERM_PROGRAM === "iTerm.app"`)
 - `it2` CLI is installed and working
 - Python API enabled in iTerm2 preferences
@@ -1288,7 +1265,7 @@ it2 session list
 ```
 
 **If setup fails:**
-Claude Code will prompt you to set up it2 when you first spawn a teammate. You can choose to:
+Claude Code prompts to set up it2 on first teammate spawn. Options:
 1. Install it2 now (guided setup)
 2. Use tmux instead
 3. Cancel
@@ -1308,7 +1285,7 @@ unset CLAUDE_CODE_SPAWN_BACKEND
 
 ### Backend in Team Config
 
-The backend type is recorded per-teammate in `config.json`:
+Backend type recorded per-teammate in `config.json`:
 
 ```json
 {
@@ -1373,7 +1350,7 @@ which it2
 
 ### Graceful Shutdown Sequence
 
-**Always follow this sequence:**
+**Required sequence:**
 
 ```javascript
 // 1. Request shutdown for all teammates
@@ -1392,12 +1369,12 @@ Teammate({ operation: "cleanup" })
 
 ### Handling Crashed Teammates
 
-Teammates have a 5-minute heartbeat timeout. If a teammate crashes:
+5-minute heartbeat timeout. On crash:
 
-1. They'll be automatically marked as inactive after timeout
-2. Their tasks remain in the task list
-3. Another teammate can claim their tasks
-4. Cleanup will work after timeout expires
+1. Automatically marked inactive after timeout
+2. Tasks remain in the task list
+3. Another teammate may claim the orphaned tasks
+4. Cleanup succeeds after timeout expires
 
 ### Debugging
 
@@ -1622,7 +1599,7 @@ Task({ team_name: "codebase-review", name: "worker-3", subagent_type: "general-p
 ## Best Practices
 
 ### 1. Always Cleanup
-Don't leave orphaned teams. Always call `cleanup` when done.
+Call `cleanup` when done. Do not leave orphaned teams.
 
 ### 2. Use Meaningful Names
 ```javascript
@@ -1637,7 +1614,7 @@ name: "agent-2"
 ```
 
 ### 3. Write Clear Prompts
-Tell workers exactly what to do:
+Specify exact steps for workers:
 ```javascript
 // Good
 prompt: `
@@ -1652,7 +1629,7 @@ prompt: "Review the code"
 ```
 
 ### 4. Use Task Dependencies
-Let the system manage unblocking:
+Prefer system-managed unblocking over manual polling:
 ```javascript
 // Good: Auto-unblocking
 TaskUpdate({ taskId: "2", addBlockedBy: ["1"] })
@@ -1662,15 +1639,15 @@ TaskUpdate({ taskId: "2", addBlockedBy: ["1"] })
 ```
 
 ### 5. Check Inboxes for Results
-Workers send results to your inbox. Check it:
+Workers send results to the leader's inbox:
 ```bash
 cat ~/.claude/teams/{team}/inboxes/team-lead.json | jq '.'
 ```
 
 ### 6. Handle Worker Failures
-- Workers have 5-minute heartbeat timeout
-- Tasks of crashed workers can be reclaimed
-- Build retry logic into worker prompts
+- 5-minute heartbeat timeout per worker
+- Reclaim tasks from crashed workers
+- Include retry logic in worker prompts
 
 ### 7. Prefer write Over broadcast
 `broadcast` sends N messages for N teammates. Use `write` for targeted communication.

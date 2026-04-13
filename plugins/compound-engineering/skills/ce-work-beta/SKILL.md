@@ -11,7 +11,7 @@ Execute work efficiently while maintaining quality and finishing features.
 
 ## Introduction
 
-This command takes a work document (plan, specification, or todo file) or a bare prompt describing the work, and executes it systematically. The focus is on **shipping complete features** by understanding requirements quickly, following existing patterns, and maintaining quality throughout.
+This command takes a work document (plan, specification, or todo file) or a bare prompt describing the work, and executes it systematically.
 
 ## Input Document
 
@@ -57,7 +57,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - If the user explicitly asks for TDD, test-first, or characterization-first execution in this session, honor that request even if the plan has no `Execution note`
    - If anything is unclear or ambiguous, ask clarifying questions now
    - Get user approval to proceed
-   - **Do not skip this** - better to ask questions now than build the wrong thing
+   - Do not skip this step
 
 2. **Setup Environment**
 
@@ -75,9 +75,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
    **If already on a feature branch** (not the default branch):
 
-   First, check whether the branch name is **meaningful** — a name like `feat/crowd-sniff` or `fix/email-validation` tells future readers what the work is about. Auto-generated worktree names (e.g., `worktree-jolly-beaming-raven`) or other opaque names do not.
-
-   If the branch name is meaningless or auto-generated, suggest renaming it before continuing:
+   Check whether the branch name is meaningful (e.g., `feat/crowd-sniff`, `fix/email-validation`). If auto-generated or opaque, suggest renaming before continuing:
    ```bash
    git branch -m <meaningful-name>
    ```
@@ -107,10 +105,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - Only proceed after user explicitly says "yes, commit to [default_branch]"
    - Never commit directly to the default branch without explicit permission
 
-   **Recommendation**: Use worktree if:
-   - You want to work on multiple features simultaneously
-   - You want to keep the default branch clean while experimenting
-   - You plan to switch between branches frequently
+   **Recommendation:** Use worktree for parallel development, keeping the default branch clean, or frequent branch switching.
 
 3. **Create Todo List** _(skip if Phase 0 already built one, or if Phase 0 routed as Trivial)_
    - Use your available task tracking tool (e.g., TodoWrite, task lists) to break the plan into actionable tasks
@@ -130,8 +125,8 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
    | Strategy | When to use |
    |----------|-------------|
-   | **Inline** | 1-2 small tasks, or tasks needing user interaction mid-flight. **Default for bare-prompt work** — bare prompts rarely produce enough structured context to justify subagent dispatch |
-   | **Serial subagents** | 3+ tasks with dependencies between them. Each subagent gets a fresh context window focused on one unit — prevents context degradation across many tasks. Requires plan-unit metadata (Goal, Files, Approach, Test scenarios) |
+   | **Inline** | 1-2 small tasks, or tasks needing user interaction mid-flight. **Default for bare-prompt work** |
+   | **Serial subagents** | 3+ tasks with dependencies between them. Each subagent gets a fresh context window focused on one unit. Requires plan-unit metadata (Goal, Files, Approach, Test scenarios) |
    | **Parallel subagents** | 3+ tasks where some units have no shared dependencies and touch non-overlapping files. Dispatch independent units simultaneously, run dependent units after their prerequisites complete. Requires plan-unit metadata |
 
    **Subagent dispatch** uses your available subagent or task spawning mechanism. For each unit, give the subagent:
@@ -144,7 +139,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
    After each subagent completes, update the plan checkboxes and task list before dispatching the next dependent unit.
 
-   For genuinely large plans needing persistent inter-agent communication (agents challenging each other's approaches, shared coordination across 10+ tasks), see Swarm Mode below which uses Agent Teams.
+   For plans needing persistent inter-agent communication across 10+ tasks, see Swarm Mode below.
 
 ### Phase 2: Execute
 
@@ -196,9 +191,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    | **What other interfaces expose this?** Mixins, DSLs, alternative entry points (Agent vs Chat vs ChatMethods). | Grep for the method/behavior in related classes. If parity is needed, add it now — not as a follow-up. |
    | **Do error strategies align across layers?** Retry middleware + application fallback + framework error handling — do they conflict or create double execution? | List the specific error classes at each layer. Verify your rescue list matches what the lower layer actually raises. |
 
-   **When to skip:** Leaf-node changes with no callbacks, no state persistence, no parallel interfaces. If the change is purely additive (new helper method, new view partial), the check takes 10 seconds and the answer is "nothing fires, skip."
-
-   **When this matters most:** Any change that touches models with callbacks, error handling with fallback/retry, or functionality exposed through multiple interfaces.
+   **When to skip:** Leaf-node changes with no callbacks, no state persistence, no parallel interfaces.
 
 
 2. **Incremental Commits**
@@ -212,9 +205,9 @@ Determine how to proceed based on what was provided in `<input_document>`.
    | About to switch contexts (backend → frontend) | Purely scaffolding with no behavior |
    | About to attempt risky/uncertain changes | Would need a "WIP" commit message |
 
-   **Heuristic:** "Can I write a commit message that describes a complete, valuable change? If yes, commit. If the message would be 'WIP' or 'partial X', wait."
+   **Heuristic:** Commit when the message describes a complete, valuable change. Wait when the message would be "WIP" or "partial X".
 
-   If the plan has Implementation Units, use them as a starting guide for commit boundaries — but adapt based on what you find during implementation. A unit might need multiple commits if it's larger than expected, or small related units might land together. Use each unit's Goal to inform the commit message.
+   If the plan has Implementation Units, use them as starting commit boundaries. Adapt as needed: split large units across multiple commits, or combine small related units. Use each unit's Goal to inform the commit message.
 
    **Commit workflow:**
    ```bash
@@ -228,9 +221,9 @@ Determine how to proceed based on what was provided in `<input_document>`.
    git commit -m "feat(scope): description of this unit"
    ```
 
-   **Handling merge conflicts:** If conflicts arise during rebasing or merging, resolve them immediately. Incremental commits make conflict resolution easier since each commit is small and focused.
+   **Handling merge conflicts:** Resolve conflicts immediately during rebasing or merging.
 
-   **Note:** Incremental commits use clean conventional messages without attribution footers. The final Phase 4 commit/PR includes the full attribution.
+   Incremental commits use clean conventional messages without attribution footers. The final Phase 4 commit/PR includes the full attribution.
 
 3. **Follow Existing Patterns**
 
@@ -243,18 +236,18 @@ Determine how to proceed based on what was provided in `<input_document>`.
 4. **Test Continuously**
 
    - Run relevant tests after each significant change
-   - Don't wait until the end to test
    - Fix failures immediately
    - Add new tests for new behavior, update tests for changed behavior, remove tests for deleted behavior
-   - **Unit tests with mocks prove logic in isolation. Integration tests with real objects prove the layers work together.** If your change touches callbacks, middleware, or error handling — you need both.
+   - For changes touching callbacks, middleware, or error handling: write both unit tests (mocks, isolated logic) and integration tests (real objects, full chain)
 
 5. **Simplify as You Go**
 
-   After completing a cluster of related implementation units (or every 2-3 units), review recently changed files for simplification opportunities — consolidate duplicated patterns, extract shared helpers, and improve code reuse and efficiency. This is especially valuable when using subagents, since each agent works with isolated context and can't see patterns emerging across units.
+   After completing a cluster of related implementation units (or every 2-3 units), review recently changed files for simplification opportunities: consolidate duplicated patterns, extract shared helpers, improve code reuse.
 
-   Don't simplify after every single unit — early patterns may look duplicated but diverge intentionally in later units. Wait for a natural phase boundary or when you notice accumulated complexity.
+   <!-- why: early patterns may look duplicated but diverge intentionally in later units -->
+   Do not simplify after every single unit. Wait for a natural phase boundary.
 
-   If a `/simplify` skill or equivalent is available, use it. Otherwise, review the changed files yourself for reuse and consolidation opportunities.
+   If a `/simplify` skill or equivalent is available, use it. Otherwise, review the changed files for reuse and consolidation opportunities.
 
 6. **Figma Design Sync** (if applicable)
 
@@ -267,11 +260,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
 7. **Frontend Design Guidance** (if applicable)
 
-   For UI tasks without a Figma design -- where the implementation touches view, template, component, layout, or page files, creates user-visible routes, or the plan contains explicit UI/frontend/design language:
-
-   - Load the `frontend-design` skill before implementing
-   - Follow its detection, guidance, and verification flow
-   - If the skill produced a verification screenshot, it satisfies Phase 4's screenshot requirement -- no need to capture separately. If the skill fell back to mental review (no browser access), Phase 4's screenshot capture still applies
+   For UI tasks without a Figma design, load the `frontend-design` skill before implementing and follow its detection, guidance, and verification flow. If the skill produced a verification screenshot, it satisfies Phase 4's screenshot requirement. If the skill fell back to mental review (no browser access), Phase 4's screenshot capture still applies.
 
 8. **Track Progress**
    - Keep the task list updated as you complete tasks
@@ -387,9 +376,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
 ## Swarm Mode with Agent Teams (Optional)
 
-For genuinely large plans where agents need to communicate with each other, challenge approaches, or coordinate across 10+ tasks with persistent specialized roles, use agent team capabilities if available (e.g., Agent Teams in Claude Code, multi-agent workflows in Codex).
-
-**Agent teams are typically experimental and require opt-in.** Do not attempt to use agent teams unless the user explicitly requests swarm mode or agent teams, and the platform supports it.
+Do not use agent teams unless the user explicitly requests swarm mode and the platform supports it.
 
 ### When to Use Agent Teams vs Subagents
 
@@ -400,7 +387,7 @@ For genuinely large plans where agents need to communicate with each other, chal
 | 10+ tasks with complex cross-cutting coordination | 3-8 tasks with clear dependency chains |
 | User explicitly requests "swarm mode" or "agent teams" | Default for most plans |
 
-Most plans should use subagent dispatch from standard mode. Agent teams add significant token cost and coordination overhead — use them when the inter-agent communication genuinely improves the outcome.
+Default to subagent dispatch. Use agent teams only when inter-agent communication genuinely improves the outcome.
 
 ### Agent Teams Workflow
 
@@ -414,9 +401,7 @@ Most plans should use subagent dispatch from standard mode. Agent teams add sign
 
 ## External Delegate Mode (Optional)
 
-For plans where token conservation matters, delegate code implementation to an external delegate (currently Codex CLI) while keeping planning, review, and git operations in the current agent.
-
-This mode integrates with the existing Phase 1 Step 4 strategy selection as a **task-level modifier** - the strategy (inline/serial/parallel) still applies, but the implementation step within each tagged task delegates to the external tool instead of executing directly.
+For plans where token conservation matters, delegate code implementation to an external delegate (currently Codex CLI) while keeping planning, review, and git operations in the current agent. This is a **task-level modifier** on the Phase 1 Step 4 strategy (inline/serial/parallel).
 
 ### When to Use External Delegation
 
@@ -433,11 +418,12 @@ External delegation activates when any of these conditions are met:
 - The user says "use codex for this work", "delegate to codex", or "delegate mode"
 - A plan implementation unit contains `Execution target: external-delegate` in its Execution note (set by ce:plan)
 
-The specific delegate tool is resolved at execution time. Currently the only supported delegate is Codex CLI. Future delegates can be added without changing plan files.
+The specific delegate tool is resolved at execution time. Currently the only supported delegate is Codex CLI.
 
 ### Environment Guard
 
-Before attempting delegation, check whether the current agent is already running inside a delegate's sandbox. Delegation from within a sandbox will fail silently or recurse.
+<!-- why: delegation from within a sandbox will fail silently or recurse -->
+Before attempting delegation, check whether the current agent is already running inside a delegate's sandbox.
 
 Check for known sandbox indicators:
 - `CODEX_SANDBOX` environment variable is set
@@ -458,11 +444,13 @@ When external delegation is active, follow this workflow for each tagged task. D
 
 3. **Write prompt to file** — Save the assembled prompt to a unique temporary file to avoid shell quoting issues and cross-task races. Use a unique filename per task.
 
-4. **Delegate** — Run the delegate CLI, piping the prompt file via stdin (not argv expansion, which hits `ARG_MAX` on large prompts). Omit the model flag to use the delegate's default model, which stays current without manual updates.
+<!-- why: argv expansion hits ARG_MAX on large prompts -->
+4. **Delegate** — Run the delegate CLI, piping the prompt file via stdin. Omit the model flag to use the delegate's default model.
 
 5. **Review diff** — After the delegate finishes, verify the diff is non-empty and in-scope. Run the project's test/lint commands. If the diff is empty or out-of-scope, fall back to standard mode for that task.
 
-6. **Commit** — The current agent handles all git operations. The delegate's sandbox blocks `.git/index.lock` writes, so the delegate cannot commit. Stage changes and commit with a conventional message.
+<!-- why: delegate sandbox blocks .git/index.lock writes -->
+6. **Commit** — The current agent handles all git operations (the delegate cannot commit). Stage changes and commit with a conventional message.
 
 7. **Error handling** — On any delegate failure (rate limit, error, empty diff), fall back to standard mode for that task. Track consecutive failures - after 3 consecutive failures, disable delegation for remaining tasks and print "Delegate disabled after 3 consecutive failures - completing remaining tasks in standard mode."
 
@@ -475,39 +463,6 @@ When some tasks are executed by the delegate and others by the current agent, us
 - If mixed: use `Generated with [CURRENT_MODEL] + [DELEGATE_MODEL] via [HARNESS]` and note which tasks were delegated in the PR description
 
 ---
-
-## Key Principles
-
-### Start Fast, Execute Faster
-
-- Get clarification once at the start, then execute
-- Don't wait for perfect understanding - ask questions and move
-- The goal is to **finish the feature**, not create perfect process
-
-### The Plan is Your Guide
-
-- Work documents should reference similar code and patterns
-- Load those references and follow them
-- Don't reinvent - match what exists
-
-### Test As You Go
-
-- Run tests after each change, not at the end
-- Fix failures immediately
-- Continuous testing prevents big surprises
-
-### Quality is Built In
-
-- Follow existing patterns
-- Write tests for new code
-- Run linting before pushing
-- Review every change — inline for simple additive work, full review for everything else
-
-### Ship Complete Features
-
-- Mark all tasks completed before moving on
-- Don't leave features 80% done
-- A finished feature that ships beats a perfect feature that doesn't
 
 ## Quality Checklist
 
@@ -538,12 +493,3 @@ Every change gets reviewed. The tier determines depth, not whether review happen
 - Pattern-following (mirrors an existing example, no novel logic)
 - Plan-faithful (no scope growth, no surprising deferred-question resolutions)
 
-## Common Pitfalls to Avoid
-
-- **Analysis paralysis** - Don't overthink, read the plan and execute
-- **Skipping clarifying questions** - Ask now, not after building wrong thing
-- **Ignoring plan references** - The plan has links for a reason
-- **Testing at the end** - Test continuously or suffer later
-- **Forgetting to track progress** - Update task status as you go or lose track of what's done
-- **80% done syndrome** - Finish the feature, don't move on early
-- **Skipping review** - Every change gets reviewed; only the depth varies
