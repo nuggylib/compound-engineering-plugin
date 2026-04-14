@@ -1,0 +1,5 @@
+{
+  "name": "waypoint",
+  "version": "0.1.0",
+  "description": "Automatic session checkpoints and progress tracking for multi-session projects."
+}

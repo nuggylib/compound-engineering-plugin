@@ -1,0 +1,21 @@
+{
+  "name": "waypoint",
+  "version": "0.1.0",
+  "description": "Automatic session checkpoints and progress tracking for multi-session projects.",
+  "author": {
+    "name": "Larah Armstrong"
+  },
+  "keywords": ["progress-tracking", "session-continuity", "checkpoints", "multi-session"],
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/stop-checkpoint.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
