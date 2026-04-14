@@ -629,7 +629,7 @@ PHASE 6: EXPERIMENTAL (requires validated foundation)
 
 1. **Universal impact**: Affects all 43 skills, not just one
 2. **Improves behavior**: Removing hedging markers ("You might want to...") INCREASES instruction compliance -- compression that improves quality
-3. **Incrementally shippable**: Start with ce-review (55KB, ~11-16KB reduction), then ce-plan, ce-work. See value after the first skill
+3. **Incrementally shippable**: Start with ce-review (55KB) and then expand to ce-plan, ce-work, and the rest of the top 7. Corrected sampling in the methodology doc suggests lower net savings than the earlier pre-correction estimate: ~19.6-25.4KB across the top 7 overall (not the older ~11-16KB-for-ce-review / ~56-85KB-corpus figures)
 4. **Foundation for later work**: A specification-register corpus is halfway to pidgin (#25) and Schelling points (#27)
 5. **Zero user behavior change**: Same invocations, same outputs, fewer tokens, better compliance
 6. **Prevents future bloat**: Establishes specification register as the authoring standard

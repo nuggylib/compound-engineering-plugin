@@ -130,8 +130,8 @@ Decision: Keep as HTML comment. The constraint alone ("Do not use `gh pr diff`")
 
 Rewritten:
 ```
-Do not use `gh pr diff` as the review scope after checkout.
 <!-- why: gh pr diff reflects remote PR state only, missing local fix commits until pushed -->
+Do not use `gh pr diff` as the review scope after checkout.
 ```
 
 **Example B -- Keep (compliance-critical):**
@@ -178,8 +178,8 @@ Decision: Borderline. Apply default-keep as HTML comment.
 
 Rewritten:
 ```
-Verify each cited line number against the file content.
 <!-- why: wrong line numbers are worse than no finding -- they misdirect the developer -->
+Verify each cited line number against the file content.
 ```
 
 **Example F -- Borderline, keep (optionality encoding):**
@@ -242,11 +242,12 @@ Each example: original text, pattern class, rewritten text, rationale preservati
 
 *Pattern class:* Progressive explanation
 *Classification:* Borderline compliance-aiding. Establishes a conceptual distinction (severity vs routing) that could help correct application of routing rules. The routing rules table is explicit and self-contained.
-*Rewritten (105 bytes):*
+*Rewritten (161 bytes):*
 ```
+Apply severity and routing axes independently: severity encodes urgency; routing encodes actor and mutation permission.
 <!-- why: severity and routing are orthogonal axes -- severity = urgency, routing = actor + mutation permission -->
 ```
-*Byte reduction:* -8 bytes (net increase from HTML comment; preserves design intent)
+*Byte reduction:* -64 bytes (net increase from preserving distinction; retains correct application of routing rules)
 
 ### Redundant Clarification
 
@@ -296,11 +297,12 @@ Do not use `gh pr diff` as the review scope after checkout.
 
 *Pattern class:* Motivational framing
 *Classification:* Borderline. Functions as a severity signal that might calibrate verification thoroughness.
-*Rewritten (80 bytes):*
+*Rewritten (143 bytes):*
 ```
 <!-- why: wrong line numbers are worse than no finding -- they misdirect the developer -->
+Verify each cited line number against the file content.
 ```
-*Byte reduction:* -17 bytes (net increase; preserves severity signal)
+*Byte reduction:* -80 bytes (net increase; preserves severity signal as compliance directive)
 
 ### Inline Rationale (Understanding-Only)
 

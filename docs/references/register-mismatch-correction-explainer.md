@@ -43,7 +43,7 @@ Here's a real example from ce-review today:
 **After (specification register):**
 > Pass the path list to `project-standards` in a `<standards-paths>` block in its review context. The persona reads files itself, targeting sections relevant to changed file types.
 
-The stripped sentences ("This keeps the orchestrator's work cheap..." and "avoids bloating...") explain *why* the design works this way. Valuable for a human maintainer, zero value for Claude executing the instruction. In the rewrite, that rationale moves to an HTML comment (`<!-- why: ... -->`) -- invisible to the model, preserved for contributors.
+The stripped sentences ("This keeps the orchestrator's work cheap..." and "avoids bloating...") explain *why* the design works this way. Valuable for a human maintainer, zero value for Claude executing the instruction. In the rewrite, that rationale can move to an HTML comment (`<!-- why: ... -->`) for contributors — note that comments are still part of the text seen and tokenized by the model unless a preprocessing step strips them first; the value is preserving contributor intent, not hiding content from Claude.
 
 ## What changes for you as a user
 
@@ -57,22 +57,22 @@ What changes is under the hood:
 
 3. **More headroom before compaction.** Claude's context window triggers auto-compaction at ~83.5% capacity. Every kilobyte saved in skill content pushes that threshold further out. When compaction hits, it summarizes your skill content rather than reloading it from disk -- and summaries lose ~60% of facts. Delaying compaction means your instructions stay intact longer.
 
-4. **Lower cost per session.** Tokens cost money. A 20-30% reduction across 55KB of ce-review content, carried across a 30+ message review session, adds up.
+4. **Lower cost per session.** Tokens cost money. The current methodology projects roughly **8-13% tutorial-register savings**, or about **19.6-25.4KB net savings across the top 7 skills**. Carried across a 30+ message review session, that still adds up.
 
 ## The estimated impact
 
 | Skill | Current size | Est. reduction | Savings |
 |-------|-------------|---------------|---------|
-| ce-review | 55KB | 20-25% | 11-14KB |
-| ce-compound-refresh | 48KB | 20-25% | 10-12KB |
-| orchestrating-swarms | 48KB | 25-30% | 12-14KB |
-| ce-plan | 42KB | 20-25% | 8-10KB |
-| ce-work-beta | 32KB | 15-20% | 5-6KB |
-| ce-compound | 31KB | 20-25% | 6-8KB |
-| ce-work | 27KB | 15-20% | 4-5KB |
-| **Top 7 total** | **283KB** | | **~56-69KB** |
+| ce-review | 55KB | 8-13% tutorial-register | varies |
+| ce-compound-refresh | 48KB | 8-13% tutorial-register | varies |
+| orchestrating-swarms | 48KB | 8-13% tutorial-register | varies |
+| ce-plan | 42KB | 8-13% tutorial-register | varies |
+| ce-work-beta | 32KB | 8-13% tutorial-register | varies |
+| ce-compound | 31KB | 8-13% tutorial-register | varies |
+| ce-work | 27KB | 8-13% tutorial-register | varies |
+| **Top 7 total** | **283KB** | **~8-13% tutorial-register** | **~19.6-25.4KB net** |
 
-That 56-69KB reduction is *per session, per message*. In a 30-message ce-review session, that's 1.7-2MB of tokens you're not paying for.
+That **~19.6-25.4KB** reduction is the current projected **net savings across the top 7 skills** based on corrected sampling in the methodology document. Because loaded skill content is re-sent throughout a session, those savings compound across repeated messages even though they are smaller than earlier exploratory estimates.
 
 ## What we're building
 
