@@ -5,3 +5,6 @@ node_modules/
 todos/
 .worktrees
 .context/
+.claude/worktrees/
+
+.compound-engineering/*.local.yaml

@@ -10,7 +10,7 @@ Execute work efficiently while maintaining quality and finishing features.
 
 ## Introduction
 
-This command takes a work document (plan, specification, or todo file) or a bare prompt describing the work, and executes it systematically.
+This command takes a work document (plan, specification, or todo file) or a bare prompt describing the work, and executes it systematically. The focus is on **shipping complete features** by understanding requirements quickly, following existing patterns, and maintaining quality throughout.
 
 ## Input Document
 
@@ -56,7 +56,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - If the user explicitly asks for TDD, test-first, or characterization-first execution in this session, honor that request even if the plan has no `Execution note`
    - If anything is unclear or ambiguous, ask clarifying questions now
    - Get user approval to proceed
-   - Do not skip this step
+   - **Do not skip this** - better to ask questions now than build the wrong thing
 
 2. **Setup Environment**
 
@@ -74,7 +74,9 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
    **If already on a feature branch** (not the default branch):
 
-   Check whether the branch name is meaningful (e.g., `feat/crowd-sniff`, `fix/email-validation`). If auto-generated or opaque, suggest renaming before continuing:
+   First, check whether the branch name is **meaningful** — a name like `feat/crowd-sniff` or `fix/email-validation` tells future readers what the work is about. Auto-generated worktree names (e.g., `worktree-jolly-beaming-raven`) or other opaque names do not.
+
+   If the branch name is meaningless or auto-generated, suggest renaming it before continuing:
    ```bash
    git branch -m <meaningful-name>
    ```
@@ -104,7 +106,10 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - Only proceed after user explicitly says "yes, commit to [default_branch]"
    - Never commit directly to the default branch without explicit permission
 
-   **Recommendation:** Use worktree for parallel development, keeping the default branch clean, or frequent branch switching.
+   **Recommendation**: Use worktree if:
+   - You want to work on multiple features simultaneously
+   - You want to keep the default branch clean while experimenting
+   - You plan to switch between branches frequently
 
 3. **Create Todo List** _(skip if Phase 0 already built one, or if Phase 0 routed as Trivial)_
    - Use your available task tracking tool (e.g., TodoWrite, task lists) to break the plan into actionable tasks
@@ -124,8 +129,8 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
    | Strategy | When to use |
    |----------|-------------|
-   | **Inline** | 1-2 small tasks, or tasks needing user interaction mid-flight. **Default for bare-prompt work** |
-   | **Serial subagents** | 3+ tasks with dependencies between them. Each subagent gets a fresh context window focused on one unit. Requires plan-unit metadata (Goal, Files, Approach, Test scenarios) |
+   | **Inline** | 1-2 small tasks, or tasks needing user interaction mid-flight. **Default for bare-prompt work** — bare prompts rarely produce enough structured context to justify subagent dispatch |
+   | **Serial subagents** | 3+ tasks with dependencies between them. Each subagent gets a fresh context window focused on one unit — prevents context degradation across many tasks. Requires plan-unit metadata (Goal, Files, Approach, Test scenarios) |
    | **Parallel subagents** | 3+ tasks where some units have no shared dependencies and touch non-overlapping files. Dispatch independent units simultaneously, run dependent units after their prerequisites complete. Requires plan-unit metadata |
 
    **Subagent dispatch** uses your available subagent or task spawning mechanism. For each unit, give the subagent:
@@ -137,8 +142,6 @@ Determine how to proceed based on what was provided in `<input_document>`.
    **Permission mode:** Omit the `mode` parameter when dispatching subagents so the user's configured permission settings apply. Do not pass `mode: "auto"` — it overrides user-level settings like `bypassPermissions`.
 
    After each subagent completes, update the plan checkboxes and task list before dispatching the next dependent unit.
-
-   For plans needing persistent inter-agent communication across 10+ tasks, see Swarm Mode below.
 
 ### Phase 2: Execute
 
@@ -190,7 +193,9 @@ Determine how to proceed based on what was provided in `<input_document>`.
    | **What other interfaces expose this?** Mixins, DSLs, alternative entry points (Agent vs Chat vs ChatMethods). | Grep for the method/behavior in related classes. If parity is needed, add it now — not as a follow-up. |
    | **Do error strategies align across layers?** Retry middleware + application fallback + framework error handling — do they conflict or create double execution? | List the specific error classes at each layer. Verify your rescue list matches what the lower layer actually raises. |
 
-   **When to skip:** Leaf-node changes with no callbacks, no state persistence, no parallel interfaces.
+   **When to skip:** Leaf-node changes with no callbacks, no state persistence, no parallel interfaces. If the change is purely additive (new helper method, new view partial), the check takes 10 seconds and the answer is "nothing fires, skip."
+
+   **When this matters most:** Any change that touches models with callbacks, error handling with fallback/retry, or functionality exposed through multiple interfaces.
 
 
 2. **Incremental Commits**
@@ -204,9 +209,9 @@ Determine how to proceed based on what was provided in `<input_document>`.
    | About to switch contexts (backend → frontend) | Purely scaffolding with no behavior |
    | About to attempt risky/uncertain changes | Would need a "WIP" commit message |
 
-   **Heuristic:** Commit when the message describes a complete, valuable change. Wait when the message would be "WIP" or "partial X".
+   **Heuristic:** "Can I write a commit message that describes a complete, valuable change? If yes, commit. If the message would be 'WIP' or 'partial X', wait."
 
-   If the plan has Implementation Units, use them as starting commit boundaries. Adapt as needed: split large units across multiple commits, or combine small related units. Use each unit's Goal to inform the commit message.
+   If the plan has Implementation Units, use them as a starting guide for commit boundaries — but adapt based on what you find during implementation. A unit might need multiple commits if it's larger than expected, or small related units might land together. Use each unit's Goal to inform the commit message.
 
    **Commit workflow:**
    ```bash
@@ -220,9 +225,9 @@ Determine how to proceed based on what was provided in `<input_document>`.
    git commit -m "feat(scope): description of this unit"
    ```
 
-   **Handling merge conflicts:** Resolve conflicts immediately during rebasing or merging.
+   **Handling merge conflicts:** If conflicts arise during rebasing or merging, resolve them immediately. Incremental commits make conflict resolution easier since each commit is small and focused.
 
-   Incremental commits use clean conventional messages without attribution footers. The final Phase 4 commit/PR includes the full attribution.
+   **Note:** Incremental commits use clean conventional messages without attribution footers. The final Phase 4 commit/PR includes the full attribution.
 
 3. **Follow Existing Patterns**
 
@@ -235,18 +240,18 @@ Determine how to proceed based on what was provided in `<input_document>`.
 4. **Test Continuously**
 
    - Run relevant tests after each significant change
+   - Don't wait until the end to test
    - Fix failures immediately
    - Add new tests for new behavior, update tests for changed behavior, remove tests for deleted behavior
-   - For changes touching callbacks, middleware, or error handling: write both unit tests (mocks, isolated logic) and integration tests (real objects, full chain)
+   - **Unit tests with mocks prove logic in isolation. Integration tests with real objects prove the layers work together.** If your change touches callbacks, middleware, or error handling — you need both.
 
 5. **Simplify as You Go**
 
-   After completing a cluster of related implementation units (or every 2-3 units), review recently changed files for simplification opportunities: consolidate duplicated patterns, extract shared helpers, improve code reuse.
+   After completing a cluster of related implementation units (or every 2-3 units), review recently changed files for simplification opportunities — consolidate duplicated patterns, extract shared helpers, and improve code reuse and efficiency. This is especially valuable when using subagents, since each agent works with isolated context and can't see patterns emerging across units.
 
-   <!-- why: early patterns may look duplicated but diverge intentionally in later units -->
-   Do not simplify after every single unit. Wait for a natural phase boundary.
+   Don't simplify after every single unit — early patterns may look duplicated but diverge intentionally in later units. Wait for a natural phase boundary or when you notice accumulated complexity.
 
-   If a `/simplify` skill or equivalent is available, use it. Otherwise, review the changed files for reuse and consolidation opportunities.
+   If a `/simplify` skill or equivalent is available, use it. Otherwise, review the changed files yourself for reuse and consolidation opportunities.
 
 6. **Figma Design Sync** (if applicable)
 
@@ -263,163 +268,49 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - Create new tasks if scope expands
    - Keep user informed of major milestones
 
-### Phase 3: Quality Check
+### Phase 3-4: Quality Check and Ship It
 
-1. **Run Core Quality Checks**
+When all Phase 2 tasks are complete and execution transitions to quality check, read `references/shipping-workflow.md` for the full shipping workflow: quality checks, code review, final validation, PR creation, and notification.
 
-   Always run before submitting:
+## Key Principles
 
-   ```bash
-   # Run full test suite (use project's test command)
-   # Examples: bin/rails test, npm test, pytest, go test, etc.
+### Start Fast, Execute Faster
 
-   # Run linting (per AGENTS.md)
-   # Use linting-agent before pushing to origin
-   ```
+- Get clarification once at the start, then execute
+- Don't wait for perfect understanding - ask questions and move
+- The goal is to **finish the feature**, not create perfect process
 
-2. **Code Review** (REQUIRED)
+### The Plan is Your Guide
 
-   Every change gets reviewed before shipping. The depth scales with the change's risk profile, but review itself is never skipped.
+- Work documents should reference similar code and patterns
+- Load those references and follow them
+- Don't reinvent - match what exists
 
-   **Tier 2: Full review (default)** — REQUIRED unless Tier 1 criteria are explicitly met. Invoke the `ce:review` skill with `mode:autofix` to run specialized reviewer agents, auto-apply safe fixes, and surface residual work as todos. When the plan file path is known, pass it as `plan:<path>`. This is the mandatory default — proceed to Tier 1 only after confirming every criterion below.
+### Test As You Go
 
-   **Tier 1: Inline self-review** — A lighter alternative permitted only when **all four** criteria are true. Before choosing Tier 1, explicitly state which criteria apply and why. If any criterion is uncertain, use Tier 2.
-   - Purely additive (new files only, no existing behavior modified)
-   - Single concern (one skill, one component — not cross-cutting)
-   - Pattern-following (implementation mirrors an existing example with no novel logic)
-   - Plan-faithful (no scope growth, no deferred questions resolved with surprising answers)
+- Run tests after each change, not at the end
+- Fix failures immediately
+- Continuous testing prevents big surprises
 
-3. **Final Validation**
-   - All tasks marked completed
-   - Testing addressed -- tests pass and new/changed behavior has corresponding test coverage (or an explicit justification for why tests are not needed)
-   - Linting passes
-   - Code follows existing patterns
-   - Figma designs match (if applicable)
-   - No console errors or warnings
-   - If the plan has a `Requirements Trace`, verify each requirement is satisfied by the completed work
-   - If any `Deferred to Implementation` questions were noted, confirm they were resolved during execution
+### Quality is Built In
 
-4. **Prepare Operational Validation Plan** (REQUIRED)
-   - Add a `## Post-Deploy Monitoring & Validation` section to the PR description for every change.
-   - Include concrete:
-     - Log queries/search terms
-     - Metrics or dashboards to watch
-     - Expected healthy signals
-     - Failure signals and rollback/mitigation trigger
-     - Validation window and owner
-   - If there is truly no production/runtime impact, still include the section with: `No additional operational monitoring required` and a one-line reason.
+- Follow existing patterns
+- Write tests for new code
+- Run linting before pushing
+- Review every change — inline for simple additive work, full review for everything else
 
-### Phase 4: Ship It
+### Ship Complete Features
 
-1. **Capture and Upload Screenshots for UI Changes** (REQUIRED for any UI work)
+- Mark all tasks completed before moving on
+- Don't leave features 80% done
+- A finished feature that ships beats a perfect feature that doesn't
 
-   For **any** design changes, new views, or UI modifications, capture and upload screenshots before creating the PR:
+## Common Pitfalls to Avoid
 
-   **Step 1: Start dev server** (if not running)
-   ```bash
-   bin/dev  # Run in background
-   ```
-
-   **Step 2: Capture screenshots with agent-browser CLI**
-   ```bash
-   agent-browser open http://localhost:3000/[route]
-   agent-browser snapshot -i
-   agent-browser screenshot output.png
-   ```
-   See the `agent-browser` skill for detailed usage.
-
-   **Step 3: Upload using imgup skill**
-   ```bash
-   skill: imgup
-   # Then upload each screenshot:
-   imgup -h pixhost screenshot.png  # pixhost works without API key
-   # Alternative hosts: catbox, imagebin, beeimg
-   ```
-
-   **What to capture:**
-   - **New screens**: Screenshot of the new UI
-   - **Modified screens**: Before AND after screenshots
-   - **Design implementation**: Screenshot showing Figma design match
-
-2. **Commit and Create Pull Request**
-
-   Load the `git-commit-push-pr` skill to handle committing, pushing, and PR creation. The skill handles convention detection, branch safety, logical commit splitting, adaptive PR descriptions, and attribution badges.
-
-   When providing context for the PR description, include:
-   - The plan's summary and key decisions
-   - Testing notes (tests added/modified, manual testing performed)
-   - Screenshot URLs from step 1 (if applicable)
-   - Figma design link (if applicable)
-   - The Post-Deploy Monitoring & Validation section (see Phase 3 Step 4)
-
-   If the user prefers to commit without creating a PR, load the `git-commit` skill instead.
-
-3. **Update Plan Status**
-
-   If the input document has YAML frontmatter with a `status` field, update it to `completed`:
-   ```
-   status: active  →  status: completed
-   ```
-
-4. **Notify User**
-   - Summarize what was completed
-   - Link to PR (if one was created)
-   - Note any follow-up work needed
-   - Suggest next steps if applicable
-
----
-
-## Swarm Mode with Agent Teams (Optional)
-
-Do not use agent teams unless the user explicitly requests swarm mode and the platform supports it.
-
-### When to Use Agent Teams vs Subagents
-
-| Agent Teams | Subagents (standard mode) |
-|-------------|---------------------------|
-| Agents need to discuss and challenge each other's approaches | Each task is independent — only the result matters |
-| Persistent specialized roles (e.g., dedicated tester running continuously) | Workers report back and finish |
-| 10+ tasks with complex cross-cutting coordination | 3-8 tasks with clear dependency chains |
-| User explicitly requests "swarm mode" or "agent teams" | Default for most plans |
-
-Default to subagent dispatch. Use agent teams only when inter-agent communication genuinely improves the outcome.
-
-### Agent Teams Workflow
-
-1. **Create team** — use your available team creation mechanism
-2. **Create task list** — parse Implementation Units into tasks with dependency relationships
-3. **Spawn teammates** — assign specialized roles (implementer, tester, reviewer) based on the plan's needs. Give each teammate the plan file path and their specific task assignments
-4. **Coordinate** — the lead monitors task completion, reassigns work if someone gets stuck, and spawns additional workers as phases unblock
-5. **Cleanup** — shut down all teammates, then clean up the team resources
-
----
-
-## Quality Checklist
-
-Before creating PR, verify:
-
-- [ ] All clarifying questions asked and answered
-- [ ] All tasks marked completed
-- [ ] Testing addressed -- tests pass AND new/changed behavior has corresponding test coverage (or an explicit justification for why tests are not needed)
-- [ ] Linting passes (use linting-agent)
-- [ ] Code follows existing patterns
-- [ ] Figma designs match implementation (if applicable)
-- [ ] Before/after screenshots captured and uploaded (for UI changes)
-- [ ] Commit messages follow conventional format
-- [ ] PR description includes Post-Deploy Monitoring & Validation section (or explicit no-impact rationale)
-- [ ] Code review completed (inline self-review or full `ce:review`)
-- [ ] PR description includes summary, testing notes, and screenshots
-- [ ] PR description includes Compound Engineered badge with accurate model and harness
-
-## Code Review Tiers
-
-Every change gets reviewed. The tier determines depth, not whether review happens.
-
-**Tier 2 (full review)** — REQUIRED default. Invoke `ce:review mode:autofix` with `plan:<path>` when available. Safe fixes are applied automatically; residual work surfaces as todos. Always use this tier unless all four Tier 1 criteria are explicitly confirmed.
-
-**Tier 1 (inline self-review)** — permitted only when all four are true (state each explicitly before choosing):
-- Purely additive (new files only, no existing behavior modified)
-- Single concern (one skill, one component — not cross-cutting)
-- Pattern-following (mirrors an existing example, no novel logic)
-- Plan-faithful (no scope growth, no surprising deferred-question resolutions)
-
+- **Analysis paralysis** - Don't overthink, read the plan and execute
+- **Skipping clarifying questions** - Ask now, not after building wrong thing
+- **Ignoring plan references** - The plan has links for a reason
+- **Testing at the end** - Test continuously or suffer later
+- **Forgetting to track progress** - Update task status as you go or lose track of what's done
+- **80% done syndrome** - Finish the feature, don't move on early
+- **Skipping review** - Every change gets reviewed; only the depth varies
