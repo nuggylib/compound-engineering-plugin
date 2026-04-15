@@ -44,7 +44,7 @@ These local branches have been deleted from the remote:
 Delete all of them? (y/n)
 ```
 
-Wait for the user's answer using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini. Fall back to presenting the list in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
+Wait for the user's answer via the platform question tool (AskUserQuestion / request_user_input / ask_user). Fallback: present the list and wait for a reply.
 
 This is a yes-or-no decision on the entire list -- do not offer multi-selection or per-branch choices.
 

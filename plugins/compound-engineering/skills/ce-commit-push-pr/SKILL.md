@@ -7,7 +7,14 @@ description: "Commit, push, and open a PR with an adaptive, value-first descript
 
 Go from working changes to an open pull request, or rewrite an existing PR description.
 
-**Asking the user:** When this skill says "ask the user", use the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini. Fall back to presenting the question in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
+## When to Use
+
+Use this skill when the user:
+- Says "commit and PR", "push and open a PR", "ship this", "create a PR", "open a pull request", or "commit push PR"
+- Says "update the PR description", "refresh the PR description", or "freshen the PR" to rewrite an existing PR description
+- Wants to go from working changes to an open pull request in one step
+
+**Asking the user:** When this skill says "ask the user", use the platform question tool (AskUserQuestion / request_user_input / ask_user). Fallback: present the question and wait for a reply.
 
 ## Mode detection
 

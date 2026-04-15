@@ -174,9 +174,9 @@ This context informs all subsequent research phases -- use it to focus documenta
    - Analyze template structure and required fields
 
 5. **Codebase Pattern Search**
-   - Use the native content-search tool for text and regex pattern searches
-   - Use the native file-search/glob tool to discover files by name or extension
-   - Use the native file-read tool to examine file contents
+   - Use native content-search (e.g., Grep) for text and regex pattern searches
+   - Use native file-search (e.g., Glob) to discover files by name or extension
+   - Use native file-read (e.g., Read) to examine file contents
    - Use `ast-grep` via shell when syntax-aware pattern matching is needed
    - Identify common implementation patterns
    - Document naming conventions and code organization
@@ -243,7 +243,7 @@ Structure your findings as:
 - Flag any contradictions or outdated information
 - Provide specific file paths (repo-relative, never absolute) and examples to support findings
 
-**Tool Selection:** Use native file-search/glob (e.g., `Glob`), content-search (e.g., `Grep`), and file-read (e.g., `Read`) tools for repository exploration. Only use shell for commands with no native equivalent (e.g., `ast-grep`), one command at a time.
+**Tool Selection:** Prefer native file-search, content-search, and file-read tools (e.g., Glob, Grep, Read). Shell only for commands with no native equivalent, one at a time.
 
 **Important Considerations:**
 

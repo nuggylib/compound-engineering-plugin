@@ -23,7 +23,7 @@ Use this skill when the user:
 
 ## Interaction Method
 
-When asking the user a question, use the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini. Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
+Use the platform question tool when available (AskUserQuestion / request_user_input / ask_user). Fallback: present numbered options and wait for a reply.
 
 Ask one question at a time. Prefer a concise single-select choice when natural options exist.
 
@@ -35,7 +35,7 @@ Ask one question at a time. Prefer a concise single-select choice when natural o
 
 If the input is present but unclear or underspecified, do not abandon — ask one or two clarifying questions, or proceed to Phase 0.4's planning bootstrap to establish enough context. The goal is always to help the user plan, never to exit the workflow.
 
-**IMPORTANT: All file references in the plan document must use repo-relative paths (e.g., `src/models/user.rb`), never absolute paths (e.g., `/Users/name/Code/project/src/models/user.rb`). This applies everywhere — implementation unit file lists, pattern references, origin document links, and prose mentions. Absolute paths break portability across machines, worktrees, and teammates.**
+**IMPORTANT: All file references must use repo-relative paths (e.g., `src/models/user.rb`), never absolute paths. See Planning Rules (§4.3) for details.**
 
 ## Core Principles
 
@@ -102,7 +102,7 @@ Before asking planning questions, search `docs/brainstorms/` for files matching 
 - It was created within the last 30 days (use judgment to override if the document is clearly still relevant or clearly stale)
 - It appears to cover the same user problem or scope
 
-If multiple source documents match, ask which one to use using the platform's blocking question tool when available (see Interaction Method). Otherwise, present numbered options in chat and wait for the user's reply before proceeding.
+If multiple source documents match, ask which one to use (see Interaction Method).
 
 #### 0.3 Use the Source Document as Primary Input
 
@@ -156,7 +156,7 @@ If the origin document contains `Resolve Before Planning` or similar blocking qu
 
 If true product blockers remain:
 - Surface them clearly
-- Ask the user, using the platform's blocking question tool when available (see Interaction Method), whether to:
+- Ask the user (see Interaction Method) whether to:
   1. Resume `ce-brainstorm` to resolve them
   2. Convert them into explicit assumptions or decisions and continue
 - Do not continue planning while true blockers remain unresolved
@@ -297,7 +297,7 @@ For each question, decide whether it should be:
 - **Resolved during planning** - the answer is knowable from repo context, documentation, or user choice
 - **Deferred to implementation** - the answer depends on code changes, runtime behavior, or execution-time discovery
 
-Ask the user only when the answer materially affects architecture, scope, sequencing, or risk and cannot be responsibly inferred. Use the platform's blocking question tool when available (see Interaction Method).
+Ask the user only when the answer materially affects architecture, scope, sequencing, or risk and cannot be responsibly inferred (see Interaction Method).
 
 **Do not** run tests, build the app, or probe runtime behavior in this phase. The goal is a strong plan, not partial execution.
 

@@ -17,7 +17,7 @@ The orchestrator passes a `<standards-paths>` block listing the file paths of al
 
 If no `<standards-paths>` block is present (standalone usage), discover the paths yourself:
 
-1. Use the native file-search/glob tool to find all `CLAUDE.md` and `AGENTS.md` files in the repository.
+1. Use native file-search (e.g., Glob) to find all `CLAUDE.md` and `AGENTS.md` files in the repository.
 2. For each changed file, check its ancestor directories up to the repo root for standards files. A file like `plugins/compound-engineering/AGENTS.md` applies to all changes under `plugins/compound-engineering/`.
 3. Read each relevant standards file found.
 
