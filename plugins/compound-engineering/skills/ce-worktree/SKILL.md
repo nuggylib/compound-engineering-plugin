@@ -5,30 +5,15 @@ description: This skill manages Git worktrees for isolated parallel development.
 
 # Git Worktree Manager
 
-This skill provides a unified interface for managing Git worktrees across your development workflow. Whether you're reviewing PRs in isolation or working on features in parallel, this skill handles all the complexity.
-
-## What This Skill Does
-
-- **Create worktrees** from main branch with clear branch names
-- **List worktrees** with current status
-- **Switch between worktrees** for parallel work
-- **Clean up completed worktrees** automatically
-- **Interactive confirmations** at each step
-- **Automatic .gitignore management** for worktree directory
-- **Automatic .env file copying** from main repo to new worktrees
-- **Automatic dev tool trusting** for mise and direnv configs with review-safe guardrails
-
 ## CRITICAL: Always Use the Manager Script
 
-**NEVER call `git worktree add` directly.** Always use the `worktree-manager.sh` script.
-
-The script handles critical setup that raw git commands don't:
-1. Copies `.env`, `.env.local`, `.env.test`, etc. from main repo
-2. Trusts dev tool configs with branch-aware safety rules:
+**NEVER call `git worktree add` directly.** Always use the `worktree-manager.sh` script. It handles:
+1. Copying `.env`, `.env.local`, `.env.test`, etc. from main repo
+2. Trusting dev tool configs with branch-aware safety rules:
    - mise: auto-trust only when unchanged from a trusted baseline branch
    - direnv: auto-allow only for trusted base branches; review worktrees stay manual
-3. Ensures `.worktrees` is in `.gitignore`
-4. Creates consistent directory structure
+3. Adding `.worktrees` to `.gitignore`
+4. Creating consistent directory structure
 
 ```bash
 # ✅ CORRECT - Always use the script
@@ -38,29 +23,14 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/ce-worktree/scripts/worktree-manager.sh create
 git worktree add .worktrees/feature-name -b feature-name main
 ```
 
-## When to Use This Skill
+## When to Use
 
-Use this skill in these scenarios:
-
-1. **Code Review (`/ce-code-review`)**: If NOT already on the target branch (PR branch or requested branch), offer worktree for isolated review
+1. **Code Review (`/ce-review`)**: If NOT already on the target branch, offer worktree for isolated review
 2. **Feature Work (`/ce-work`)**: Always ask if user wants parallel worktree or live branch work
 3. **Parallel Development**: When working on multiple features simultaneously
 4. **Cleanup**: After completing work in a worktree
 
-## How to Use
-
-### In Claude Code Workflows
-
-The skill is automatically called from `/ce-code-review` and `/ce-work` commands:
-
-```
-# For review: offers worktree if not on PR branch
-# For work: always asks - new branch or worktree?
-```
-
-### Manual Usage
-
-You can also invoke the skill directly from bash:
+## Usage
 
 ```bash
 # Create a new worktree (copies .env files automatically)
@@ -83,7 +53,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/ce-worktree/scripts/worktree-manager.sh cleanu
 
 ### `create <branch-name> [from-branch]`
 
-Creates a new worktree with the given branch name.
+Create a new worktree with the given branch name.
 
 **Options:**
 - `branch-name` (required): The name for the new branch and worktree
@@ -102,12 +72,12 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/ce-worktree/scripts/worktree-manager.sh create
 5. **Trusts dev tool configs** with branch-aware safety rules:
    - trusted bases (`main`, `develop`, `dev`, `trunk`, `staging`, `release/*`) compare against themselves
    - other branches compare against the default branch
-   - direnv auto-allow is skipped on non-trusted bases because `.envrc` can source unchecked files
+   - direnv auto-allow is skipped on non-trusted bases <!-- why: .envrc can source unchecked files -->
 6. Shows path for cd-ing to the worktree
 
 ### `list` or `ls`
 
-Lists all available worktrees with their branches and current status.
+List all worktrees with their branches and status.
 
 **Example:**
 ```bash
@@ -122,19 +92,18 @@ bash ${CLAUDE_PLUGIN_ROOT}/skills/ce-worktree/scripts/worktree-manager.sh list
 
 ### `switch <name>` or `go <name>`
 
-Switches to an existing worktree and cd's into it.
+Switch to an existing worktree.
 
 **Example:**
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/skills/ce-worktree/scripts/worktree-manager.sh switch feature-login
 ```
 
-**Optional:**
-- If name not provided, lists available worktrees and prompts for selection
+Optional: If name not provided, lists worktrees and prompts for selection.
 
 ### `cleanup` or `clean`
 
-Interactively cleans up inactive worktrees with confirmation.
+Clean up inactive worktrees interactively.
 
 **Example:**
 ```bash
@@ -187,34 +156,9 @@ cd .
 bash ${CLAUDE_PLUGIN_ROOT}/skills/ce-worktree/scripts/worktree-manager.sh cleanup
 ```
 
-## Key Design Principles
-
-### KISS (Keep It Simple, Stupid)
-
-- **One manager script** handles all worktree operations
-- **Simple commands** with sensible defaults
-- **Interactive prompts** prevent accidental operations
-- **Clear naming** using branch names directly
-
-### Opinionated Defaults
-
-- Worktrees always created from **main** (unless specified)
-- Worktrees stored in **.worktrees/** directory
-- Branch name becomes worktree name
-- **.gitignore** automatically managed
-
-### Safety First
-
-- **Confirms before creating** worktrees
-- **Confirms before cleanup** to prevent accidental removal
-- **Won't remove current worktree**
-- **Clear error messages** for issues
-
 ## Integration with Workflows
 
 ### `/ce-code-review`
-
-Instead of always creating a worktree:
 
 ```
 1. Check current branch
@@ -226,8 +170,6 @@ Instead of always creating a worktree:
 ```
 
 ### `/ce-work`
-
-Always offer choice:
 
 ```
 1. Ask: "How do you want to work?
@@ -242,38 +184,32 @@ Always offer choice:
 
 ### "Worktree already exists"
 
-If you see this, the script will ask if you want to switch to it instead.
+The script will offer to switch to it instead.
 
 ### "Cannot remove worktree: it is the current worktree"
 
-Switch out of the worktree first (to main repo), then cleanup:
+Switch to the main repo first, then clean up:
 
 ```bash
 cd $(git rev-parse --show-toplevel)
 bash ${CLAUDE_PLUGIN_ROOT}/skills/ce-worktree/scripts/worktree-manager.sh cleanup
 ```
 
-### Lost in a worktree?
-
-See where you are:
+### Identify current worktree
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/skills/ce-worktree/scripts/worktree-manager.sh list
 ```
 
-### .env files missing in worktree?
+### .env files missing in worktree
 
-If a worktree was created without .env files (e.g., via raw `git worktree add`), copy them:
+Copy .env files to a worktree created without them (e.g., via raw `git worktree add`):
 
 ```bash
 bash ${CLAUDE_PLUGIN_ROOT}/skills/ce-worktree/scripts/worktree-manager.sh copy-env feature-name
 ```
 
-Navigate back to main:
-
-```bash
-cd $(git rev-parse --show-toplevel)
-```
+Return to main repo: `cd $(git rev-parse --show-toplevel)`
 
 ## Technical Details
 
@@ -294,17 +230,9 @@ cd $(git rev-parse --show-toplevel)
 .gitignore (updated to include .worktrees)
 ```
 
-### How It Works
+### Internals
 
-- Uses `git worktree add` for isolated environments
-- Each worktree has its own branch
-- Changes in one worktree don't affect others
-- Share git history with main repo
-- Can push from any worktree
-
-### Performance
-
-- Worktrees are lightweight (just file system links)
-- No repository duplication
-- Shared git objects for efficiency
-- Much faster than cloning or stashing/switching
+- Each worktree gets its own branch via `git worktree add`
+- Worktrees share git objects with the main repo (no duplication)
+- Changes in one worktree do not affect others
+- Push from any worktree

@@ -5,18 +5,18 @@ description: "Write Ruby gems following Andrew Kane's proven patterns and philos
 
 # Andrew Kane Gem Writer
 
-Write Ruby gems following Andrew Kane's battle-tested patterns from 100+ gems with 374M+ downloads (Searchkick, PgHero, Chartkick, Strong Migrations, Lockbox, Ahoy, Blazer, Groupdate, Neighbor, Blind Index).
+Write Ruby gems following Andrew Kane's patterns from 100+ gems with 374M+ downloads (Searchkick, PgHero, Chartkick, Strong Migrations, Lockbox, Ahoy, Blazer, Groupdate, Neighbor, Blind Index).
 
 ## When to Use
 
-Use this skill when the user:
-- Says "create a gem", "write a Ruby library", or "design a gem API"
-- Wants to write or refactor Ruby gems following Andrew Kane's clean, minimal style
-- Needs production-ready Ruby library code with zero or minimal dependencies
+Triggers:
+- "create a gem", "write a Ruby library", "design a gem API"
+- Writing or refactoring Ruby gems in Andrew Kane's clean, minimal style
+- Production-ready Ruby library code with zero or minimal dependencies
 
 ## Core Philosophy
 
-**Simplicity over cleverness.** Zero or minimal dependencies. Explicit code over metaprogramming. Rails integration without Rails coupling. Every pattern serves production use cases.
+**Simplicity over cleverness.** Zero or minimal dependencies. Explicit code over metaprogramming. Rails integration without Rails coupling.
 
 ## Entry Point Structure
 
@@ -49,7 +49,7 @@ end
 
 ## Class Macro DSL Pattern
 
-The signature Kane pattern—single method call configures everything:
+Single method call configures everything:
 
 ```ruby
 # Usage
@@ -183,7 +183,7 @@ end
 
 ## Reference Files
 
-For deeper patterns, see:
+Additional references:
 - `references/module-organization.md` - Directory layouts, method decomposition
 - `references/rails-integration.md` - Railtie, Engine, on_load patterns
 - `references/database-adapters.md` - Multi-database support patterns

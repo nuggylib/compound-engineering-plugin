@@ -6,11 +6,9 @@ argument-hint: "[PR number, branch name, 'current', or --port PORT]"
 
 # Browser Test Skill
 
-Run end-to-end browser tests on pages affected by a PR or branch changes using the `agent-browser` CLI.
-
 ## Use `agent-browser` Only For Browser Automation
 
-This workflow uses the `agent-browser` CLI exclusively. Do not use any alternative browser automation system, browser MCP integration, or built-in browser-control tool. If the platform offers multiple ways to control a browser, always choose `agent-browser`.
+Use `agent-browser` exclusively. Do not use any alternative browser automation system, browser MCP integration, or built-in browser-control tool.
 
 Use `agent-browser` for: opening pages, clicking elements, filling forms, taking screenshots, and scraping rendered content.
 
@@ -32,34 +30,24 @@ Check whether `agent-browser` is installed:
 command -v agent-browser >/dev/null 2>&1 && echo "Installed" || echo "NOT INSTALLED"
 ```
 
-If not installed, inform the user: "`agent-browser` is not installed. Run `/ce-setup` to install required dependencies." Then stop — this skill cannot function without agent-browser.
+If not installed, inform the user: "`agent-browser` is not installed. Run `/ce-setup` to install required dependencies." Then stop.
 
 ## Workflow
 
-### 1. Verify Installation
-
-Before starting, verify `agent-browser` is available:
-
-```bash
-command -v agent-browser >/dev/null 2>&1 && echo "Ready" || echo "NOT INSTALLED"
-```
-
-If not installed, inform the user: "`agent-browser` is not installed. Run `/ce-setup` to install required dependencies." Then stop.
-
-### 2. Ask Browser Mode
+### 1. Ask Browser Mode
 
 Ask the user whether to run headed or headless via the platform question tool (AskUserQuestion / request_user_input / ask_user) — or present options and wait for a reply:
 
 ```
 Do you want to watch the browser tests run?
 
-1. Headed (watch) - Opens visible browser window so you can see tests run
-2. Headless (faster) - Runs in background, faster but invisible
+1. Headed (visible browser window)
+2. Headless (background, faster)
 ```
 
 Store the choice and use the `--headed` flag when the user selects option 1.
 
-### 3. Determine Test Scope
+### 2. Determine Test Scope
 
 **If PR number provided:**
 ```bash
@@ -76,7 +64,7 @@ git diff --name-only main...HEAD
 git diff --name-only main...[branch]
 ```
 
-### 4. Map Files to Routes
+### 3. Map Files to Routes
 
 Map changed files to testable routes:
 
@@ -92,9 +80,7 @@ Map changed files to testable routes:
 | `src/app/*` (Next.js) | Corresponding routes |
 | `src/components/*` | Pages using those components |
 
-Build a list of URLs to test based on the mapping.
-
-### 5. Detect Dev Server Port
+### 4. Detect Dev Server Port
 
 Determine the dev server port using this priority:
 
@@ -122,7 +108,7 @@ PORT="${PORT:-3000}"
 echo "Using dev server port: $PORT"
 ```
 
-### 6. Verify Server is Running
+### 5. Verify Server is Running
 
 ```bash
 agent-browser open http://localhost:${PORT}
@@ -142,7 +128,7 @@ Please start your development server:
 Then re-run this skill.
 ```
 
-### 7. Test Each Affected Page
+### 6. Test Each Affected Page
 
 For each affected route:
 
@@ -177,9 +163,9 @@ agent-browser screenshot page-name.png
 agent-browser screenshot --full page-name-full.png
 ```
 
-### 8. Human Verification (When Required)
+### 7. Human Verification (When Required)
 
-Pause for human input when testing touches flows that require external interaction:
+Pause for human input when testing touches external flows:
 
 | Flow Type | What to Ask |
 |-----------|-------------|
@@ -189,7 +175,7 @@ Pause for human input when testing touches flows that require external interacti
 | SMS | "Verify you received the SMS code" |
 | External APIs | "Confirm the [service] integration is working" |
 
-Ask the user (using the platform's question tool, or present numbered options and wait):
+Ask the user:
 
 ```
 Human Verification Needed
@@ -203,7 +189,7 @@ Did it work correctly?
 2. No - describe the issue
 ```
 
-### 9. Handle Failures
+### 8. Handle Failures
 
 When a test fails:
 
@@ -229,7 +215,7 @@ When a test fails:
 4. **If "Create todo":** load the `ce-todo-create` skill and create a todo with priority p1 and description `browser-test-{description}`, continue
 5. **If "Skip":** log as skipped, continue
 
-### 10. Test Summary
+### 9. Test Summary
 
 After all tests complete, present a summary:
 

@@ -10,10 +10,10 @@ Detect project type, recommend a capture tier, record visual evidence, upload to
 
 ## When to Use
 
-Use this skill when the user:
-- Says "add a demo", "record a GIF", "screenshot a feature", "show what changed visually", "create a demo reel", "capture evidence", "add proof to a PR", or "create a before/after comparison"
-- Is shipping UI changes, CLI features, or any work with observable behavior that benefits from visual proof
-- Needs visual evidence for a PR description
+Triggers:
+- "add a demo", "record a GIF", "screenshot a feature", "show what changed visually", "create a demo reel", "capture evidence", "add proof to a PR", "create a before/after comparison"
+- Shipping UI changes, CLI features, or any work with observable behavior
+- Visual evidence needed for a PR description
 
 **Evidence means USING THE PRODUCT, not running tests.** "I ran npm test" is test evidence. Evidence capture is running the actual CLI command, opening the web app, making the API call, or triggering the feature. The distinction is absolute -- test output is never labeled "Demo" or "Screenshots."
 
@@ -24,16 +24,16 @@ Never generate fake or placeholder image/GIF URLs. If upload fails, report the f
 ## Arguments
 
 Parse `$ARGUMENTS`:
-- **What to capture**: A description of the feature or behavior to demonstrate. If provided, use it to guide which pages to visit, commands to run, or states to capture.
+- **What to capture**: Use to guide which pages to visit, commands to run, or states to capture.
 - If blank, infer what to capture from recoverable branch or PR context. If the target remains ambiguous after that, ask the user what they want to demonstrate before proceeding.
 
 ## Step 0: Discover Capture Target
 
-Treat target discovery as stateless and branch-aware. The agent may be invoked in a fresh session after the work was already done, so do not rely on conversation history or assume the caller knows the right artifact.
+Treat target discovery as stateless and branch-aware. <!-- why: the agent may be invoked in a fresh session after the work was already done --> Do not rely on conversation history or assume the caller knows the right artifact.
 
-If invoked by another skill, treat the caller-provided target as a hint, not proof. Rerun target discovery and validation before capturing anything.
+Rerun target discovery and validation before capturing anything, even when invoked by another skill with a caller-provided target.
 
-Use the lightest available context to identify the best evidence target:
+Identify the best evidence target from the lightest available context:
 
 - Current branch name
 - Open PR title and description, if one exists
@@ -56,23 +56,21 @@ Before capturing anything, verify the feature works by actually using it:
 - **Library**: Run example code using the new/changed API
 - **Bug fix**: Reproduce the original bug scenario and confirm it's fixed
 
-Use the workspace where the feature was built. Do not reinstall from scratch. If setup requires credentials or services, use the platform question tool (AskUserQuestion / request_user_input / ask_user) to ask the user.
+Use the workspace where the feature was built. If setup requires credentials or services, use the platform question tool (AskUserQuestion / request_user_input / ask_user) to ask the user.
 
 ## Step 2: Detect Project Type
 
-Use the capture target from Step 0 to decide which directory to classify. If the diff touches a specific subdirectory with its own package manifest (e.g., `packages/cli/`, `apps/web/`), pass that as the root. Otherwise use the repo root.
+If the diff touches a specific subdirectory with its own package manifest (e.g., `packages/cli/`, `apps/web/`), pass that as the root. Otherwise use the repo root.
 
 ```bash
 python3 scripts/capture-demo.py detect --repo-root [TARGET_DIR]
 ```
 
-This outputs JSON with `type` and `reason`. The result is a signal, not a gate. If the agent's understanding from Step 0 contradicts the script's classification (e.g., the diff clearly changes CLI behavior but the repo root classifies as `web-app` because of a sibling Next.js app), the agent's judgment wins.
+Output: JSON with `type` and `reason`. The result is a signal, not a gate — if Step 0 context contradicts the script's classification, the agent's judgment wins.
 
 ## Step 3: Assess Change Type
 
-Step 0 already handled the "no observable behavior" early exit. This step classifies changes that DO have observable behavior into `motion` or `states` to guide tier selection.
-
-If arguments describe what to capture, classify based on the description. Otherwise, use the diff context from Step 0.
+Classify based on arguments if provided, otherwise use the diff context from Step 0.
 
 **Change classification:**
 
@@ -99,7 +97,7 @@ Run the preflight check:
 python3 scripts/capture-demo.py preflight
 ```
 
-This outputs JSON with boolean availability for each tool: `agent_browser`, `vhs`, `silicon`, `ffmpeg`, `ffprobe`. Print a human-readable summary for the user based on the result, noting install commands for missing tools (e.g., `brew install charmbracelet/tap/vhs` for vhs, `brew install silicon` for silicon, `brew install ffmpeg` for ffmpeg).
+Output: JSON with boolean availability for `agent_browser`, `vhs`, `silicon`, `ffmpeg`, `ffprobe`. Print a human-readable summary noting install commands for missing tools (e.g., `brew install charmbracelet/tap/vhs`, `brew install silicon`, `brew install ffmpeg`).
 
 ## Step 5: Create Run Directory
 
@@ -109,7 +107,7 @@ Create a per-run scratch directory in the OS temp location:
 mktemp -d -t demo-reel-XXXXXX
 ```
 
-Use the output as `RUN_DIR`. Pass this concrete run directory to every tier reference. Evidence artifacts are ephemeral — they get uploaded to a public URL and then discarded. The OS temp directory is the right place for them, not the repo tree.
+Use the output as `RUN_DIR`. Pass this concrete run directory to every tier reference.
 
 ## Step 6: Recommend Tier and Ask User
 
@@ -119,7 +117,7 @@ Run the recommendation script with the project type from Step 2, change classifi
 python3 scripts/capture-demo.py recommend --project-type [TYPE] --change-type [motion|states] --tools '[PREFLIGHT_JSON]'
 ```
 
-This outputs JSON with `recommended` (the best tier), `available` (list of tiers whose tools are present), and `reasoning`.
+Output: JSON with `recommended` (best tier), `available` (tiers whose tools are present), and `reasoning`.
 
 Present the available tiers to the user via the platform question tool (AskUserQuestion / request_user_input / ask_user). Mark the recommended tier. Always include "No evidence needed" as a final option.
 
@@ -136,7 +134,7 @@ If the question tool is unavailable (background agent, batch mode), present the 
 
 ## Step 7: Execute Selected Tier
 
-Carry the capture hypothesis from Step 0 and the feature exercise results from Step 1 into tier execution — these determine which specific pages to visit, commands to run, or states to screenshot. Substitute `[RUN_DIR]` in the tier reference with the concrete path from Step 5.
+Carry the capture hypothesis from Step 0 and the feature exercise results from Step 1 into tier execution. Substitute `[RUN_DIR]` in the tier reference with the concrete path from Step 5.
 
 Load the appropriate reference file for the selected tier:
 
@@ -146,15 +144,15 @@ Load the appropriate reference file for the selected tier:
 - **Static screenshots** -> Read `references/tier-static-screenshots.md`
 - **No evidence needed** -> Skip to output. Set `evidence_url` to null, `evidence_label` to null.
 
-**Runtime failure fallback:** If the selected tier fails during execution (tool crashes, server not accessible, recording produces empty output), fall back to the next available tier rather than failing entirely. The fallback order is: browser reel -> static screenshots, terminal recording -> screenshot reel -> static screenshots, screenshot reel -> static screenshots. Static screenshots is the terminal fallback -- if even that fails, report the failure and let the user decide.
+**Runtime failure fallback:** If the selected tier fails (tool crash, server inaccessible, empty output), fall back to the next available tier. Fallback order: browser reel -> static screenshots, terminal recording -> screenshot reel -> static screenshots, screenshot reel -> static screenshots. If static screenshots also fails, report the failure.
 
 ## Step 8: Upload and Approval
 
-After the selected tier produces an artifact, read `references/upload-and-approval.md` for upload to a public host, user approval gate, and markdown embed generation.
+Read `references/upload-and-approval.md` for upload to a public host, user approval gate, and markdown embed generation.
 
 ## Output
 
-Return these values to the caller (e.g., ce-commit-push-pr):
+Return these values to the caller:
 
 ```
 === Evidence Capture Complete ===
@@ -164,12 +162,11 @@ URL: [public URL or "none" (multiple URLs comma-separated for static screenshots
 === End Evidence ===
 ```
 
-The `Description` is a 1-line summary derived from the capture hypothesis in Step 0 (e.g., "CLI detect command classifying 3 project types and recommending capture tiers"). The caller decides how to format the URL(s) into the PR description.
+The `Description` is a 1-line summary derived from the capture hypothesis in Step 0 (e.g., "CLI detect command classifying 3 project types and recommending capture tiers").
 
 - `Tier: skipped` or `URL: "none"` means no evidence was captured.
 
 **Label convention:**
 - Browser reel, terminal recording, screenshot reel: label as "Demo"
 - Static screenshots: label as "Screenshots"
-- The caller applies the label when formatting. ce-demo-reel does not generate markdown.
 - Test output is never labeled "Demo" or "Screenshots"

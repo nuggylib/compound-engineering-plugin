@@ -1,0 +1,511 @@
+# Dead Content Elimination Audit Ledger
+# Generated: 2026-04-15
+# Covers: Units 1-5 of docs/plans/2026-04-15-004-refactor-dead-content-audit-plan.md
+# Branch: token-improvements
+
+metadata:
+  plan: docs/plans/2026-04-15-004-refactor-dead-content-audit-plan.md
+  methodology: docs/references/register-mismatch-correction-methodology.md
+  units_covered: [1, 2, 3, 4, 5]
+  units_deferred: []
+  total_files_audited: 94
+  total_bytes_before: 511699
+  total_bytes_after: 418208
+  total_bytes_saved: 93491
+  savings_percentage: 18.3%
+
+# Unit 1: Mechanical Pattern Removals (date stamps + deprecated TodoWrite refs)
+# Commit: c79f06d
+unit_1:
+  category: mechanical-removal
+  files:
+    - file: skills/ce-plan/SKILL.md
+      categories: [{type: date-stamp, action: removed, bytes: 98}]
+      priority: P1
+    - file: skills/ce-ideate/SKILL.md
+      categories: [{type: date-stamp, action: removed, bytes: 98}]
+      priority: P1
+    - file: skills/ce-brainstorm/SKILL.md
+      categories: [{type: date-stamp, action: removed, bytes: 98}]
+      priority: P1
+    - file: agents/research/git-history-analyzer.md
+      categories: [{type: date-stamp, action: removed, bytes: 98}]
+      priority: P2
+    - file: agents/research/slack-researcher.md
+      categories: [{type: date-stamp, action: removed, bytes: 98}]
+      priority: P2
+    - file: agents/research/framework-docs-researcher.md
+      categories: [{type: date-stamp, action: removed, bytes: 98}]
+      priority: P2
+    - file: agents/research/issue-intelligence-analyst.md
+      categories: [{type: date-stamp, action: removed, bytes: 98}]
+      priority: P2
+    - file: agents/research/repo-research-analyst.md
+      categories: [{type: date-stamp, action: removed, bytes: 98}]
+      priority: P2
+    - file: agents/research/best-practices-researcher.md
+      categories: [{type: date-stamp, action: removed, bytes: 98}]
+      priority: P2
+    - file: agents/research/session-historian.md
+      categories: [{type: date-stamp, action: removed, bytes: 98}]
+      priority: P2
+    - file: skills/ce-work/SKILL.md
+      categories: [{type: deprecated-tool-ref, action: corrected, bytes: 20}]
+      priority: P1
+  total_bytes_saved: 1000
+
+# Unit 2: Cross-Platform Boilerplate Condensing
+# Commit: ddb079f
+# Note: This unit condensed verbose boilerplate to shorter forms (net-zero line count
+# but reduced bytes per instance). 34 files touched, 0 net line change.
+unit_2:
+  category: boilerplate-condensing
+  files:
+    - file: agents/research/best-practices-researcher.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 40}]
+      priority: P2
+    - file: agents/research/framework-docs-researcher.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P2
+    - file: agents/research/git-history-analyzer.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P2
+    - file: agents/research/issue-intelligence-analyst.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 40}]
+      priority: P2
+    - file: agents/research/repo-research-analyst.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 80}]
+      priority: P2
+    - file: agents/review/project-standards-reviewer.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P2
+    - file: agents/workflow/spec-flow-analyzer.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 40}]
+      priority: P2
+    - file: skills/ce-brainstorm/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 40}]
+      priority: P1
+    - file: skills/ce-brainstorm/references/universal-brainstorming.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P3
+    - file: skills/ce-compound-refresh/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 60}]
+      priority: P1
+    - file: skills/ce-compound/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 60}]
+      priority: P1
+    - file: skills/ce-debug/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/ce-demo-reel/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 40}]
+      priority: P1
+    - file: skills/ce-demo-reel/references/upload-and-approval.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P3
+    - file: skills/ce-ideate/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 40}]
+      priority: P1
+    - file: skills/ce-optimize/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/ce-plan/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 100}]
+      priority: P1
+    - file: skills/ce-plan/references/universal-planning.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 40}]
+      priority: P3
+    - file: skills/ce-pr-description/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/ce-review/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 80}]
+      priority: P1
+    - file: skills/ce-sessions/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/ce-setup/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/ce-slack-research/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/claude-permissions-optimizer/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/frontend-design/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/git-clean-gone-branches/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/git-commit-push-pr/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/git-commit/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 40}]
+      priority: P1
+    - file: skills/onboarding/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/report-bug-ce/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/resolve-pr-feedback/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/test-browser/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/test-xcode/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+    - file: skills/todo-create/SKILL.md
+      categories: [{type: question-tool-boilerplate, action: condensed, bytes: 20}]
+      priority: P1
+  total_bytes_saved: 1120
+
+# Unit 3: orchestrating-swarms Content Extraction
+# Commit: 819d3c9
+unit_3:
+  category: structural-extraction
+  files:
+    - file: skills/orchestrating-swarms/SKILL.md
+      total_bytes_before: 48055
+      total_bytes_after: 35574
+      dead_content_bytes: 12481
+      categories:
+        - {type: structural-extraction, action: extracted, bytes: 12481}
+      priority: P1
+      notes: "Content moved to references/message-formats.md, references/tool-call-reference.md, references/advanced-patterns.md"
+    - file: skills/orchestrating-swarms/references/message-formats.md
+      categories: [{type: structural-extraction, action: created, bytes: 0}]
+      priority: P3
+    - file: skills/orchestrating-swarms/references/tool-call-reference.md
+      categories: [{type: structural-extraction, action: created, bytes: 0}]
+      priority: P3
+    - file: skills/orchestrating-swarms/references/advanced-patterns.md
+      categories: [{type: structural-extraction, action: created, bytes: 0}]
+      priority: P3
+  total_bytes_saved: 12481
+
+# Unit 4: Code Example Reduction in Reference Files
+# Commit: 4ae26ac
+unit_4:
+  category: code-example-reduction
+  files:
+    - file: skills/agent-native-architecture/references/mobile-patterns.md
+      total_bytes_before: 25629
+      total_bytes_after: 18731
+      dead_content_bytes: 6898
+      categories: [{type: code-example-verbose, action: condensed, bytes: 6898}]
+      priority: P3
+    - file: skills/agent-native-architecture/references/shared-workspace-architecture.md
+      total_bytes_before: 20874
+      total_bytes_after: 15106
+      dead_content_bytes: 5768
+      categories: [{type: code-example-verbose, action: condensed, bytes: 5768}]
+      priority: P3
+    - file: skills/dspy-ruby/references/optimization.md
+      total_bytes_before: 18800
+      total_bytes_after: 13209
+      dead_content_bytes: 5591
+      categories: [{type: code-example-verbose, action: condensed, bytes: 5591}]
+      priority: P3
+    - file: skills/dspy-ruby/references/core-concepts.md
+      total_bytes_before: 17911
+      total_bytes_after: 12361
+      dead_content_bytes: 5550
+      categories: [{type: code-example-verbose, action: condensed, bytes: 5550}]
+      priority: P3
+    - file: skills/agent-native-architecture/references/architecture-patterns.md
+      total_bytes_before: 17241
+      total_bytes_after: 12915
+      dead_content_bytes: 4326
+      categories: [{type: code-example-verbose, action: condensed, bytes: 4326}]
+      priority: P3
+    - file: skills/agent-native-architecture/references/mcp-tool-design.md
+      total_bytes_before: 15658
+      total_bytes_after: 11384
+      dead_content_bytes: 4274
+      categories: [{type: code-example-verbose, action: condensed, bytes: 4274}]
+      priority: P3
+    - file: skills/dspy-ruby/references/toolsets.md
+      total_bytes_before: 15970
+      total_bytes_after: 11895
+      dead_content_bytes: 4075
+      categories: [{type: code-example-verbose, action: condensed, bytes: 4075}]
+      priority: P3
+    - file: skills/agent-native-architecture/references/agent-native-testing.md
+      total_bytes_before: 16749
+      total_bytes_after: 13335
+      dead_content_bytes: 3414
+      categories: [{type: code-example-verbose, action: condensed, bytes: 3414}]
+      priority: P3
+    - file: skills/dhh-rails-style/references/architecture.md
+      total_bytes_before: 13122
+      total_bytes_after: 9853
+      dead_content_bytes: 3269
+      categories: [{type: code-example-verbose, action: condensed, bytes: 3269}]
+      priority: P3
+  total_bytes_saved: 43165
+
+# Unit 5: Register-Mismatch Extension to Remaining 36 Skills
+# Uncommitted (pending commit on token-improvements)
+unit_5:
+  category: register-mismatch
+  methodology: 6-pattern classification (progressive-explanation, redundant-clarification, motivational-framing, inline-rationale, hedging-markers, indirect-speech-acts)
+  stop_loss_triggered: false
+  batches_completed: 5
+
+  # Batch 5a (7 files, largest)
+  batch_5a:
+    - file: skills/ce-optimize/SKILL.md
+      total_bytes_before: 35480
+      total_bytes_after: 26916
+      dead_content_bytes: 8564
+      categories: [{type: register-mismatch, action: corrected, bytes: 8564}]
+      priority: P1
+    - file: skills/ce-pr-description/SKILL.md
+      total_bytes_before: 24686
+      total_bytes_after: 18477
+      dead_content_bytes: 6209
+      categories: [{type: register-mismatch, action: corrected, bytes: 6209}]
+      priority: P1
+    - file: skills/onboarding/SKILL.md
+      total_bytes_before: 25223
+      total_bytes_after: 20285
+      dead_content_bytes: 4938
+      categories: [{type: register-mismatch, action: corrected, bytes: 4938}]
+      priority: P1
+    - file: skills/resolve-pr-feedback/SKILL.md
+      total_bytes_before: 19393
+      total_bytes_after: 14514
+      dead_content_bytes: 4879
+      categories: [{type: register-mismatch, action: corrected, bytes: 4879}]
+      priority: P1
+    - file: skills/agent-native-architecture/SKILL.md
+      total_bytes_before: 22430
+      total_bytes_after: 18322
+      dead_content_bytes: 4108
+      categories: [{type: register-mismatch, action: corrected, bytes: 4108}]
+      priority: P1
+    - file: skills/frontend-design/SKILL.md
+      total_bytes_before: 14022
+      total_bytes_after: 12333
+      dead_content_bytes: 1689
+      categories: [{type: register-mismatch, action: corrected, bytes: 1689}]
+      priority: P1
+    - file: skills/dspy-ruby/SKILL.md
+      total_bytes_before: 23138
+      total_bytes_after: 21472
+      dead_content_bytes: 1666
+      categories: [{type: register-mismatch, action: corrected, bytes: 1666}]
+      priority: P1
+
+  # Batch 5b (7 files)
+  batch_5b:
+    - file: skills/ce-brainstorm/SKILL.md
+      total_bytes_before: 13887
+      total_bytes_after: 11614
+      dead_content_bytes: 2273
+      categories: [{type: register-mismatch, action: corrected, bytes: 2273}]
+      priority: P1
+    - file: skills/git-worktree/SKILL.md
+      total_bytes_before: 9294
+      total_bytes_after: 7096
+      dead_content_bytes: 2198
+      categories: [{type: register-mismatch, action: corrected, bytes: 2198}]
+      priority: P1
+    - file: skills/git-commit-push-pr/SKILL.md
+      total_bytes_before: 13893
+      total_bytes_after: 12428
+      dead_content_bytes: 1465
+      categories: [{type: register-mismatch, action: corrected, bytes: 1465}]
+      priority: P1
+    - file: skills/ce-demo-reel/SKILL.md
+      total_bytes_before: 10455
+      total_bytes_after: 9132
+      dead_content_bytes: 1323
+      categories: [{type: register-mismatch, action: corrected, bytes: 1323}]
+      priority: P1
+    - file: skills/ce-ideate/SKILL.md
+      total_bytes_before: 9900
+      total_bytes_after: 8935
+      dead_content_bytes: 965
+      categories: [{type: register-mismatch, action: corrected, bytes: 965}]
+      priority: P1
+    - file: skills/ce-debug/SKILL.md
+      total_bytes_before: 12317
+      total_bytes_after: 11361
+      dead_content_bytes: 956
+      categories: [{type: register-mismatch, action: corrected, bytes: 956}]
+      priority: P1
+    - file: skills/test-browser/SKILL.md
+      total_bytes_before: 9115
+      total_bytes_after: 8311
+      dead_content_bytes: 804
+      categories: [{type: register-mismatch, action: corrected, bytes: 804}]
+      priority: P1
+
+  # Batch 5c (7 files)
+  batch_5c:
+    - file: skills/document-review/SKILL.md
+      total_bytes_before: 8049
+      total_bytes_after: 7605
+      dead_content_bytes: 444
+      categories: [{type: register-mismatch, action: corrected, bytes: 444}]
+      priority: P1
+    - file: skills/ce-setup/SKILL.md
+      total_bytes_before: 6869
+      total_bytes_after: 6509
+      dead_content_bytes: 360
+      categories: [{type: register-mismatch, action: corrected, bytes: 360}]
+      priority: P1
+    - file: skills/claude-permissions-optimizer/SKILL.md
+      total_bytes_before: 8075
+      total_bytes_after: 7724
+      dead_content_bytes: 351
+      categories: [{type: register-mismatch, action: corrected, bytes: 351}]
+      priority: P1
+    - file: skills/agent-native-audit/SKILL.md
+      total_bytes_before: 8237
+      total_bytes_after: 7956
+      dead_content_bytes: 281
+      categories: [{type: register-mismatch, action: corrected, bytes: 281}]
+      priority: P1
+    - file: skills/dhh-rails-style/SKILL.md
+      total_bytes_before: 6685
+      total_bytes_after: 6518
+      dead_content_bytes: 167
+      categories: [{type: register-mismatch, action: corrected, bytes: 167}]
+      priority: P1
+    - file: skills/test-xcode/SKILL.md
+      total_bytes_before: 6530
+      total_bytes_after: 6373
+      dead_content_bytes: 157
+      categories: [{type: register-mismatch, action: corrected, bytes: 157}]
+      priority: P1
+    - file: skills/proof/SKILL.md
+      total_bytes_before: 6544
+      total_bytes_after: 6467
+      dead_content_bytes: 77
+      categories: [{type: register-mismatch, action: corrected, bytes: 77}]
+      priority: P1
+
+  # Batch 5d (7 files)
+  batch_5d:
+    - file: skills/every-style-editor/SKILL.md
+      total_bytes_before: 4844
+      total_bytes_after: 3009
+      dead_content_bytes: 1835
+      categories: [{type: register-mismatch, action: corrected, bytes: 1835}]
+      priority: P1
+    - file: skills/report-bug-ce/SKILL.md
+      total_bytes_before: 4484
+      total_bytes_after: 3838
+      dead_content_bytes: 646
+      categories: [{type: register-mismatch, action: corrected, bytes: 646}]
+      priority: P1
+    - file: skills/git-commit/SKILL.md
+      total_bytes_before: 5903
+      total_bytes_after: 5291
+      dead_content_bytes: 612
+      categories: [{type: register-mismatch, action: corrected, bytes: 612}]
+      priority: P1
+    - file: skills/changelog/SKILL.md
+      total_bytes_before: 4702
+      total_bytes_after: 4144
+      dead_content_bytes: 558
+      categories: [{type: register-mismatch, action: corrected, bytes: 558}]
+      priority: P1
+    - file: skills/gemini-imagegen/SKILL.md
+      total_bytes_before: 6239
+      total_bytes_after: 6031
+      dead_content_bytes: 208
+      categories: [{type: register-mismatch, action: corrected, bytes: 208}]
+      priority: P1
+    - file: skills/todo-create/SKILL.md
+      total_bytes_before: 4060
+      total_bytes_after: 3918
+      dead_content_bytes: 142
+      categories: [{type: register-mismatch, action: corrected, bytes: 142}]
+      priority: P1
+    - file: skills/andrew-kane-gem-writer/SKILL.md
+      total_bytes_before: 4747
+      total_bytes_after: 4613
+      dead_content_bytes: 134
+      categories: [{type: register-mismatch, action: corrected, bytes: 134}]
+      priority: P1
+
+  # Batch 5e (8 files, smallest)
+  batch_5e:
+    - file: skills/ce-update/SKILL.md
+      total_bytes_before: 3155
+      total_bytes_after: 2546
+      dead_content_bytes: 609
+      categories: [{type: register-mismatch, action: corrected, bytes: 609}]
+      priority: P1
+    - file: skills/lfg/SKILL.md
+      total_bytes_before: 1667
+      total_bytes_after: 1093
+      dead_content_bytes: 574
+      categories: [{type: register-mismatch, action: corrected, bytes: 574}]
+      priority: P1
+    - file: skills/ce-sessions/SKILL.md
+      total_bytes_before: 1890
+      total_bytes_after: 1449
+      dead_content_bytes: 441
+      categories: [{type: register-mismatch, action: corrected, bytes: 441}]
+      priority: P1
+    - file: skills/todo-resolve/SKILL.md
+      total_bytes_before: 2933
+      total_bytes_after: 2535
+      dead_content_bytes: 398
+      categories: [{type: register-mismatch, action: corrected, bytes: 398}]
+      priority: P1
+    - file: skills/ce-slack-research/SKILL.md
+      total_bytes_before: 2274
+      total_bytes_after: 1988
+      dead_content_bytes: 286
+      categories: [{type: register-mismatch, action: corrected, bytes: 286}]
+      priority: P1
+    - file: skills/git-clean-gone-branches/SKILL.md
+      total_bytes_before: 2234
+      total_bytes_after: 2017
+      dead_content_bytes: 217
+      categories: [{type: register-mismatch, action: corrected, bytes: 217}]
+      priority: P1
+    - file: skills/todo-triage/SKILL.md
+      total_bytes_before: 2142
+      total_bytes_after: 1963
+      dead_content_bytes: 179
+      categories: [{type: register-mismatch, action: corrected, bytes: 179}]
+      priority: P1
+    - file: skills/deploy-docs/SKILL.md
+      total_bytes_before: 2745
+      total_bytes_after: 2782
+      dead_content_bytes: -37
+      categories: [{type: register-mismatch, action: corrected, bytes: -37}]
+      priority: P1
+      notes: "Net increase due to HTML comment preservation of non-obvious technical knowledge"
+
+  total_bytes_saved: 50676
+
+# Aggregate Summary
+summary:
+  by_unit:
+    - {unit: 1, category: mechanical-removal, files: 11, bytes_saved: 1000}
+    - {unit: 2, category: boilerplate-condensing, files: 34, bytes_saved: 1120}
+    - {unit: 3, category: structural-extraction, files: 4, bytes_saved: 12481}
+    - {unit: 4, category: code-example-reduction, files: 9, bytes_saved: 43165}
+    - {unit: 5, category: register-mismatch, files: 36, bytes_saved: 50676}
+  by_priority:
+    - {priority: P1, description: "always-loaded skills", bytes_saved: 52796}
+    - {priority: P2, description: "always-loaded agents", bytes_saved: 1470}
+    - {priority: P3, description: "on-demand references", bytes_saved: 49225}
+  total_bytes_saved: 93491
+  total_files_audited: 94
+  files_with_no_savings: 1
+  files_below_3pct_threshold: 5
+  stop_loss_triggered: false

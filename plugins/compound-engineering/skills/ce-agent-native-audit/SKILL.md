@@ -7,8 +7,6 @@ disable-model-invocation: true
 
 # Agent-Native Architecture Audit
 
-Conduct a comprehensive review of the codebase against agent-native architecture principles, launching parallel sub-agents for each principle and producing a scored report.
-
 ## Core Principles to Audit
 
 1. **Action Parity** - "Whatever the user can do, the agent can do"
@@ -24,22 +22,22 @@ Conduct a comprehensive review of the codebase against agent-native architecture
 
 ### Step 1: Load the Agent-Native Skill
 
-First, invoke the agent-native-architecture skill to understand all principles:
+Invoke the agent-native-architecture skill:
 
 ```
 /ce-agent-native-architecture
 ```
 
-Select option 7 (action parity) to load the full reference material.
+Select option 7 (action parity).
 
 ### Step 2: Launch Parallel Sub-Agents
 
-Launch 8 parallel sub-agents using the Task tool with `subagent_type: Explore`, one for each principle. Each agent should:
+Launch 8 parallel sub-agents using the Task tool with `subagent_type: Explore`, one for each principle. Each agent:
 
-1. Enumerate ALL instances in the codebase (user actions, tools, contexts, data stores, etc.)
-2. Check compliance against the principle
-3. Provide a SPECIFIC SCORE like "X out of Y (percentage%)"
-4. List specific gaps and recommendations
+1. Enumerates ALL instances in the codebase (user actions, tools, contexts, data stores, etc.)
+2. Checks compliance against the principle
+3. Provides a SPECIFIC SCORE like "X out of Y (percentage%)"
+4. Lists specific gaps and recommendations
 
 <sub-agents>
 
@@ -220,7 +218,7 @@ Format:
 
 ### Step 3: Compile Summary Report
 
-After all agents complete, compile a summary with:
+Compile a summary:
 
 ```markdown
 ## Agent-Native Architecture Review: [Project Name]

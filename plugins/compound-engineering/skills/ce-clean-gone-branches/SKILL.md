@@ -5,8 +5,6 @@ description: "Clean up local branches whose remote tracking branch is gone, incl
 
 # Clean Gone Branches
 
-Delete local branches whose remote tracking branch has been deleted, including any associated worktrees.
-
 ## When to Use
 
 Use this skill when the user:
@@ -18,7 +16,7 @@ Use this skill when the user:
 
 ### Step 1: Discover gone branches
 
-Run the discovery script to fetch the latest remote state and identify gone branches:
+Run the discovery script:
 
 ```bash
 bash scripts/clean-gone
@@ -46,7 +44,7 @@ Delete all of them? (y/n)
 
 Wait for the user's answer via the platform question tool (AskUserQuestion / request_user_input / ask_user). Fallback: present the list and wait for a reply.
 
-This is a yes-or-no decision on the entire list -- do not offer multi-selection or per-branch choices.
+Do not offer multi-selection or per-branch choices.
 
 ### Step 3: Delete confirmed branches
 

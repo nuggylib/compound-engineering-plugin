@@ -4,12 +4,12 @@ description: "Write Ruby and Rails code in DHH's 37signals style with REST purit
 ---
 
 <objective>
-Apply 37signals/DHH Rails conventions to Ruby and Rails code. This skill provides comprehensive domain expertise extracted from analyzing production 37signals codebases (Fizzy/Campfire) and DHH's code review patterns.
+Apply 37signals/DHH Rails conventions to Ruby and Rails code.
 </objective>
 
 ## When to Use
 
-Use this skill when the user:
+Activate when the user:
 - Is writing, generating, or refactoring Ruby or Rails code and wants DHH/37signals style
 - Requests a code review against DHH or 37signals conventions
 - Mentions DHH, 37signals, Basecamp, HEY, or Campfire style as a reference
@@ -58,7 +58,7 @@ What are you working on?
 7. **Code Review** - Review code against DHH style
 8. **General Guidance** - Philosophy and conventions
 
-**Specify a number or describe your task.**
+**Specify a number or describe the task.**
 </intake>
 
 <routing>
@@ -74,7 +74,7 @@ What are you working on?
 | 7, review | Read all references, then review code |
 | 8, general task | Read relevant references based on context |
 
-**After reading relevant references, apply patterns to the user's code.**
+**Read relevant references, then apply patterns to the user's code.**
 </routing>
 
 <quick_reference>

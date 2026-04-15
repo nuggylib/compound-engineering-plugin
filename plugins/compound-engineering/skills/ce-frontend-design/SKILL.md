@@ -5,8 +5,6 @@ description: "Build web interfaces with genuine design quality. Use for any fron
 
 # Frontend Design
 
-Guide creation of distinctive, production-grade frontend interfaces that avoid generic AI aesthetics. This skill covers the full lifecycle: detect what exists, plan the design, build with intention, and verify visually.
-
 ## Authority Hierarchy
 
 Every rule in this skill is a default, not a mandate.
@@ -14,8 +12,6 @@ Every rule in this skill is a default, not a mandate.
 1. **Existing design system / codebase patterns** -- highest priority, always respected
 2. **User's explicit instructions** -- override skill defaults
 3. **Skill defaults** -- apply in greenfield work or when the user asks for design guidance
-
-When working in an existing codebase with established patterns, follow those patterns. When the user specifies a direction that contradicts a default, follow the user.
 
 ## Workflow
 
@@ -27,7 +23,7 @@ Detect context -> Plan the design -> Build -> Verify visually
 
 ## Layer 0: Context Detection
 
-Before any design work, examine the codebase for existing design signals. This determines how much of the skill's opinionated guidance applies.
+Before any design work, examine the codebase for existing design signals.
 
 ### What to Look For
 
@@ -60,7 +56,7 @@ Example question: "I found [detected signals]. Should I follow your existing des
 
 ## Layer 1: Pre-Build Planning
 
-Before writing code, write three short statements. These create coherence and give the user a checkpoint to redirect before code is written.
+Before writing code, write three short statements and present them for user confirmation.
 
 1. **Visual thesis** -- one sentence describing the mood, material, and energy
    - Greenfield examples: "Clean editorial feel, lots of whitespace, serif headlines, muted earth tones" or "Dense data-forward dashboard, monospace accents, dark surface hierarchy"
@@ -79,27 +75,22 @@ Before writing code, write three short statements. These create coherence and gi
 
 ## Layer 2: Design Guidance Core
 
-These principles apply across all context types. Each yields to existing design systems and user instructions per the authority hierarchy.
-
 ### Typography
 
 - Choose distinctive, characterful fonts. Avoid the usual suspects (Inter, Roboto, Arial, system defaults) unless the existing codebase uses them.
 - Two typefaces maximum without a clear reason for more. Pair a display/headline font with a body font.
-- *Yields to existing font choices when detected in Layer 0.*
 
 ### Color & Theme
 
 - Commit to a cohesive palette using CSS variables. A dominant color with sharp accents outperforms timid, evenly-distributed palettes.
 - No purple-on-white bias, no dark-mode bias. Vary between light and dark based on context.
 - One accent color by default unless the product already has a multi-color system.
-- *Yields to existing color tokens when detected.*
 
 ### Composition
 
 - Start with composition, not components. Treat the first viewport as a poster, not a document.
 - Use whitespace, alignment, scale, cropping, and contrast before adding chrome (borders, shadows, cards).
-- Default to cardless layouts. Cards are allowed when they serve as the container for a user interaction (clickable item, draggable unit, selectable option). If removing the card styling would not hurt comprehension, it should not be a card.
-- *All composition rules are defaults. The user can override them.*
+- Default to cardless layouts. Cards are allowed when they serve as the container for a user interaction (clickable item, draggable unit, selectable option).
 
 ### Motion
 
@@ -117,7 +108,6 @@ These principles apply across all context types. Each yields to existing design 
 - Semantic HTML by default: `nav`, `main`, `section`, `article`, `button` -- not divs for everything.
 - Color contrast meeting WCAG AA minimum.
 - Focus states on all interactive elements.
-- Accessibility and aesthetics are not in tension when done well.
 
 ### Imagery
 
@@ -129,7 +119,7 @@ These principles apply across all context types. Each yields to existing design 
 
 ## Context Modules
 
-Select the module that fits what is being built. When working inside an existing application, default to Module C regardless of what the feature is.
+Select the matching module. Default to Module C when working inside an existing application.
 
 ### Module A: Landing Pages & Marketing (Greenfield)
 
@@ -167,9 +157,9 @@ Select the module that fits what is being built. When working inside an existing
 
 ### Module C: Components & Features (Default in Existing Apps)
 
-For adding to an existing application:
+When adding to an existing application:
 
-- Match the existing visual language. This module is about making something that belongs, not something that stands out.
+- Match the existing visual language.
 - Inherit spacing scale, border radius, color tokens, and typography from surrounding code.
 - Focus on interaction quality: clear states (default, hover, active, disabled, loading, error), smooth transitions between states, obvious affordances.
 - One new component should not introduce a new design system. If the existing app uses 4px border radius, do not add a component with 8px.
@@ -179,8 +169,6 @@ For adding to an existing application:
 ## Hard Rules & Anti-Patterns
 
 ### Default Against (Overridable)
-
-These are the skill being opinionated. The user can override any of them.
 
 - Generic SaaS card grid as the first impression
 - Purple-on-white color schemes, dark-mode bias
@@ -195,8 +183,6 @@ These are the skill being opinionated. The user can override any of them.
 
 ### Always Avoid (Quality Floor)
 
-These are genuine quality failures no user would want.
-
 - Prompt language or AI commentary leaking into the UI
 - Broken contrast -- text unreadable over images or backgrounds
 - Interactive elements without visible focus states
@@ -206,7 +192,7 @@ These are genuine quality failures no user would want.
 
 ## Litmus Checks
 
-Quick self-review before moving to visual verification. Not all checks apply in every context -- apply judgment about which are relevant.
+Apply relevant checks before moving to visual verification.
 
 - Is the brand or product unmistakable in the first screen?
 - Is there one strong visual anchor?
@@ -222,7 +208,7 @@ Quick self-review before moving to visual verification. Not all checks apply in 
 
 ## Visual Verification
 
-After implementing, verify visually. This is a sanity check, not a pixel-perfect review. One pass. If there is a glaring issue, fix it. If it looks solid, move on.
+After implementing, do one visual verification pass. Fix glaring issues only.
 
 ### Tool Preference Cascade
 
@@ -249,10 +235,8 @@ For iterative refinement beyond a single pass (multiple rounds of screenshot-ass
 
 ## Creative Energy
 
-This skill provides structure, but the goal is distinctive work that avoids AI slop -- not formulaic output.
-
-For greenfield work, commit to a bold aesthetic direction. Consider the tone: brutally minimal, maximalist, retro-futuristic, organic/natural, luxury/refined, playful, editorial, brutalist, art deco, soft/pastel, industrial -- or invent something that fits the context. There are endless flavors. Use these for inspiration but design one that is true to the project.
+For greenfield work, commit to a bold aesthetic direction. Consider the tone: brutally minimal, maximalist, retro-futuristic, organic/natural, luxury/refined, playful, editorial, brutalist, art deco, soft/pastel, industrial -- or invent something that fits the context.
 
 Ask: what makes this unforgettable? What is the one thing someone will remember?
 
-Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well, not from intensity.
+Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist designs need restraint, precision, and careful attention to spacing, typography, and subtle details.

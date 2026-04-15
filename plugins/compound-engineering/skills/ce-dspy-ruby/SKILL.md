@@ -5,13 +5,7 @@ description: "Build type-safe LLM applications with DSPy.rb, Ruby's programmatic
 
 # DSPy.rb
 
-> Build LLM apps like you build software. Type-safe, modular, testable.
-
-DSPy.rb brings software engineering best practices to LLM development. Instead of tweaking prompts, define what you want with Ruby types and let DSPy handle the rest.
-
 ## Overview
-
-DSPy.rb is a Ruby framework for building language model applications with programmatic prompts. It provides:
 
 - **Type-safe signatures** — Define inputs/outputs with Sorbet types
 - **Modular components** — Compose and reuse LLM logic
@@ -21,8 +15,6 @@ DSPy.rb is a Ruby framework for building language model applications with progra
 ## Core Concepts
 
 ### 1. Signatures
-
-Define interfaces between your app and LLMs using Ruby types:
 
 ```ruby
 class EmailClassifier < DSPy::Signature
@@ -52,16 +44,12 @@ end
 
 ### 2. Modules
 
-Build complex workflows from simple building blocks:
-
 - **Predict** — Basic LLM calls with signatures
 - **ChainOfThought** — Step-by-step reasoning
 - **ReAct** — Tool-using agents
 - **CodeAct** — Dynamic code generation agents (install the `dspy-code_act` gem)
 
 ### 3. Tools & Toolsets
-
-Create type-safe tools for agents with comprehensive Sorbet support:
 
 ```ruby
 # Enum-based tool with automatic type conversion
@@ -120,16 +108,12 @@ end
 
 ### 4. Type System & Discriminators
 
-DSPy.rb uses sophisticated type discrimination for complex data structures:
-
 - **Automatic `_type` field injection** — DSPy adds discriminator fields to structs for type safety
 - **Union type support** — `T.any()` types automatically disambiguated by `_type`
 - **Reserved field name** — Avoid defining your own `_type` fields in structs
 - **Recursive filtering** — `_type` fields filtered during deserialization at all nesting levels
 
 ### 5. Optimization
-
-Improve accuracy with real data:
 
 - **MIPROv2** — Advanced multi-prompt optimization with bootstrap sampling and Bayesian optimization
 - **GEPA** — Genetic-Pareto Reflective Prompt Evolution with feedback maps, experiment tracking, and telemetry
@@ -181,8 +165,6 @@ gem 'dspy-anthropic' # Claude
 gem 'dspy-gemini'    # Gemini
 ```
 
-Each adapter gem pulls in the official SDK (`openai`, `anthropic`, `gemini-ai`).
-
 ### Unified adapter via RubyLLM (recommended for multi-provider)
 
 ```ruby
@@ -192,7 +174,7 @@ gem 'dspy-ruby_llm'  # Routes to any provider via ruby_llm
 gem 'ruby_llm'
 ```
 
-RubyLLM handles provider routing based on the model name. Use the `ruby_llm/` prefix:
+Use the `ruby_llm/` prefix:
 
 ```ruby
 DSPy.configure do |c|
@@ -203,8 +185,6 @@ end
 ```
 
 ## Events System
-
-DSPy.rb ships with a structured event bus for observing runtime behavior.
 
 ### Module-Scoped Subscriptions (preferred for agents)
 
@@ -232,8 +212,6 @@ DSPy.events.subscribe('llm.*') { |name, attrs| puts "[#{name}] tokens=#{attrs[:t
 Event names use dot-separated namespaces (`llm.generate`, `react.iteration_complete`). Every event includes module metadata (`module_path`, `module_leaf`, `module_scope.ancestry_token`) for filtering.
 
 ## Lifecycle Callbacks
-
-Rails-style lifecycle hooks ship with every `DSPy::Module`:
 
 - **`before`** — Runs ahead of `forward` for setup (metrics, context loading)
 - **`around`** — Wraps `forward`, calls `yield`, and lets you pair setup/teardown logic
@@ -311,8 +289,6 @@ Use `DSPy::Example` for typed test data and `export_scores: true` to push result
 
 ## GEPA Optimization
 
-GEPA (Genetic-Pareto Reflective Prompt Evolution) uses reflection-driven instruction rewrites:
-
 ```ruby
 gem 'dspy-gepa'
 
@@ -327,11 +303,11 @@ result = teleprompter.compile(program, trainset: train, valset: val)
 optimized_program = result.optimized_program
 ```
 
-The metric must return `DSPy::Prediction.new(score:, feedback:)` so the reflection model can reason about failures. Use `feedback_map` to target individual predictors in composite modules.
+The metric must return `DSPy::Prediction.new(score:, feedback:)`. Use `feedback_map` to target individual predictors in composite modules.
 
 ## Typed Context Pattern
 
-Replace opaque string context blobs with `T::Struct` inputs. Each field gets its own `description:` annotation in the JSON schema the LLM sees:
+Use `T::Struct` inputs with per-field `description:` annotations:
 
 ```ruby
 class NavigationContext < T::Struct
@@ -355,8 +331,6 @@ class ToolSelectionSignature < DSPy::Signature
   end
 end
 ```
-
-Benefits: type safety at compile time, per-field descriptions in the LLM schema, easy to test as value objects, extensible by adding `const` declarations.
 
 ## Schema Formats (BAML / TOON)
 
@@ -456,7 +430,7 @@ end
 
 ## Schema-Driven Signatures
 
-**Prefer typed schemas over string descriptions.** Let the type system communicate structure to the LLM rather than prose in the signature description.
+**Prefer typed schemas over string descriptions.**
 
 ### Entities as Shared Types
 
@@ -525,12 +499,6 @@ class RerankTool < DSPy::Tools::Base
   end
 end
 ```
-
-**Key patterns:**
-- Short-circuit LLM calls when unnecessary (small data, trivial cases)
-- Cap input size to prevent token overflow
-- Per-tool model selection via `configure`
-- Graceful error handling with fallback data
 
 ### Error Handling Concern
 
@@ -678,7 +646,7 @@ When helping users with DSPy.rb:
 
 ### Signature Best Practices
 
-**Keep description concise** — The signature `description` should state the goal, not the field details:
+**Keep description concise** — state the goal, not field details:
 
 ```ruby
 # Good — concise goal

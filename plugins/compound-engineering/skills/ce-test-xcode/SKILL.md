@@ -5,9 +5,7 @@ argument-hint: "[scheme name or 'current' to use default]"
 disable-model-invocation: true
 ---
 
-# Xcode Test Skill
-
-Build, install, and test iOS apps on the simulator using XcodeBuildMCP. Captures screenshots, logs, and verifies app behavior.
+# Xcode Test
 
 ## Prerequisites
 
@@ -95,7 +93,7 @@ Call `get_sim_logs` with the simulator UUID. Look for:
 - Failed network requests
 
 **Known automation limitation — SwiftUI Text links:**
-Simulated taps (via XcodeBuildMCP or any simulator automation tool) do not trigger gesture recognizers on SwiftUI `Text` views with inline `AttributedString` links. Taps report success but have no effect. This is a platform limitation — inline links are not exposed as separate elements in the accessibility tree. When a tap on a Text link has no visible effect, prompt the user to tap manually in the simulator. If the target URL is known, `xcrun simctl openurl <device> <URL>` can open it directly as a fallback.
+Simulated taps (via XcodeBuildMCP or any simulator automation tool) do not trigger gesture recognizers on SwiftUI `Text` views with inline `AttributedString` links. Taps report success but have no effect. <!-- why: inline links are not exposed as separate elements in the accessibility tree --> When a tap on a Text link has no visible effect, prompt the user to tap manually in the simulator. If the target URL is known, `xcrun simctl openurl <device> <URL>` can open it directly as a fallback.
 
 ### 6. Human Verification (When Required)
 
@@ -194,7 +192,7 @@ After all tests complete, present a summary:
 After testing:
 
 1. Call `stop_log_capture` with the simulator UUID
-2. Optionally call `shutdown_simulator` with the simulator UUID
+2. Optional: call `shutdown_simulator` with the simulator UUID
 
 ## Quick Usage Examples
 
@@ -211,4 +209,4 @@ After testing:
 
 ## Integration with ce-code-review
 
-When reviewing PRs that touch iOS code, the `ce-code-review` workflow can spawn an agent to run this skill, build on the simulator, test key screens, and check for crashes.
+The `ce-review` workflow spawns an agent to run `/test-xcode`, build on the simulator, test key screens, and check for crashes when reviewing PRs that touch iOS code.

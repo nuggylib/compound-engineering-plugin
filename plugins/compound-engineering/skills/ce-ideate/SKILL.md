@@ -12,14 +12,7 @@ argument-hint: "[feature, focus area, or constraint]"
 - `ce-brainstorm` answers: "What exactly should one chosen idea mean?"
 - `ce-plan` answers: "How should it be built?"
 
-This workflow produces a ranked ideation artifact in `docs/ideation/`. It does **not** produce requirements, plans, or code.
-
-## When to Use
-
-Use this skill when the user:
-- Says "what should I improve", "give me ideas", "ideate on this project", "surprise me with improvements", or "what would you change"
-- Wants the AI to proactively suggest strong project directions before brainstorming
-- Is exploring what to improve or requesting idea generation for the current codebase
+Produce a ranked ideation artifact in `docs/ideation/`. Do **not** produce requirements, plans, or code.
 
 ## Interaction Method
 
@@ -43,8 +36,8 @@ If no argument is provided, proceed with open-ended ideation.
 ## Core Principles
 
 1. **Ground before ideating** - Scan the actual codebase first. Do not generate abstract product advice detached from the repository.
-2. **Generate many -> critique all -> explain survivors only** - The quality mechanism is explicit rejection with reasons, not optimistic ranking. Do not let extra process obscure this pattern.
-3. **Route action into brainstorming** - Ideation identifies promising directions; `ce-brainstorm` defines the selected one precisely enough for planning. Do not skip to planning from ideation output.
+2. **Generate many -> critique all -> explain survivors only** - Use explicit rejection with reasons, not optimistic ranking.
+3. **Route action into brainstorming** - Do not skip to planning from ideation output.
 
 ## Execution Flow
 
@@ -129,7 +122,7 @@ Issue-tracker intent triggers when the argument's primary intent is about analyz
 
 Do NOT trigger on arguments that merely mention bugs as a focus: `bug in auth`, `fix the login issue`, `the signup bug` — these are focus hints, not requests to analyze the issue tracker.
 
-When combined (e.g., `top 3 bugs in authentication`): detect issue-tracker intent first, volume override second, remainder is the focus hint. The focus narrows which issues matter; the volume override controls survivor count.
+When combined (e.g., `top 3 bugs in authentication`): detect issue-tracker intent first, volume override second, remainder is the focus hint.
 
 Default volume:
 - each ideation sub-agent generates about 6-8 ideas (yielding ~36-48 raw ideas across 6 frames in the default path, or ~24-32 across 4 frames in issue-tracker mode; roughly 25-30 survivors after dedupe in the 6-frame path and fewer in the 4-frame path)
@@ -147,42 +140,7 @@ Use reasonable interpretation rather than formal parsing.
 
 Skip this step in repo mode (Phase 1 grounding agents do the work) and in non-software elsewhere mode (the universal facilitation reference governs intake).
 
-Apply the **discrimination test** before asking anything: would swapping one piece of the user's stated context for a contrasting alternative materially change which ideas survive? If yes, the context is load-bearing — proceed without asking. If no, ask 1-3 narrowly chosen questions, building on what the user already provided rather than starting from a template. Default to free-form questions; use single-select only when the answer space is small and discrete (e.g., genre, tone). After each answer, re-apply the test before asking another. Stop on dismissive responses ("idk just go") and treat genuine "no constraint" answers as real answers.
-
-When the user provides rich context up front (a paste, a brief, an existing draft), confirm understanding in one line and skip intake entirely.
-
-#### 0.5 Cost Transparency Notice
-
-Before dispatching Phase 1, surface the agent count for the inferred mode in one short line so multi-agent cost is not invisible. Compute the count from the actual dispatch decision: 1 grounding-context agent (codebase scan in repo mode; user-context synthesis in elsewhere) + 1 learnings (skip in elsewhere-non-software) + 1 web researcher + 6 ideation = baseline 9 in repo mode and elsewhere-software, 8 in elsewhere-non-software. When issue-tracker intent triggers (repo mode only): add 1 for the issue-intelligence agent and drop ideation from 6 to 4, for a net -1 (baseline 8). Add 1 if the user opted into Slack research. Subtract 1 if the user issued a web-research skip phrase or V15 reuse will fire.
-
-Examples (defaults, no skips, no opt-ins):
-
-- **Repo mode:** "Will dispatch ~9 agents: codebase scan + learnings + web research + 6 ideation sub-agents. Skip phrases: 'no external research', 'no slack'."
-- **Repo mode, issue-tracker intent:** "Will dispatch ~8 agents: codebase scan + learnings + web research + issue intelligence + 4 ideation sub-agents. Skip phrases: 'no external research', 'no slack'." Reflects the successful-theme path; if issue intelligence returns insufficient signal (see Phase 1), ideation falls back to 6 sub-agents and the total becomes ~9.
-- **Elsewhere-software:** "Will dispatch ~9 agents: context synthesis + learnings + web research + 6 ideation sub-agents. Skip phrases: 'no external research'."
-- **Elsewhere-non-software:** "Will dispatch ~8 agents: context synthesis + web research + 6 ideation sub-agents. Skip phrases: 'no external research'."
-
-The line is informational; users do not need to acknowledge it.
-
-### Phase 1: Mode-Aware Grounding
-
-Before generating ideas, gather grounding. The dispatch set depends on the mode chosen in Phase 0.2. Web research runs in all modes (skip phrases honored). Learnings runs in repo mode and elsewhere-software, and is **skipped by default in elsewhere-non-software** — the CWD repo's `docs/solutions/` almost always contains engineering patterns that do not transfer to naming, narrative, personal, or non-digital business topics.
-
-Generate a `<run-id>` once at the start of Phase 1 (8 hex chars). Reuse it for the V15 cache file (this phase) and the V17 checkpoints (Phases 2 and 4) so they share one per-run scratch directory.
-
-**Pre-resolve the scratch directory path.** Scratch lives in OS temp (not `.context/`), per the cross-invocation-reusable rule in the repo Scratch Space convention — the ideation topic is rarely tied to the CWD repo (especially in elsewhere mode), so keeping scratch out of any repo tree is the right default. Run one bash command to create the directory and capture its **absolute path** for all downstream use. Do not pass `${TMPDIR:-/tmp}` as a literal string to non-shell tools (Write, Read, Glob); those tools do not perform shell expansion.
-
-```bash
-SCRATCH_DIR="${TMPDIR:-/tmp}/compound-engineering/ce-ideate/<run-id>"
-mkdir -p "$SCRATCH_DIR"
-echo "$SCRATCH_DIR"
-```
-
-Use the echoed absolute path (e.g., `/var/folders/.../T/compound-engineering/ce-ideate/a3f7c2e1` on macOS, `/tmp/compound-engineering/ce-ideate/a3f7c2e1` on Linux) as `<scratch-dir>` for every subsequent checkpoint write and cache read in this run. The run directory is not deleted on Phase 6 completion — the V15 cache is session-scoped and reused across run-ids, and the checkpoints follow the cross-invocation-reusable convention of leaving session-scoped artifacts for later invocations to find.
-
-Run grounding agents in parallel in the **foreground** (do not background — results are needed before Phase 2):
-
-**Repo mode dispatch:**
+Run agents in parallel in the **foreground** (do not use background dispatch):
 
 1. **Quick context scan** — dispatch a general-purpose sub-agent using the platform's cheapest capable model (e.g., `model: "haiku"` in Claude Code) with this prompt:
 
@@ -198,7 +156,7 @@ Run grounding agents in parallel in the **foreground** (do not background — re
 
 2. **Learnings search** — dispatch `ce-learnings-researcher` with a brief summary of the ideation focus.
 
-3. **Web research** (always-on; see "Web research" subsection below for skip-phrase and V15 cache handling).
+3. **Issue intelligence** (conditional) — if issue-tracker intent was detected in Phase 0.2, dispatch `compound-engineering:research:issue-intelligence-analyst` with the focus hint. If a focus hint is present, pass it. Run this in parallel with agents 1 and 2.
 
 4. **Issue intelligence** (conditional) — if issue-tracker intent was detected in Phase 0.3, dispatch `ce-issue-intelligence-analyst` with the focus hint. Run in parallel with the other agents.
 
@@ -206,7 +164,7 @@ Run grounding agents in parallel in the **foreground** (do not background — re
 
    If the agent reports fewer than 5 total issues, note "Insufficient issue signal for theme analysis" and proceed with default ideation frames in Phase 2.
 
-**Elsewhere mode dispatch (skip the codebase scan; user-supplied context is the primary grounding):**
+Consolidate all results into a short grounding summary. When issue intelligence is present, keep it as a distinct section:
 
 1. **User-context synthesis** — dispatch a general-purpose sub-agent (cheapest capable model) to read the user-supplied context from Phase 0.4 intake plus any rich-prompt material, and return a structured grounding summary that mirrors the codebase-context shape (project shape → topic shape; notable patterns → stated constraints; pain points → user-named pain points; leverage points → opportunity hooks the context implies). This keeps Phase 2 sub-agents agnostic to grounding source.
 
@@ -242,11 +200,11 @@ Consolidate all dispatched results into a short grounding summary using these se
 
 Generate the full candidate list before critiquing any idea.
 
-Dispatch parallel ideation sub-agents on the inherited model (do not tier down -- creative ideation needs the orchestrator's reasoning level). Omit the `mode` parameter so the user's configured permission settings apply. Dispatch count is mode-conditional: **4 sub-agents only when issue-tracker intent was detected in Phase 0.3 AND the issue intelligence agent returned usable themes** (see override below — cluster-derived frames capped at 4); **6 sub-agents otherwise**, including the insufficient-issue-signal fallback from Phase 1 where intent triggered but themes were not returned. Each targets ~6-8 ideas (yielding ~36-48 raw ideas across 6 frames or ~24-32 across 4 frames, roughly 25-30 survivors after dedupe in the 6-frame path and fewer in the 4-frame path). Adjust per-agent targets when volume overrides apply (e.g., "100 ideas" raises it, "top 3" may lower the survivor count instead).
+Dispatch 3-4 parallel ideation sub-agents on the inherited model (do not tier down). <!-- why: creative ideation needs the orchestrator's reasoning level --> Omit the `mode` parameter. Each targets ~8-10 ideas (yielding ~30 raw ideas, ~20-25 after dedupe). Adjust per-agent targets when volume overrides apply (e.g., "100 ideas" raises it, "top 3" may lower the survivor count instead).
 
-Give each sub-agent: the grounding summary, the focus hint, the per-agent volume target, and an instruction to generate raw candidates only (not critique). Each agent's first few ideas tend to be obvious -- push past them. Ground every idea in the Phase 1 grounding summary.
+Give each sub-agent: the grounding summary, the focus hint, the per-agent volume target, and an instruction to generate raw candidates only (not critique). Push past obvious first ideas. Ground every idea in the Phase 1 scan.
 
-Assign each sub-agent a different ideation frame as a **starting bias, not a constraint**. Prompt each to begin from its assigned perspective but follow any promising thread -- cross-cutting ideas that span multiple frames are valuable.
+Assign each sub-agent a different ideation frame as a **starting bias, not a constraint**. Prompt each to begin from its assigned perspective but follow any promising thread.
 
 **Frame selection (mode-symmetric — same six frames in repo and elsewhere modes):**
 

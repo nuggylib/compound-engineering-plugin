@@ -5,7 +5,7 @@ argument-hint: "[optional: daily|weekly, or time period in days]"
 disable-model-invocation: true
 ---
 
-You are a witty and enthusiastic product marketer tasked with creating a fun, engaging change log for an internal development team. Your goal is to summarize the latest merges to the main branch, highlighting new features, bug fixes, and giving credit to the hard-working developers.
+Create a fun, engaging changelog for an internal development team. Summarize the latest merges to the main branch, highlight new features and bug fixes, and credit contributors.
 
 ## Time Period
 
@@ -18,12 +18,12 @@ You are a witty and enthusiastic product marketer tasked with creating a fun, en
 
 Analyze the provided GitHub changes and related issues. Look for:
 
-1. New features that have been added
-2. Bug fixes that have been implemented
-3. Any other significant changes or improvements
-4. References to specific issues and their details
-5. Names of contributors who made the changes
-6. Use gh cli to lookup the PRs as well and the description of the PRs
+1. New features
+2. Bug fixes
+3. Other significant changes or improvements
+4. Issue references and details
+5. Contributor names
+6. PR descriptions via `gh` CLI
 7. Check PR labels to identify feature type (feature, bug, chore, etc.)
 8. Look for breaking changes and highlight them prominently
 9. Include PR numbers for traceability
@@ -40,13 +40,11 @@ Analyze the provided GitHub changes and related issues. Look for:
 
 ## Formatting Guidelines
 
-Now, create a change log summary with the following guidelines:
-
 1. Keep it concise and to the point
 2. Highlight the most important changes first
 3. Group similar changes together (e.g., all new features, all bug fixes)
 4. Include issue references where applicable
-5. Mention the names of contributors, giving them credit for their work
+5. Credit contributors by name
 6. Add a touch of humor or playfulness to make it engaging
 7. Use emojis sparingly to add visual interest
 8. Keep total message under 2000 characters for Discord
@@ -63,7 +61,7 @@ When relevant, include:
 - Manual intervention steps post-deploy
 - Dependencies that need updating
 
-Your final output should be formatted as follows:
+Output format:
 
 <change_log>
 
@@ -97,13 +95,13 @@ Your final output should be formatted as follows:
 
 ## Style Guide Review
 
-Now review the changelog using the EVERY_WRITE_STYLE.md file and go one by one to make sure you are following the style guide. Use multiple agents, run in parallel to make it faster.
+Review the changelog against the EVERY_WRITE_STYLE.md file line by line. Use parallel agents for speed.
 
-Remember, your final output should only include the content within the <change_log> tags. Do not include any of your thought process or the original data in the output.
+Final output: only the content within the <change_log> tags. Exclude thought process and original data.
 
 ## Discord Posting (Optional)
 
-You can post changelogs to Discord by adding your own webhook URL:
+Optional: Post changelogs to Discord via webhook:
 
 ```
 # Set your Discord webhook URL
@@ -115,7 +113,7 @@ curl -H "Content-Type: application/json" \
   $DISCORD_WEBHOOK_URL
 ```
 
-To get a webhook URL, go to your Discord server → Server Settings → Integrations → Webhooks → New Webhook.
+Webhook URL path: Discord server → Server Settings → Integrations → Webhooks → New Webhook.
 
 ## Error Handling
 

@@ -7,13 +7,6 @@ description: "Search and ask questions about your coding agent session history. 
 
 Search your session history.
 
-## When to Use
-
-Use this skill when the user:
-- Asks what they worked on, what was tried before, or how a problem was investigated across sessions
-- Asks what happened recently or references prior sessions, previous attempts, or past investigations
-- Has any question about past agent sessions
-
 ## Usage
 
 ```
@@ -27,13 +20,13 @@ Use this skill when the user:
 
 **Git branch (pre-resolved):** !`git rev-parse --abbrev-ref HEAD 2>/dev/null`
 
-If the lines above resolved to plain values (a folder name like `my-repo` and a branch name like `feat/my-branch`), they are ready to pass to the agent. If they still contain backtick command strings or are empty, they did not resolve — omit them from the dispatch and let the agent derive them at runtime.
+If either value still contains a backtick command string or is empty, omit it from the dispatch — the agent derives it at runtime.
 
 ## Execution
 
 If no argument is provided, ask what the user wants to know about their session history. Use the platform question tool (AskUserQuestion / request_user_input / ask_user). Fallback: ask in plain text and wait for a reply.
 
-Dispatch `ce-session-historian` with the user's question as the task prompt. Omit the `mode` parameter so the user's configured permission settings apply. Include in the dispatch prompt:
+Dispatch `compound-engineering:research:session-historian` with the user's question as the task prompt. <!-- why: omitting mode lets the user's configured permission settings apply --> Omit the `mode` parameter. Include in the dispatch prompt:
 
 - The user's question
 - The current working directory

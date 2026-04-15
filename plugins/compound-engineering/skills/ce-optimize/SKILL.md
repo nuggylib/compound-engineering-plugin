@@ -6,11 +6,9 @@ argument-hint: "[path to optimization spec YAML, or describe the optimization go
 
 # Iterative Optimization Loop
 
-Run metric-driven iterative optimization. Define a goal, build measurement scaffolding, then run parallel experiments that converge toward the best solution.
-
 ## Interaction Method
 
-Use the platform question tool when available (AskUserQuestion / request_user_input / ask_user). Fallback: present numbered options and wait for a reply.
+Use the platform question tool (AskUserQuestion / request_user_input / ask_user). Fallback: present numbered options and wait for a reply.
 
 ## Input
 
@@ -41,41 +39,37 @@ For a first run, optimize for signal and safety, not maximum throughput:
 - Avoid new dependencies until the baseline and measurement harness are trusted
 - For judge mode, start with `sample_size: 10`, `batch_size: 5`, and `max_total_cost_usd: 5`
 
-For a friendly overview of what this skill is for, when to use hard metrics vs LLM-as-judge, and example kickoff prompts, see:
-
 `references/usage-guide.md`
 
 ---
 
 ## Persistence Discipline
 
-**CRITICAL: The experiment log on disk is the single source of truth. The conversation context is NOT durable storage. Results that exist only in the conversation WILL be lost.**
+**CRITICAL: The experiment log on disk is the single source of truth. Results that exist only in the conversation WILL be lost.**
 
-The files under `.context/compound-engineering/ce-optimize/<spec-name>/` are local scratch state. They are ignored by git, so they survive local resumes on the same machine but are not preserved by commits, branches, or pushes unless the user exports them separately.
+Files under `.context/compound-engineering/ce-optimize/<spec-name>/` are local scratch state, gitignored. They survive local resumes but are not preserved by commits, branches, or pushes unless exported separately.
 
-This skill runs for hours. Context windows compact, sessions crash, and agents restart. Every piece of state that matters MUST live on disk, not in the agent's memory.
-
-**If you produce a results table in the conversation without writing those results to disk first, you have a bug.** The conversation is for the user's benefit. The experiment log file is for durability.
+**Never present results to the user without writing them to disk first.**
 
 ### Core Rules
 
-1. **Write each experiment result to disk IMMEDIATELY after measurement** — not after the batch, not after evaluation, IMMEDIATELY. Append the experiment entry to the experiment log file the moment its metrics are known, before evaluating the next experiment. This is the #1 crash-safety rule.
+1. **Write each experiment result to disk IMMEDIATELY after measurement** — append the experiment entry to the log the moment metrics are known, before evaluating the next experiment.
 
-2. **VERIFY every critical write** — after writing the experiment log, read the file back and confirm the entry is present. This catches silent write failures. Do not proceed to the next experiment until verification passes.
+2. **VERIFY every critical write** — after writing the experiment log, read the file back and confirm the entry is present. Do not proceed until verification passes. <!-- why: catches silent write failures that lose data -->
 
-3. **Re-read from disk at every phase boundary and before every decision** — never trust in-memory state across phase transitions, batch boundaries, or after any operation that might have taken significant time. Re-read the experiment log and strategy digest from disk.
+3. **Re-read from disk at every phase boundary and before every decision** — re-read the experiment log and strategy digest at phase transitions, batch boundaries, and after any long operation.
 
-4. **The experiment log is append-only during Phase 3** — never rewrite the full file. Append new experiment entries. Update the `best` section in place only when a new best is found. This prevents data loss if a write is interrupted.
+4. **The experiment log is append-only during Phase 3** — append new experiment entries. Update the `best` section in place only when a new best is found. <!-- why: prevents data loss if a write is interrupted -->
 
 5. **Per-experiment result markers for crash recovery** — each experiment writes a `result.yaml` marker in its worktree immediately after measurement. On resume, scan for these markers to recover experiments that were measured but not yet logged.
 
 6. **Strategy digest is written after every batch, before generating new hypotheses** — the agent reads the digest (not its memory) when deciding what to try next.
 
-7. **Never present results to the user without writing them to disk first** — the pattern is: measure -> write to disk -> verify -> THEN show the user. Not the reverse.
+7. **Never present results to the user without writing them to disk first** — measure -> write to disk -> verify -> THEN show the user.
 
 ### Mandatory Disk Checkpoints
 
-These are non-negotiable write-then-verify steps. At each checkpoint, the agent MUST write the specified file and then read it back to confirm the write succeeded.
+At each checkpoint, write the specified file and read it back to confirm success.
 
 | Checkpoint | File Written | Phase |
 |---|---|---|
@@ -86,11 +80,7 @@ These are non-negotiable write-then-verify steps. At each checkpoint, the agent 
 | CP-4: Batch summary | `experiment-log.yaml` (outcomes + best) + `strategy-digest.md` | Phase 3.5, after batch evaluation |
 | CP-5: Final summary | `experiment-log.yaml` (final state) | Phase 4, at wrap-up |
 
-**Format of a verification step:**
-1. Write the file using the native file-write tool
-2. Read the file back using the native file-read tool
-3. Confirm the expected content is present
-4. If verification fails, retry the write. If it fails twice, alert the user.
+**Verification step:** Write the file, read it back, confirm expected content is present. On failure, retry once, then alert the user.
 
 ### File Locations (all under `.context/compound-engineering/ce-optimize/<spec-name>/`)
 
@@ -104,7 +94,7 @@ These are non-negotiable write-then-verify steps. At each checkpoint, the agent 
 ### On Resume
 
 When Phase 0.4 detects an existing run:
-1. Read the experiment log from disk — this is the ground truth
+1. Read the experiment log from disk
 2. Scan worktree directories for `result.yaml` markers not yet in the log
 3. Recover any measured-but-unlogged experiments
 4. Continue from where the log left off
@@ -115,14 +105,13 @@ When Phase 0.4 detects an existing run:
 
 ### 0.1 Determine Input Type
 
-Check whether the input is:
-- **A spec file path** (ends in `.yaml` or `.yml`): read and validate it
-- **A description of the optimization goal**: help the user create a spec interactively
+- **Spec file path** (ends in `.yaml` or `.yml`): read and validate it
+- **Description of the optimization goal**: create a spec interactively with the user
 
 ### 0.2 Load or Create Spec
 
 **If spec file provided:**
-1. Read the YAML spec file. The orchestrating agent parses YAML natively -- no shell script parsing.
+1. Read and parse the YAML spec file natively (no shell script parsing).
 2. Validate against `references/optimize-spec-schema.yaml`:
    - All required fields present
    - `name` is lowercase kebab-case and safe to use in git refs / worktree paths
@@ -138,37 +127,26 @@ Check whether the input is:
 
 **If description provided:**
 1. Analyze the project to understand what can be measured
-2. **Detect whether the optimization target is qualitative or quantitative** — this determines `type: hard` vs `type: judge` and is the single most important spec decision:
+2. **Detect whether the optimization target is qualitative or quantitative:**
 
-   **Use `type: hard`** when:
-   - The metric is a scalar number with a clear "better" direction
-   - The metric is objectively measurable (build time, test pass rate, latency, memory usage)
-   - No human judgment is needed to evaluate "is this result actually good?"
-   - Examples: reduce build time, increase test coverage, reduce API latency, decrease bundle size
+   **Use `type: hard`** when the metric is a scalar number, objectively measurable, with a clear "better" direction (build time, test pass rate, latency, memory usage, bundle size).
 
-   **Use `type: judge`** when:
-   - The quality of the output requires semantic understanding to evaluate
-   - A human reviewer would need to look at the results to say "this is better"
-   - Proxy metrics exist but can mislead (e.g., "more clusters" does not mean "better clusters")
-   - The optimization could produce degenerate solutions that look good on paper
-   - Examples: clustering quality, search relevance, summarization quality, code readability, UX copy, recommendation relevance
+   **Use `type: judge`** when output quality requires semantic understanding, proxy metrics can mislead, or optimization could produce degenerate solutions that look good numerically (clustering quality, search relevance, summarization quality, code readability).
 
-   **IMPORTANT**: If the target is qualitative, **strongly recommend `type: judge`**. Explain that hard metrics alone will optimize proxy numbers without checking actual quality. Show the user the three-tier approach:
-   - **Degenerate gates** (hard, cheap, fast): catch obviously broken solutions — e.g., "all items in 1 cluster" or "0% coverage". Run first. If gates fail, skip the expensive judge step.
-   - **LLM-as-judge** (the actual optimization target): sample outputs, score them against a rubric, aggregate. This is what the loop optimizes.
-   - **Diagnostics** (logged, not gated): distribution stats, counts, timing — useful for understanding WHY a judge score changed.
+   For qualitative targets, **strongly recommend `type: judge`** and present the three-tier approach:
+   - **Degenerate gates** (hard, cheap, fast): catch obviously broken solutions. If gates fail, skip the expensive judge step.
+   - **LLM-as-judge** (optimization target): sample outputs, score against rubric, aggregate.
+   - **Diagnostics** (logged, not gated): distribution stats, counts, timing.
 
-   If the user insists on `type: hard` for a qualitative target, proceed but warn that the results may optimize a misleading proxy.
+   If the user insists on `type: hard` for a qualitative target, proceed but warn about misleading proxy optimization.
 
 3. **Design the sampling strategy** (for `type: judge`):
 
-   Guide the user through defining stratified sampling. The key question is: "What parts of the output space do you need to check quality on?"
-
-   Walk through these questions:
+   Guide the user through stratified sampling with these questions:
    - **What does one "item" look like?** (a cluster, a search result page, a summary, etc.)
-   - **What are the natural size/quality strata?** (e.g., large clusters vs small clusters vs singletons)
-   - **Where are quality failures most likely?** (e.g., very large clusters may be degenerate merges; singletons may be missed groupings)
-   - **What total sample size balances cost vs signal?** (default: 30 items, adjust based on output volume)
+   - **What are the natural size/quality strata?** (e.g., large vs small vs singletons)
+   - **Where are quality failures most likely?** (e.g., degenerate merges, missed groupings)
+   - **What total sample size balances cost vs signal?** (default: 30 items)
 
    Example stratified sampling for clustering:
    ```yaml
@@ -182,17 +160,17 @@ Check whether the input is:
    singleton_sample: 15          # singletons — check for false negatives (items that should cluster)
    ```
 
-   The sampling strategy is domain-specific. For search relevance, strata might be "top-3 results", "results 4-10", "tail results". For summarization, strata might be "short documents", "long documents", "multi-topic documents".
+   Adapt strata to the domain (e.g., search relevance: "top-3", "results 4-10", "tail"; summarization: "short", "long", "multi-topic").
 
-   **Singleton evaluation is critical when the goal involves coverage** — sampling singletons with the singleton rubric checks whether the system is missing obvious groupings.
+   When the goal involves coverage, sample singletons with the singleton rubric to detect missed groupings.
 
 4. **Design the rubric** (for `type: judge`):
 
-   Help the user define the scoring rubric. A good rubric:
-   - Has a 1-5 scale (or similar) with concrete descriptions for each level
-   - Includes supplementary fields that help diagnose issues (e.g., `distinct_topics`, `outlier_count`)
-   - Is specific enough that two judges would give similar scores
-   - Does NOT assume bigger/more is better — "3 items per cluster average" is not inherently good or bad
+   Define the scoring rubric:
+   - 1-5 scale with concrete descriptions for each level
+   - Supplementary diagnostic fields (e.g., `distinct_topics`, `outlier_count`)
+   - Specific enough for inter-judge agreement
+   - No directional assumptions ("3 items per cluster average" is not inherently good or bad)
 
    Example for clustering:
    ```yaml
@@ -218,20 +196,18 @@ Check whether the input is:
 
 ### 0.3 Search Prior Learnings
 
-Dispatch `ce-learnings-researcher` to search for prior optimization work on similar topics. If relevant learnings exist, incorporate them into the approach.
+Dispatch `compound-engineering:research:learnings-researcher` to search for prior optimization work on similar topics. Incorporate any relevant learnings.
 
 ### 0.4 Run Identity Detection
 
-Check if `optimize/<spec-name>` branch already exists:
+Check if the `optimize/<spec-name>` branch exists:
 
 ```bash
 git rev-parse --verify "optimize/<spec-name>" 2>/dev/null
 ```
 
-**If branch exists**, check for an existing experiment log at `.context/compound-engineering/ce-optimize/<spec-name>/experiment-log.yaml`.
-
-Present the user with a choice via the platform question tool:
-- **Resume**: read ALL state from the experiment log on disk (do not rely on any in-memory context from a prior session). Recover any measured-but-unlogged experiments by scanning worktree directories for `result.yaml` markers. Continue from the last iteration number in the log.
+**If branch exists**, check for an existing experiment log at `.context/compound-engineering/ce-optimize/<spec-name>/experiment-log.yaml`. Present the user with a choice:
+- **Resume**: read ALL state from the experiment log on disk. Recover measured-but-unlogged experiments by scanning worktree directories for `result.yaml` markers. Continue from the last iteration in the log.
 - **Fresh start**: archive the old branch to `optimize-archive/<spec-name>/archived-<timestamp>`, clear the experiment log, start from scratch
 
 ### 0.5 Create Optimization Branch and Scratch Space
@@ -249,44 +225,41 @@ mkdir -p .context/compound-engineering/ce-optimize/<spec-name>/
 
 ## Phase 1: Measurement Scaffolding
 
-**This phase is a HARD GATE. The user must approve baseline and parallel readiness before Phase 2.**
+**HARD GATE: User must approve baseline and parallel readiness before Phase 2.**
 
 ### 1.1 Clean-Tree Gate
 
-Verify no uncommitted changes to files within `scope.mutable` or `scope.immutable`:
+Verify no uncommitted changes to `scope.mutable` or `scope.immutable` files:
 
 ```bash
 git status --porcelain
 ```
 
-Filter the output against the scope paths. If any in-scope files have uncommitted changes:
-- Report which files are dirty
-- Ask the user to commit or stash before proceeding
-- Do NOT continue until the working tree is clean for in-scope files
+Filter output against scope paths. If any in-scope files are dirty:
+- Report the dirty files
+- Ask the user to commit or stash
+- Do NOT continue until in-scope files are clean
 
 ### 1.2 Build or Validate Measurement Harness
 
-**If user provides a measurement harness** (the `measurement.command` already exists):
-1. Run it once via the measurement script:
+**If `measurement.command` exists:**
+1. Run it once:
    ```bash
    bash scripts/measure.sh "<measurement.command>" <timeout_seconds> "<measurement.working_directory or .>"
    ```
-2. Validate the JSON output:
-   - Contains keys for all degenerate gate metric names
-   - Contains keys for all diagnostic metric names
-   - Values are numeric or boolean as expected
-3. If validation fails, report what is missing and ask the user to fix the harness
+2. Validate JSON output contains keys for all gate and diagnostic metric names with numeric or boolean values
+3. On validation failure, report missing keys and ask the user to fix the harness
 
-**If agent must build the harness:**
-1. Analyze the codebase to understand the current approach and what should be measured
-2. Build an evaluation script (e.g., `evaluate.py`, `evaluate.sh`, or equivalent)
-3. Add the evaluation script path to `scope.immutable` -- the experiment agent must not modify it
-4. Run it once and validate the output
-5. Present the harness and its output to the user for review
+**If building the harness:**
+1. Analyze the codebase to determine what to measure
+2. Build an evaluation script (e.g., `evaluate.py`, `evaluate.sh`)
+3. Add the script path to `scope.immutable`
+4. Run once and validate output
+5. Present the harness and output to the user for review
 
 ### 1.3 Establish Baseline
 
-Run the measurement harness on the current code.
+Run the measurement harness on current code.
 
 **If stability mode is `repeat`:**
 1. Run the harness `repeat_count` times
@@ -315,7 +288,7 @@ Run the parallelism probe script:
 bash scripts/parallel-probe.sh "<project_directory>" "<measurement.command>" "<measurement.working_directory>" <shared_files...>
 ```
 
-Read the JSON output. Present any blockers to the user with suggested mitigations. Treat the probe as intentionally narrow: it should inspect the measurement command, the measurement working directory, and explicitly declared shared files, not the entire repository.
+Read the JSON output. Present blockers with suggested mitigations. The probe inspects the measurement command, working directory, and declared shared files only.
 
 ### 1.5 Worktree Budget Check
 
@@ -324,43 +297,40 @@ Count existing worktrees:
 bash scripts/experiment-worktree.sh count
 ```
 
-If count + `execution.max_concurrent` would exceed 12:
-- Warn the user
-- Suggest cleaning up existing worktrees or reducing `max_concurrent`
-- Do NOT block -- the user may proceed at their own risk
+If count + `execution.max_concurrent` exceeds 12:
+- Warn the user and suggest cleanup or reducing `max_concurrent`
+- Do NOT block
 
 ### 1.6 Write Baseline to Disk (CP-1)
 
-**MANDATORY CHECKPOINT.** Before presenting results to the user, write the initial experiment log with baseline metrics to disk:
+**MANDATORY CHECKPOINT.** Write the initial experiment log before presenting results:
 
-1. Create the experiment log file at `.context/compound-engineering/ce-optimize/<spec-name>/experiment-log.yaml`
-2. Include all required top-level sections from `references/experiment-log-schema.yaml`: `spec`, `run_id`, `started_at`, `baseline`, `experiments`, and `best`
-3. Seed `experiments` as an empty array and seed `best` from the baseline snapshot (use `iteration: 0`, baseline metrics, and baseline judge scores if present) so later phases have a valid current-best state to compare against
-4. Optionally seed `hypothesis_backlog: []` here as well so the log shape is stable before Phase 2 populates it
-5. **Verify**: read the file back and confirm the required sections are present and the baseline values match
-6. Only THEN present results to the user
+1. Create `.context/compound-engineering/ce-optimize/<spec-name>/experiment-log.yaml`
+2. Include all required sections from `references/experiment-log-schema.yaml`: `spec`, `run_id`, `started_at`, `baseline`, `experiments`, and `best`
+3. Seed `experiments: []` and seed `best` from the baseline snapshot (`iteration: 0`, baseline metrics, baseline judge scores if present)
+4. Optional: seed `hypothesis_backlog: []`
+5. **Verify**: read back and confirm required sections and baseline values
+6. Then present results to the user
 
 ### 1.7 User Approval Gate
 
-Present to the user via the platform question tool:
+Present via platform question tool:
 
-- **Baseline metrics**: all gate values, diagnostic values, and judge scores (if applicable)
-- **Experiment log location**: show the file path so the user knows where results are saved
-- **Parallel readiness**: probe results, any blockers, mitigations applied
+- **Baseline metrics**: gate values, diagnostic values, judge scores (if applicable)
+- **Experiment log location**: file path
+- **Parallel readiness**: probe results, blockers, mitigations
 - **Clean-tree status**: confirmed clean
 - **Worktree budget**: current count and projected usage
-- **Judge budget**: estimated per-experiment judge cost and configured `max_total_cost_usd` cap (or an explicit note that spend is uncapped)
+- **Judge budget**: estimated per-experiment cost and `max_total_cost_usd` cap (flag uncapped if null)
 
 **Options:**
-1. **Proceed** -- approve baseline and parallel config, move to Phase 2
-2. **Adjust spec** -- modify spec settings before proceeding
-3. **Fix issues** -- user needs to resolve blockers first
+1. **Proceed** -- move to Phase 2
+2. **Adjust spec** -- modify settings
+3. **Fix issues** -- resolve blockers
 
-Do NOT proceed to Phase 2 until the user explicitly approves.
+Do NOT proceed until the user explicitly approves. If `max_total_cost_usd` is null, require explicit approval for uncapped spend.
 
-If primary type is `judge` and `max_total_cost_usd` is null, call that out as uncapped spend and require explicit approval before proceeding.
-
-**State re-read:** After gate approval, re-read the spec and baseline from disk. Do not carry stale in-memory values forward.
+After approval, re-read spec and baseline from disk.
 
 ---
 
@@ -368,35 +338,31 @@ If primary type is `judge` and `max_total_cost_usd` is null, call that out as un
 
 ### 2.1 Analyze Current Approach
 
-Read the code within `scope.mutable` to understand:
-- The current implementation approach
-- Obvious improvement opportunities
-- Constraints and dependencies between components
+Read code within `scope.mutable` to identify:
+- Current implementation approach
+- Improvement opportunities
+- Constraints and inter-component dependencies
 
-Optionally dispatch `ce-repo-research-analyst` for deeper codebase analysis if the scope is large or unfamiliar.
+Optional: dispatch `compound-engineering:research:repo-research-analyst` for deeper analysis when scope is large or unfamiliar.
 
 ### 2.2 Generate Hypothesis List
 
-Generate an initial set of hypotheses. Each hypothesis should have:
+Generate 10-30 hypotheses. Each must have:
 - **Description**: what to try
-- **Category**: one of the standard categories (signal-extraction, graph-signals, embedding, algorithm, preprocessing, parameter-tuning, architecture, data-handling) or a domain-specific category
-- **Priority**: high, medium, or low based on expected impact and feasibility
-- **Required dependencies**: any new packages or tools needed
+- **Category**: standard (signal-extraction, graph-signals, embedding, algorithm, preprocessing, parameter-tuning, architecture, data-handling) or domain-specific
+- **Priority**: high / medium / low
+- **Required dependencies**: new packages or tools needed
 
-Include user-provided hypotheses if any were given as input.
-
-Aim for 10-30 hypotheses in the initial backlog. More can be generated during the loop based on learnings.
+Include user-provided hypotheses. More hypotheses can be generated during the loop.
 
 ### 2.3 Dependency Pre-Approval
 
-Collect all unique new dependencies across all hypotheses.
-
-If any hypotheses require new dependencies:
-1. Present the full dependency list to the user via the platform question tool
+Collect all unique new dependencies across hypotheses:
+1. Present the full dependency list via platform question tool
 2. Ask for bulk approval
 3. Mark each hypothesis's `dep_status` as `approved` or `needs_approval`
 
-Hypotheses with unapproved dependencies remain in the backlog but are skipped during batch selection. They are re-presented at wrap-up for potential approval.
+Unapproved-dependency hypotheses remain in backlog but are skipped during batch selection and re-presented at wrap-up.
 
 ### 2.4 Record Hypothesis Backlog (CP-2)
 
@@ -419,31 +385,29 @@ hypothesis_backlog:
 
 ## Phase 3: Optimization Loop
 
-This phase repeats in batches until a stopping criterion is met.
-
 ### 3.1 Batch Selection
 
-Select hypotheses for this batch:
-- Build a runnable backlog by excluding hypotheses with `dep_status: needs_approval`
+Select hypotheses for the batch:
+- Build runnable backlog by excluding hypotheses with `dep_status: needs_approval`
 - If `execution.mode` is `serial`, force `batch_size = 1`
 - Otherwise, `batch_size = min(runnable_backlog_size, execution.max_concurrent)`
 - Prefer diversity: select from different categories when possible
 - Within a category, select by priority (high first)
 
-If the backlog is empty and no new hypotheses can be generated, proceed to Phase 4 (wrap-up).
-If the backlog is non-empty but no runnable hypotheses remain because everything needs approval or is otherwise blocked, proceed to Phase 4 so the user can approve dependencies instead of spinning forever.
+If backlog is empty and no new hypotheses can be generated, proceed to Phase 4.
+If no runnable hypotheses remain (all need approval or are blocked), proceed to Phase 4.
 
 ### 3.2 Dispatch Experiments
 
-For each hypothesis in the batch, dispatch according to `execution.mode`. In `serial` mode, run exactly one experiment to completion before selecting the next hypothesis. In `parallel` mode, dispatch the full batch concurrently.
+Dispatch according to `execution.mode`: serial runs one experiment to completion before selecting the next; parallel dispatches the full batch concurrently.
 
 **Worktree backend:**
 1. Create experiment worktree:
    ```bash
    WORKTREE_PATH=$(bash scripts/experiment-worktree.sh create "<spec_name>" <exp_index> "optimize/<spec_name>" <shared_files...>)  # creates optimize-exp/<spec_name>/exp-<NNN>
    ```
-2. Apply port parameterization if configured (set env vars for the measurement script)
-3. Fill the experiment prompt template (`references/experiment-prompt-template.md`) with:
+2. Apply port parameterization if configured
+3. Fill `references/experiment-prompt-template.md` with:
    - Iteration number, spec name
    - Hypothesis description and category
    - Current best and baseline metrics
@@ -468,69 +432,59 @@ For each hypothesis in the batch, dispatch according to `execution.mode`. In `se
 
 ### 3.3 Collect and Persist Results
 
-Process experiments as they complete — do NOT wait for the entire batch to finish before writing results.
-
-For each completed experiment, **immediately**:
+Process experiments as they complete — do NOT wait for the entire batch. For each completed experiment, **immediately**:
 
 1. **Run measurement** in the experiment's worktree:
    ```bash
    bash scripts/measure.sh "<measurement.command>" <timeout_seconds> "<worktree_path>/<measurement.working_directory or .>" <env_vars...>
    ```
-   - If stability mode is `repeat`, run the measurement harness `repeat_count` times in that working directory and aggregate the results exactly as in Phase 1 before evaluating gates or ranking the experiment.
-   - Use the aggregated metrics as the experiment's score; if variance exceeds `noise_threshold`, record that in learnings so the operator knows the result is noisy.
+   - If stability mode is `repeat`, run `repeat_count` times, aggregate as in Phase 1 before evaluating gates.
+   - Use aggregated metrics as the experiment's score; if variance exceeds `noise_threshold`, record in learnings.
 
-2. **Write crash-recovery marker** — immediately after measurement, write `result.yaml` in the experiment worktree containing the raw metrics. This ensures the measurement is recoverable even if the agent crashes before updating the main log.
+2. **Write crash-recovery marker** — write `result.yaml` in the experiment worktree containing raw metrics. <!-- why: recovers measurement if agent crashes before updating main log -->
 
 3. **Read raw JSON output** from the measurement script
 
 4. **Evaluate degenerate gates**:
-   - For each gate in `metric.degenerate_gates`, parse the operator and threshold
-   - Compare the metric value against the threshold
-   - If ANY gate fails: mark outcome as `degenerate`, skip judge evaluation, save money
+   - For each gate in `metric.degenerate_gates`, compare metric value against operator and threshold
+   - If ANY gate fails: mark outcome as `degenerate`, skip judge evaluation
 
 5. **If gates pass AND primary type is `judge`**:
-   - Read the experiment's output (cluster assignments, search results, etc.)
-   - Apply stratified sampling per `metric.judge.stratification` config (using `sample_seed`)
-   - Group samples into batches of `metric.judge.batch_size`
-   - Fill the judge prompt template (`references/judge-prompt-template.md`) for each batch
+   - Read the experiment's output
+   - Apply stratified sampling per `metric.judge.stratification` (using `sample_seed`)
+   - Group into batches of `metric.judge.batch_size`
+   - Fill `references/judge-prompt-template.md` for each batch
    - Dispatch `ceil(sample_size / batch_size)` parallel judge sub-agents
-   - Each sub-agent returns structured JSON scores
-   - Aggregate scores: compute the configured primary judge field from `metric.judge.scoring.primary` (which should match `metric.primary.name`) plus any `scoring.secondary` values
-   - If `singleton_sample > 0`: also dispatch singleton evaluation sub-agents
+   - Aggregate structured JSON scores: `metric.judge.scoring.primary` plus any `scoring.secondary` values
+   - If `singleton_sample > 0`: dispatch singleton evaluation sub-agents
 
-6. **If gates pass AND primary type is `hard`**:
-   - Use the metric value directly from the measurement output
+6. **If gates pass AND primary type is `hard`**: use the metric value directly from measurement output.
 
-7. **IMMEDIATELY append to experiment log on disk (CP-3)** — do not defer this to batch evaluation. Write the experiment entry (iteration, hypothesis, outcome, metrics, learnings) to `.context/compound-engineering/ce-optimize/<spec-name>/experiment-log.yaml` right now. Use the transitional outcome `measured` once the experiment has valid metrics but has not yet been compared to the current best. Update the outcome to `kept`, `reverted`, or another terminal state in the evaluation step, but the raw metrics are on disk and safe from context compaction.
+7. **IMMEDIATELY append to experiment log (CP-3)** — write the experiment entry (iteration, hypothesis, outcome, metrics, learnings) to `.context/compound-engineering/ce-optimize/<spec-name>/experiment-log.yaml`. Use transitional outcome `measured`; update to `kept`, `reverted`, or terminal state during evaluation.
 
-8. **VERIFY the write (CP-3 verification)** — read the experiment log back from disk and confirm the entry just written is present. If verification fails, retry the write. Do NOT proceed to the next experiment until this entry is confirmed on disk.
-
-**Why immediately + verify?** The agent's context window is NOT a durable store. Context compaction, session crashes, and restarts are expected during long runs. If results only exist in the agent's memory, they are lost. Karpathy's autoresearch writes to `results.tsv` after every single experiment — this skill must do the same with the experiment log. The verification step catches silent write failures that would otherwise lose data.
+8. **VERIFY the write (CP-3)** — read the log back and confirm the entry is present. Retry on failure. Do NOT proceed until confirmed on disk.
 
 ### 3.4 Evaluate Batch
 
-After all experiments in the batch have been measured:
+After all experiments in the batch are measured:
 
-1. **Rank** experiments by primary metric improvement:
-   - For hard metrics: compare to the current best using `metric.primary.direction` (`maximize` means higher is better, `minimize` means lower is better), and require the absolute improvement to exceed `measurement.stability.noise_threshold` before treating it as a real win
-   - For judge metrics: compare the configured primary judge score (`metric.judge.scoring.primary` / `metric.primary.name`) to the current best, and require it to exceed `minimum_improvement`
+1. **Rank** by primary metric improvement:
+   - Hard metrics: compare to current best using `metric.primary.direction`; improvement must exceed `measurement.stability.noise_threshold`
+   - Judge metrics: compare primary judge score to current best; must exceed `minimum_improvement`
 
 2. **Identify the best experiment** that passes all gates and improves the primary metric
 
 3. **If best improves on current best: KEEP**
-   - Commit the experiment branch first so the winning diff exists as a real commit before any merge or cherry-pick
-   - Include only mutable-scope changes in that commit; if no eligible diff remains, treat the experiment as non-improving and revert it
-   - Merge the committed experiment branch into the optimization branch
-   - Use the message `optimize(<spec-name>): <hypothesis description>` for the experiment commit
-   - After the merge succeeds, clean up the winner's experiment worktree and branch; the integrated commit on the optimization branch is the durable artifact
-   - This is now the new baseline for subsequent batches
+   - Commit the experiment branch (mutable-scope changes only); if no eligible diff remains, revert
+   - Merge into the optimization branch with message `optimize(<spec-name>): <hypothesis description>`
+   - Clean up the winner's experiment worktree and branch
+   - New baseline for subsequent batches
 
 4. **Check file-disjoint runners-up** (up to `max_runner_up_merges_per_batch`):
-   - For each runner-up that also improved, check file-level disjointness with the kept experiment
-   - **File-level disjointness**: two experiments are disjoint if they modified completely different files. Same file = overlapping, even if different lines.
-   - If disjoint: cherry-pick the runner-up onto the new baseline, re-run full measurement
-   - If combined measurement is strictly better: keep the cherry-pick (outcome: `runner_up_kept`), then clean up that runner-up's experiment worktree and branch
-   - Otherwise: revert the cherry-pick, log as "promising alone but neutral/harmful in combination" (outcome: `runner_up_reverted`), then clean up the runner-up's experiment worktree and branch
+   - For each improving runner-up, check file-level disjointness with the kept experiment (same file = overlapping, even if different lines)
+   - If disjoint: cherry-pick onto new baseline, re-run full measurement
+   - If combined measurement is strictly better: keep (`runner_up_kept`), clean up worktree/branch
+   - Otherwise: revert (`runner_up_reverted`), clean up worktree/branch
    - Stop after first failed combination
 
 5. **Handle deferred deps**: experiments that need unapproved dependencies get outcome `deferred_needs_approval`
@@ -539,11 +493,11 @@ After all experiments in the batch have been measured:
 
 ### 3.5 Update State (CP-4)
 
-**MANDATORY CHECKPOINT.** By this point, individual experiment results are already on disk (written in step 3.3). This step updates aggregate state and verifies.
+**MANDATORY CHECKPOINT.** Update aggregate state and verify.
 
-1. **Re-read the experiment log from disk** — do not trust in-memory state. The log is the source of truth.
+1. **Re-read the experiment log from disk.**
 
-2. **Finalize outcomes** — update experiment entries from step 3.4 evaluation (mark `kept`, `reverted`, `runner_up_kept`, etc.). Write these outcome updates to disk immediately.
+2. **Finalize outcomes** — mark `kept`, `reverted`, `runner_up_kept`, etc. Write to disk immediately.
 
 3. **Update the `best` section** in the experiment log if a new best was found. Write to disk.
 
@@ -553,47 +507,38 @@ After all experiments in the batch have been measured:
    - Exploration frontier: what categories and approaches remain untried
    - Current best metrics and improvement from baseline
 
-5. **Generate new hypotheses** based on learnings:
-   - Re-read the strategy digest from disk (not from memory)
-   - Read the rolling window (last 10 experiments from the log on disk)
-   - Do NOT read the full experiment log -- use the digest for broad context
-   - Add new hypotheses to the backlog and write the updated backlog to disk
+5. **Generate new hypotheses**:
+   - Re-read strategy digest from disk
+   - Read rolling window (last 10 experiments from log on disk)
+   - Do NOT read full log -- use digest for broad context
+   - Add new hypotheses to backlog, write to disk
 
-6. **Write updated hypothesis backlog to disk** — the backlog section of the experiment log must reflect newly added hypotheses and removed (tested) ones.
+6. **Write updated hypothesis backlog to disk** (newly added and removed hypotheses).
 
-**CP-4 Verification:** Read the experiment log back from disk. Confirm: (a) all experiment outcomes from this batch are finalized, (b) the `best` section reflects the current best, (c) the hypothesis backlog is updated. Read `strategy-digest.md` back and confirm it exists. Only THEN proceed to the next batch or stopping criteria check.
-
-**Checkpoint: at this point, all state for this batch is on disk. If the agent crashes and restarts, it can resume from the experiment log without loss.**
+**CP-4 Verification:** Read experiment log back. Confirm: (a) all batch outcomes finalized, (b) `best` section current, (c) backlog updated. Read `strategy-digest.md` back. Only then proceed.
 
 ### 3.6 Check Stopping Criteria
 
-Stop the loop if ANY of these are true:
-- **Target reached**: `stopping.target_reached` is true, `metric.primary.target` is set, and the primary metric reaches that target according to `metric.primary.direction` (`>=` for `maximize`, `<=` for `minimize`)
-- **Max iterations**: total experiments run >= `stopping.max_iterations`
-- **Max hours**: wall-clock time since Phase 3 start >= `stopping.max_hours`
-- **Judge budget exhausted**: cumulative judge spend >= `metric.judge.max_total_cost_usd` (if set)
+Stop if ANY:
+- **Target reached**: `stopping.target_reached` is true, `metric.primary.target` is set, and primary metric reaches target per `metric.primary.direction`
+- **Max iterations**: experiments >= `stopping.max_iterations`
+- **Max hours**: wall-clock time >= `stopping.max_hours`
+- **Judge budget exhausted**: cumulative spend >= `metric.judge.max_total_cost_usd`
 - **Plateau**: no improvement for `stopping.plateau_iterations` consecutive experiments
-- **Manual stop**: user interrupts (save state and proceed to Phase 4)
-- **Empty backlog**: no hypotheses remain and no new ones can be generated
+- **Manual stop**: user interrupts (save state, proceed to Phase 4)
+- **Empty backlog**: no hypotheses remain
 
-If no stopping criterion is met, proceed to the next batch (step 3.1).
+If none met, proceed to next batch (step 3.1).
 
 ### 3.7 Cross-Cutting Concerns
 
-**Codex failure cascade**: Track consecutive Codex delegation failures. After 3 consecutive failures, auto-disable Codex for remaining experiments and fall back to subagent dispatch. Log the switch.
+**Codex failure cascade**: After 3 consecutive Codex delegation failures, auto-disable Codex and fall back to subagent dispatch. Log the switch.
 
-**Error handling**: If an experiment's measurement command crashes, times out, or produces malformed output:
-- Log as outcome `error` or `timeout` with the error message
-- Revert the experiment (cleanup worktree)
-- The loop continues with remaining experiments in the batch
+**Error handling**: If measurement crashes, times out, or produces malformed output: log as `error` or `timeout`, revert (cleanup worktree), continue with remaining batch experiments.
 
-**Progress reporting**: After each batch, report:
-- Batch N of estimated M (based on backlog size)
-- Experiments run this batch and total
-- Current best metric and improvement from baseline
-- Cumulative judge cost (if applicable)
+**Progress reporting**: After each batch report batch N/M, experiments run (batch + total), current best metric + improvement from baseline, cumulative judge cost.
 
-**Crash recovery**: See Persistence Discipline section. Per-experiment `result.yaml` markers are written in step 3.3. Individual experiment results are appended to the log immediately in step 3.3. Batch-level state (outcomes, best, digest) is written in step 3.5. On resume (Phase 0.4), the log on disk is the ground truth — scan for any `result.yaml` markers not yet reflected in the log.
+**Crash recovery**: Per-experiment `result.yaml` markers (step 3.3), individual results appended immediately (step 3.3), batch state finalized (step 3.5). On resume (Phase 0.4), scan for `result.yaml` markers not yet in the log.
 
 ---
 
@@ -601,14 +546,14 @@ If no stopping criterion is met, proceed to the next batch (step 3.1).
 
 ### 4.1 Present Deferred Hypotheses
 
-If any hypotheses were deferred due to unapproved dependencies:
-1. List them with their dependency requirements
-2. Ask the user whether to approve, skip, or save for a future run
-3. If approved: add to backlog and offer to re-enter Phase 3 for one more round
+If deferred hypotheses exist:
+1. List with dependency requirements
+2. Ask: approve, skip, or save for future run
+3. If approved: add to backlog and offer one more Phase 3 round
 
 ### 4.2 Summarize Results
 
-Present a comprehensive summary:
+Present summary:
 
 ```
 Optimization: <spec-name>
@@ -635,25 +580,21 @@ Key improvements:
 
 ### 4.3 Preserve and Offer Next Steps
 
-The optimization branch (`optimize/<spec-name>`) is preserved with all commits from kept experiments.
-The experiment log and strategy digest remain in local `.context/...` scratch space for resume and audit on this machine only; they do not travel with the branch because `.context/` is gitignored.
+The optimization branch (`optimize/<spec-name>`) preserves all kept-experiment commits. The experiment log and strategy digest remain in local `.context/` scratch space (gitignored, machine-local only).
 
-Present post-completion options via the platform question tool:
+Present post-completion options:
 
-1. **Run `/ce-code-review`** on the cumulative diff (baseline to final). Load the `ce-code-review` skill with `mode:autofix` on the optimization branch.
-2. **Run `/ce-compound`** to document the winning strategy as an institutional learning.
-3. **Create PR** from the optimization branch to the default branch.
-4. **Continue** with more experiments: re-enter Phase 3 with the current state. State re-read first.
-5. **Done** -- leave the optimization branch for manual review.
+1. **Run `/ce-review`** on cumulative diff with `mode:autofix`
+2. **Run `/ce-compound`** to document the winning strategy
+3. **Create PR** from optimization branch to default branch
+4. **Continue** -- re-enter Phase 3 (re-read state first)
+5. **Done** -- leave branch for manual review
 
 ### 4.4 Cleanup
 
-Clean up scratch space:
 ```bash
-# Keep the experiment log for local resume/audit on this machine
-# Remove temporary batch artifacts
+# Remove temporary batch artifacts; keep experiment log for local resume/audit
 rm -f .context/compound-engineering/ce-optimize/<spec-name>/strategy-digest.md
 ```
 
-Do NOT delete the experiment log if the user may resume locally or wants a local audit trail. If they need a durable shared artifact, summarize or export the results into a tracked path before cleanup.
-Do NOT delete experiment worktrees that are still being referenced.
+Do NOT delete the experiment log if the user may resume or wants a local audit trail. Do NOT delete worktrees still being referenced.

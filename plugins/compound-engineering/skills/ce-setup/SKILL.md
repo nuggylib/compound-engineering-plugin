@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 Ask the user each question below using the platform question tool (AskUserQuestion / request_user_input / ask_user). Fallback: present numbered options and wait for a reply. For multiSelect questions, accept comma-separated numbers (e.g. `1, 3`). Never skip or auto-configure.
 
-Interactive setup for compound-engineering — diagnoses environment health, cleans obsolete repo-local CE config, and helps configure required tools. Review agent selection is handled automatically by `ce-code-review`; project-specific review guidance belongs in `CLAUDE.md` or `AGENTS.md`.
+Review agent selection is handled automatically by `ce-review`; project-specific review guidance belongs in `CLAUDE.md` or `AGENTS.md`.
 
 ## Phase 1: Diagnose
 
@@ -24,7 +24,7 @@ If a version is found, pass it to the check script via `--version`. Otherwise om
 
 Before running the script, display: "Compound Engineering -- checking your environment..."
 
-Run the bundled check script. Do not perform manual dependency checks -- the script handles all CLI tools, repo-local CE file checks, and `.gitignore` guidance in one pass.
+Run the bundled check script. Do not perform manual dependency checks. <!-- why: the script handles all CLI tools, repo-local CE file checks, and .gitignore guidance in one pass -->
 
 ```bash
 bash scripts/check-health --version VERSION
@@ -74,13 +74,13 @@ Otherwise proceed to Phase 2 to resolve any issues. Handle repo-local cleanup (S
 
 ### Step 4: Resolve Repo-Local CE Issues
 
-Resolve the repository root (`git rev-parse --show-toplevel`). If `compound-engineering.local.md` exists at the repo root, explain that it is obsolete because review-agent selection is automatic and CE now uses `.compound-engineering/config.local.yaml` for any surviving machine-local state. Ask whether to delete it now. Use the repo-root path when deleting.
+Resolve the repository root (`git rev-parse --show-toplevel`). If `compound-engineering.local.md` exists at the repo root, explain that it is obsolete and ask whether to delete it now. Use the repo-root path when deleting.
 
 ### Step 5: Bootstrap Project Config
 
 Resolve the repository root (`git rev-parse --show-toplevel`). All paths below are relative to the repo root, not the current working directory.
 
-**Example file (always refresh):** Copy `references/config-template.yaml` to `<repo-root>/.compound-engineering/config.local.example.yaml`, creating the directory if needed. This file is committed to the repo and always overwritten with the latest template so teammates can see available settings.
+**Example file (always refresh):** Copy `references/config-template.yaml` to `<repo-root>/.compound-engineering/config.local.example.yaml`, creating the directory if needed. Always overwrite with the latest template.
 
 **Local config (create once):** If `.compound-engineering/config.local.yaml` does not exist, ask whether to create it:
 

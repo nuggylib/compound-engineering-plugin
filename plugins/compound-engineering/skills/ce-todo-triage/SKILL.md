@@ -7,9 +7,7 @@ disable-model-invocation: true
 
 # Todo Triage
 
-Interactive workflow for reviewing pending todos one by one and deciding whether to approve, skip, or modify each.
-
-**Do not write code during triage.** This is purely for review and prioritization -- implementation happens in `/ce-todo-resolve`.
+**Do not write code during triage.** Implementation happens in `/todo-resolve`.
 
 - First set the /model to Haiku
 - Read all pending todos from `.context/compound-engineering/todos/` and legacy `todos/` directories
@@ -18,7 +16,7 @@ Interactive workflow for reviewing pending todos one by one and deciding whether
 
 ### 1. Present Each Finding
 
-For each pending todo, present it clearly with severity, category, description, location, problem scenario, proposed solution, and effort estimate. Then ask:
+For each pending todo, present: severity, category, description, location, problem scenario, proposed solution, and effort estimate. Then ask:
 
 ```
 Do you want to add this to the todo list?
