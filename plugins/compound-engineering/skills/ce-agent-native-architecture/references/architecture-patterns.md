@@ -31,11 +31,7 @@ The agent runs as a long-lived process that responds to events. Events become pr
                    (restart)       (list_items)
 ```
 
-**Key characteristics:**
-- Events (messages, webhooks, timers) trigger agent turns
-- Agent decides how to respond based on system prompt
-- Tools are primitives for IO, not business logic
-- State persists between events via data tools
+**Key characteristics:** Events trigger agent turns. Agent decides response via system prompt. Tools are IO primitives. State persists via data tools.
 
 **Example: Discord feedback bot**
 ```typescript
@@ -93,11 +89,7 @@ For self-modifying agents, separate code (shared) from data (instance-specific).
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Why this works:**
-- Code and site are version controlled (GitHub)
-- Raw data stays local (instance-specific)
-- Site is generated from data, so reproducible
-- Automatic rollback via git history
+**Why:** Code is version-controlled with rollback. Data stays local. Site is generated from data, so reproducible.
 </pattern>
 
 <pattern name="multi-instance">
@@ -134,35 +126,18 @@ tool("propose_to_main", "Create PR to share improvements", ...)
 The agent generates and maintains a website as a natural output, not through specialized site tools.
 
 ```
-Discord Message
-      ↓
-Agent processes it, extracts insights
-      ↓
-Agent decides what site updates are needed
-      ↓
-Agent writes files using write_file primitive
-      ↓
-Git commit + push triggers deployment
-      ↓
-Site updates automatically
+Discord Message -> Agent extracts insights -> writes files via write_file -> git push -> deploy
 ```
 
 **Key insight:** Don't build site generation tools. Give the agent file tools and teach it in the prompt how to create good sites.
 
 ```markdown
 ## Site Management
-
-You maintain a public feedback site. When feedback comes in:
-1. Use write_file to update site/public/content/feedback.json
-2. If the site's React components need improvement, modify them
-3. Commit changes and push to trigger Vercel deploy
-
-The site should be:
-- Clean, modern dashboard aesthetic
-- Clear visual hierarchy
-- Status organization (Inbox, Active, Done)
-
-You decide the structure. Make it good.
+You maintain a public feedback site. On new feedback:
+1. write_file to update site/public/content/feedback.json
+2. Improve React components if needed
+3. Commit + push to trigger Vercel deploy
+You decide the structure. Make it clean with clear hierarchy and status organization.
 ```
 </pattern>
 
@@ -172,30 +147,19 @@ You decide the structure. Make it good.
 Separate "propose" from "apply" for dangerous operations.
 
 ```typescript
-// Pending changes stored separately
 const pendingChanges = new Map<string, string>();
 
 tool("write_file", async ({ path, content }) => {
   if (requiresApproval(path)) {
-    // Store for approval
     pendingChanges.set(path, content);
-    const diff = generateDiff(path, content);
-    return {
-      text: `Change requires approval.\n\n${diff}\n\nReply "yes" to apply.`
-    };
-  } else {
-    // Apply immediately
-    writeFileSync(path, content);
-    return { text: `Wrote ${path}` };
+    return { text: `Change requires approval.\n\n${generateDiff(path, content)}\n\nReply "yes" to apply.` };
   }
+  writeFileSync(path, content);
+  return { text: `Wrote ${path}` };
 });
 
 tool("apply_pending", async () => {
-  for (const [path, content] of pendingChanges) {
-    writeFileSync(path, content);
-  }
-  pendingChanges.clear();
-  return { text: "Applied all pending changes" };
+  /* iterate pendingChanges -> writeFileSync each -> clear map */
 });
 ```
 
@@ -216,22 +180,10 @@ tool("apply_pending", async () => {
 One execution engine, many agent types. All agents use the same orchestrator but with different configurations.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    AgentOrchestrator                         │
-├─────────────────────────────────────────────────────────────┤
-│  - Lifecycle management (start, pause, resume, stop)        │
-│  - Checkpoint/restore (for background execution)            │
-│  - Tool execution                                            │
-│  - Chat integration                                          │
-└─────────────────────────────────────────────────────────────┘
-          │                    │                    │
-    ┌─────┴─────┐        ┌─────┴─────┐        ┌─────┴─────┐
-    │ Research  │        │   Chat    │        │  Profile  │
-    │   Agent   │        │   Agent   │        │   Agent   │
-    └───────────┘        └───────────┘        └───────────┘
-    - web_search         - read_library       - read_photos
-    - write_file         - publish_to_feed    - write_file
-    - read_file          - web_search         - analyze_image
+AgentOrchestrator (lifecycle, checkpoint/restore, tool execution, chat)
+  |-- Research Agent: web_search, write_file, read_file
+  |-- Chat Agent: read_library, publish_to_feed, web_search
+  |-- Profile Agent: read_photos, write_file, analyze_image
 ```
 
 **Implementation:**
@@ -244,51 +196,20 @@ let session = try await AgentOrchestrator.shared.startAgent(
     context: ResearchAgent.context(for: book)   // Context varies
 )
 
-// Agent types define their own configuration
 struct ResearchAgent {
-    static var tools: [AgentTool] {
-        [
-            FileTools.readFile(),
-            FileTools.writeFile(),
-            WebTools.webSearch(),
-            WebTools.webFetch(),
-        ]
-    }
-
+    static var tools: [AgentTool] { [FileTools.readFile(), FileTools.writeFile(), WebTools.webSearch(), WebTools.webFetch()] }
     static func context(for book: Book) -> String {
-        """
-        You are researching "\(book.title)" by \(book.author).
-        Save findings to Documents/Research/\(book.id)/
-        """
+        "You are researching \"\(book.title)\" by \(book.author). Save findings to Documents/Research/\(book.id)/"
     }
 }
 
 struct ChatAgent {
-    static var tools: [AgentTool] {
-        [
-            FileTools.readFile(),
-            FileTools.writeFile(),
-            BookTools.readLibrary(),
-            BookTools.publishToFeed(),  // Chat can publish directly
-            WebTools.webSearch(),
-        ]
-    }
-
-    static func context(library: [Book]) -> String {
-        """
-        You help the user with their reading.
-        Available books: \(library.map { $0.title }.joined(separator: ", "))
-        """
-    }
+    static var tools: [AgentTool] { /* FileTools + BookTools.readLibrary + BookTools.publishToFeed + WebTools */ }
+    static func context(library: [Book]) -> String { /* reading assistant prompt with available books */ }
 }
 ```
 
-**Benefits:**
-- Consistent lifecycle management across all agent types
-- Automatic checkpoint/resume (critical for mobile)
-- Shared tool protocol
-- Easy to add new agent types
-- Centralized error handling and logging
+**Benefits:** Consistent lifecycle, automatic checkpoint/resume, shared tool protocol, easy to add agent types, centralized error handling.
 </pattern>
 
 <pattern name="agent-to-ui-communication">
@@ -301,36 +222,20 @@ When agents take actions, the UI should reflect them immediately. The user shoul
 Agent writes through the same service the UI observes:
 
 ```swift
-// Shared service
 class BookLibraryService: ObservableObject {
     static let shared = BookLibraryService()
     @Published var books: [Book] = []
     @Published var feedItems: [FeedItem] = []
-
-    func addFeedItem(_ item: FeedItem) {
-        feedItems.append(item)
-        persist()
-    }
+    func addFeedItem(_ item: FeedItem) { feedItems.append(item); persist() }
 }
 
-// Agent tool writes through shared service
+// Agent tool writes through shared service (same instance UI observes)
 tool("publish_to_feed", async ({ bookId, content, headline }) => {
-    let item = FeedItem(bookId: bookId, content: content, headline: headline)
-    BookLibraryService.shared.addFeedItem(item)  // Same service UI uses
+    BookLibraryService.shared.addFeedItem(FeedItem(bookId: bookId, content: content, headline: headline))
     return { text: "Published to feed" }
 })
 
-// UI observes the same service
-struct FeedView: View {
-    @StateObject var library = BookLibraryService.shared
-
-    var body: some View {
-        List(library.feedItems) { item in
-            FeedItemRow(item: item)
-            // Automatically updates when agent adds items
-        }
-    }
-}
+// UI: @StateObject var library = BookLibraryService.shared -> List auto-updates
 ```
 
 **Pattern 2: File System Observation**
@@ -343,20 +248,8 @@ class ResearchWatcher: ObservableObject {
     private var watcher: DirectoryWatcher?
 
     func watch(bookId: String) {
-        let path = documentsURL.appendingPathComponent("Research/\(bookId)")
-
-        watcher = DirectoryWatcher(path: path) { [weak self] in
-            self?.reload(from: path)
-        }
-
-        reload(from: path)
+        /* DirectoryWatcher on Research/{bookId} -> reload on change; agent write_file triggers UI update automatically */
     }
-}
-
-// Agent writes files
-tool("write_file", { path, content }) -> {
-    writeFile(documentsURL.appendingPathComponent(path), content)
-    // DirectoryWatcher triggers UI update automatically
 }
 ```
 
@@ -365,43 +258,22 @@ tool("write_file", { path, content }) -> {
 For complex apps with multiple independent components:
 
 ```typescript
-// Shared event bus
 const agentEvents = new EventEmitter();
 
-// Agent tool emits events
+// Agent tool emits events on action
 tool("publish_to_feed", async ({ content }) => {
     const item = await feedService.add(content);
     agentEvents.emit('feed:new-item', item);
     return { text: "Published" };
 });
 
-// UI components subscribe
-function FeedView() {
-    const [items, setItems] = useState([]);
-
-    useEffect(() => {
-        const handler = (item) => setItems(prev => [...prev, item]);
-        agentEvents.on('feed:new-item', handler);
-        return () => agentEvents.off('feed:new-item', handler);
-    }, []);
-
-    return <FeedList items={items} />;
-}
+// UI subscribes: useEffect -> agentEvents.on('feed:new-item', handler) -> cleanup on unmount
 ```
 
 **What to avoid:**
 
 ```swift
-// BAD: UI doesn't observe agent changes
-// Agent writes to database directly
-tool("publish_to_feed", { content }) {
-    database.insert("feed", content)  // UI doesn't see this
-}
-
-// UI loads once at startup, never refreshes
-struct FeedView: View {
-    let items = database.query("feed")  // Stale!
-}
+// BAD: Agent writes directly to database, UI loads once at startup -> stale data
 ```
 </pattern>
 
@@ -434,45 +306,21 @@ struct AgentConfig {
     let systemPrompt: String
 }
 
-// Research agent: balanced tier
-let researchConfig = AgentConfig(
-    modelTier: .balanced,
-    tools: researchTools,
-    systemPrompt: researchPrompt
-)
-
-// Profile analysis: powerful tier (complex photo interpretation)
-let profileConfig = AgentConfig(
-    modelTier: .powerful,
-    tools: profileTools,
-    systemPrompt: profilePrompt
-)
-
-// Quick lookup: fast tier
-let lookupConfig = AgentConfig(
-    modelTier: .fast,
-    tools: [readLibrary],
-    systemPrompt: "Answer quick questions about the user's library."
-)
+// Match tier to task: research=.balanced, profileAnalysis=.powerful, quickLookup=.fast
 ```
 
-**Cost optimization strategies:**
-- Start with balanced tier, only upgrade if quality insufficient
-- Use fast tier for tool-heavy loops where each turn is simple
-- Reserve powerful tier for synthesis tasks (comparing multiple sources)
-- Consider token limits per turn to control costs
+**Cost optimization:** Start balanced, upgrade only if quality insufficient. Use fast for tool-heavy loops. Reserve powerful for multi-source synthesis.
 </pattern>
 
 <design_questions>
 ## Questions to Ask When Designing
 
-1. **What events trigger agent turns?** (messages, webhooks, timers, user requests)
-2. **What primitives does the agent need?** (read, write, call API, restart)
-3. **What decisions should the agent make?** (format, structure, priority, action)
-4. **What decisions should be hardcoded?** (security boundaries, approval requirements)
-5. **How does the agent verify its work?** (health checks, build verification)
-6. **How does the agent recover from mistakes?** (git rollback, approval gates)
-7. **How does the UI know when agent changes state?** (shared store, file watching, events)
-8. **What model tier does each agent type need?** (fast, balanced, powerful)
-9. **How do agents share infrastructure?** (unified orchestrator, shared tools)
+1. **Event triggers?** (messages, webhooks, timers, user requests)
+2. **Primitives needed?** (read, write, call API, restart)
+3. **Agent decisions vs hardcoded?** (agent: format, priority; hardcoded: security, approvals)
+4. **Verification?** (health checks, build verification)
+5. **Recovery?** (git rollback, approval gates)
+6. **UI communication?** (shared store, file watching, events)
+7. **Model tier per agent?** (fast, balanced, powerful)
+8. **Shared infrastructure?** (unified orchestrator, shared tools)
 </design_questions>
