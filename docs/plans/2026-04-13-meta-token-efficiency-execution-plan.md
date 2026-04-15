@@ -207,10 +207,10 @@ Update this table as brainstorm/plan work progresses:
 |---|------|-------|-----------|------|-----------|-------|
 | 14 | Empirical Ablation Framework | 1 | done | done | | `docs/brainstorms/2026-04-13-empirical-ablation-framework-requirements.md`, `docs/plans/2026-04-13-001-feat-empirical-ablation-framework-plan.md` |
 | 20 | Carrying Cost Budgeting | 1 | done | done | | `docs/brainstorms/2026-04-13-carrying-cost-budgeting-requirements.md`, `docs/plans/2026-04-13-002-feat-carrying-cost-budgeting-plan.md` |
-| 9 | Description Trim | 2 | | | | |
-| 6 | Merge ce-work/beta | 2 | | | | |
-| 5 | Dead Content Audit | 2 | | | | |
-| 10 | Token Guardrails | 2 | | | | |
+| 9 | Description Trim | 2 | done | done | done | 23 skills trimmed + 5 agents. ~6.4KB always-loaded savings (52% reduction). AGENTS.md guideline codified |
+| 6 | Merge ce-work/beta | 2 | done | done | done | Beta promoted into ce-work, beta dir deleted. 42 skills (was 43). ~47KB repo savings |
+| 5 | Dead Content Audit | 2 | done | done | | `docs/plans/2026-04-15-004-refactor-dead-content-audit-plan.md`. 7 units, 173 files, 101-120KB estimated savings |
+| 10 | Token Guardrails | 2 | done | done | done | 3 checks live in release:validate. Budget 15,486/18,000 (86%). Description limit 250 chars |
 | 7 | On-Demand Loading | 3 | | | | |
 | 3 | Diff-Proportional Scaling | 3 | | | | |
 | 8 | Cross-Skill Dedup | 3 | | | | |
