@@ -1,12 +1,20 @@
 ---
 name: ce-debug
-description: 'Systematically find root causes and fix bugs. Use when debugging errors, investigating test failures, reproducing bugs from issue trackers (GitHub, Linear, Jira), or when stuck on a problem after failed fix attempts. Also use when the user says ''debug this'', ''why is this failing'', ''fix this bug'', ''trace this error'', or pastes stack traces, error messages, or issue references.'
+description: "Systematically find root causes and fix bugs through causal-chain investigation. Use when debugging errors, investigating test failures, or reproducing bugs from issue trackers."
 argument-hint: "[issue reference, error message, test path, or description of broken behavior]"
 ---
 
 # Debug and Fix
 
 Find root causes, then fix them. This skill investigates bugs systematically — tracing the full causal chain before proposing a fix — and optionally implements the fix with test-first discipline.
+
+## When to Use
+
+Use this skill when the user:
+- Says "debug this", "why is this failing", "fix this bug", or "trace this error"
+- Is debugging errors, investigating test failures, or reproducing bugs from issue trackers (GitHub, Linear, Jira)
+- Is stuck on a problem after failed fix attempts
+- Pastes stack traces, error messages, or issue references
 
 <bug_description> #$ARGUMENTS </bug_description>
 

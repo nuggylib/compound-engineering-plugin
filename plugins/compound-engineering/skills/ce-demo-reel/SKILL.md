@@ -1,12 +1,19 @@
 ---
 name: ce-demo-reel
-description: "Capture a visual demo reel (GIF, terminal recording, screenshots) for PR descriptions. Use when shipping UI changes, CLI features, or any work with observable behavior that benefits from visual proof. Also use when asked to add a demo, record a GIF, screenshot a feature, show what changed visually, create a demo reel, capture evidence, add proof to a PR, or create a before/after comparison."
+description: "Capture visual demo reels (GIFs, terminal recordings, screenshots) for PR descriptions. Use when shipping observable changes that benefit from visual proof."
 argument-hint: "[what to capture, e.g. 'the new settings page' or 'CLI output of the migrate command']"
 ---
 
 # Demo Reel
 
 Detect project type, recommend a capture tier, record visual evidence, upload to a public URL, and return markdown for PR inclusion.
+
+## When to Use
+
+Use this skill when the user:
+- Says "add a demo", "record a GIF", "screenshot a feature", "show what changed visually", "create a demo reel", "capture evidence", "add proof to a PR", or "create a before/after comparison"
+- Is shipping UI changes, CLI features, or any work with observable behavior that benefits from visual proof
+- Needs visual evidence for a PR description
 
 **Evidence means USING THE PRODUCT, not running tests.** "I ran npm test" is test evidence. Evidence capture is running the actual CLI command, opening the web app, making the API call, or triggering the feature. The distinction is absolute -- test output is never labeled "Demo" or "Screenshots."
 

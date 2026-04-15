@@ -1,11 +1,17 @@
 ---
 name: ce-commit
-description: Create a git commit with a clear, value-communicating message. Use when the user says "commit", "commit this", "save my changes", "create a commit", or wants to commit staged or unstaged work. Produces well-structured commit messages that follow repo conventions when they exist, and defaults to conventional commit format otherwise.
+description: "Create a git commit with a clear, value-communicating message following repo conventions. Use when committing staged or unstaged work."
 ---
 
 # Git Commit
 
 Create a single, well-crafted git commit from the current working tree changes.
+
+## When to Use
+
+Use this skill when the user:
+- Says "commit", "commit this", "save my changes", or "create a commit"
+- Wants to commit staged or unstaged work
 
 ## Context
 

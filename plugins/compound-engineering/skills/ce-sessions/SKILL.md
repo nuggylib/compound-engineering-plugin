@@ -1,11 +1,18 @@
 ---
 name: ce-sessions
-description: "Search and ask questions about your coding agent session history. Use when asking what you worked on, what was tried before, how a problem was investigated across sessions, what happened recently, or any question about past agent sessions. Also use when the user references prior sessions, previous attempts, or past investigations — even without saying 'sessions' explicitly."
+description: "Search and ask questions about your coding agent session history. Use when asking what you worked on, what was tried before, or any question about past agent sessions."
 ---
 
 # /ce-sessions
 
 Search your session history.
+
+## When to Use
+
+Use this skill when the user:
+- Asks what they worked on, what was tried before, or how a problem was investigated across sessions
+- Asks what happened recently or references prior sessions, previous attempts, or past investigations
+- Has any question about past agent sessions
 
 ## Usage
 

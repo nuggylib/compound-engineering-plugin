@@ -1,6 +1,6 @@
 ---
 name: ce-onboarding
-description: "Generate or regenerate ONBOARDING.md to help new contributors understand a codebase. Use when the user asks to 'create onboarding docs', 'generate ONBOARDING.md', 'document this project for new developers', 'write onboarding documentation', 'vonboard', 'vonboarding', 'prepare this repo for a new contributor', 'refresh the onboarding doc', or 'update ONBOARDING.md'. Also use when someone needs to onboard a new team member and wants a written artifact, or when a codebase lacks onboarding documentation and the user wants to generate one."
+description: "Generate or regenerate ONBOARDING.md to help new contributors understand a codebase. Use when the project needs onboarding documentation or an existing onboarding doc needs updating."
 ---
 
 # Generate Onboarding Document
@@ -10,6 +10,15 @@ Crawl a repository and generate `ONBOARDING.md` at the repo root -- a document t
 Onboarding is a general problem in software, but it is more acute in fast-moving codebases where code is written faster than documentation -- whether through AI-assisted development, rapid prototyping, or simply a team that ships faster than it documents. This skill reconstructs the mental model from the code itself.
 
 This skill always regenerates the document from scratch. It does not read or diff a previous version. If `ONBOARDING.md` already exists, it is overwritten.
+
+## When to Use
+
+Use this skill when the user:
+- Says "create onboarding docs", "generate ONBOARDING.md", "write onboarding documentation", "vonboard", or "vonboarding"
+- Says "document this project for new developers" or "prepare this repo for a new contributor"
+- Says "refresh the onboarding doc" or "update ONBOARDING.md"
+- Wants to onboard a new team member and needs a written artifact
+- Has a codebase that lacks onboarding documentation
 
 ## Core Principles
 

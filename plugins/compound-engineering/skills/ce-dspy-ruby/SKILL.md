@@ -1,6 +1,6 @@
 ---
 name: ce-dspy-ruby
-description: Build type-safe LLM applications with DSPy.rb — Ruby's programmatic prompt framework with signatures, modules, agents, and optimization. Use when implementing predictable AI features, creating LLM signatures and modules, configuring language model providers, building agent systems with tools, optimizing prompts, or testing LLM-powered functionality in Ruby applications.
+description: "Build type-safe LLM applications with DSPy.rb, Ruby's programmatic prompt framework. Use when implementing AI features with signatures, modules, agents, or optimization in Ruby."
 ---
 
 # DSPy.rb

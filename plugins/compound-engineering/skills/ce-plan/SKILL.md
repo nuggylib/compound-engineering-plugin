@@ -1,6 +1,6 @@
 ---
 name: ce-plan
-description: "Create structured plans for any multi-step task -- software features, research workflows, events, study plans, or any goal that benefits from structured breakdown. Also deepen existing plans with interactive review of sub-agent findings. Use for plan creation when the user says 'plan this', 'create a plan', 'write a tech plan', 'plan the implementation', 'how should we build', 'what's the approach for', 'break this down', 'plan a trip', 'create a study plan', or when a brainstorm/requirements document is ready for planning. Use for plan deepening when the user says 'deepen the plan', 'deepen my plan', 'deepening pass', or uses 'deepen' in reference to a plan. For exploratory or ambiguous requests where the user is unsure what to do, prefer ce-brainstorm first."
+description: "Create structured implementation plans from requirements, feature descriptions, or any multi-step task. Use when the user wants to plan work, break down a feature, or deepen an existing plan."
 argument-hint: "[optional: feature description, requirements doc path, plan path to deepen, or any task to plan]"
 ---
 
@@ -13,6 +13,15 @@ argument-hint: "[optional: feature description, requirements doc path, plan path
 **When directly invoked, always plan.** Never classify a direct invocation as "not a planning task" and abandon the workflow. If the input is unclear, ask clarifying questions or use the planning bootstrap (Phase 0.4) to establish enough context — but always stay in the planning workflow.
 
 This workflow produces a durable implementation plan. It does **not** implement code, run tests, or learn from execution-time results. If the answer depends on changing code and seeing what happens, that belongs in `ce-work`, not here.
+
+## When to Use
+
+Use this skill when the user:
+- Says "plan this", "create a plan", "write a tech plan", "plan the implementation", "how should we build", "what's the approach for", or "break this down"
+- Says "plan a trip", "create a study plan", or similar non-software planning requests (routes to universal planning)
+- Says "deepen the plan", "deepen my plan", or "deepening pass" to strengthen an existing plan
+- Has a brainstorm or requirements document ready for implementation planning
+- Wants to break down a feature, refactor, or multi-step task into structured implementation units
 
 ## Interaction Method
 

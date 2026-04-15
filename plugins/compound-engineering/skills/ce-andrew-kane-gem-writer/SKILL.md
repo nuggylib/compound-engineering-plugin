@@ -1,11 +1,18 @@
 ---
 name: ce-andrew-kane-gem-writer
-description: This skill should be used when writing Ruby gems following Andrew Kane's proven patterns and philosophy. It applies when creating new Ruby gems, refactoring existing gems, designing gem APIs, or when clean, minimal, production-ready Ruby library code is needed. Triggers on requests like "create a gem", "write a Ruby library", "design a gem API", or mentions of Andrew Kane's style.
+description: "Write Ruby gems following Andrew Kane's proven patterns and philosophy for clean, minimal, production-ready libraries. Use when creating or refactoring Ruby gems."
 ---
 
 # Andrew Kane Gem Writer
 
 Write Ruby gems following Andrew Kane's battle-tested patterns from 100+ gems with 374M+ downloads (Searchkick, PgHero, Chartkick, Strong Migrations, Lockbox, Ahoy, Blazer, Groupdate, Neighbor, Blind Index).
+
+## When to Use
+
+Use this skill when the user:
+- Says "create a gem", "write a Ruby library", or "design a gem API"
+- Wants to write or refactor Ruby gems following Andrew Kane's clean, minimal style
+- Needs production-ready Ruby library code with zero or minimal dependencies
 
 ## Core Philosophy
 

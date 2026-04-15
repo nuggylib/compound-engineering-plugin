@@ -1,6 +1,6 @@
 ---
 name: ce-brainstorm
-description: 'Explore requirements and approaches through collaborative dialogue before writing a right-sized requirements document and planning implementation. Use for feature ideas, problem framing, when the user says ''let''s brainstorm'', or when they want to think through options before deciding what to build. Also use when a user describes a vague or ambitious feature request, asks ''what should we build'', ''help me think through X'', presents a problem with multiple valid solutions, or seems unsure about scope or direction — even if they don''t explicitly ask to brainstorm.'
+description: "Explore requirements and approaches through collaborative dialogue, then write a right-sized requirements document. Use when framing features, thinking through options, or deciding what to build."
 argument-hint: "[feature idea or problem to explore]"
 ---
 
@@ -15,6 +15,15 @@ The durable output of this workflow is a **requirements document**. In other wor
 This skill does not implement code. It explores, clarifies, and documents decisions for later planning or execution.
 
 **IMPORTANT: All file references in generated documents must use repo-relative paths (e.g., `src/models/user.rb`), never absolute paths. Absolute paths break portability across machines, worktrees, and teammates.**
+
+## When to Use
+
+Use this skill when the user:
+- Says "let's brainstorm", "what should we build", "help me think through X", or "plan a trip" (non-software brainstorming)
+- Has a vague or ambitious feature request with multiple valid solutions
+- Wants to think through options, explore approaches, or frame a problem before planning
+- Is unsure about scope, direction, or what to build next
+- Needs to explore requirements and approaches through collaborative dialogue
 
 ## Core Principles
 

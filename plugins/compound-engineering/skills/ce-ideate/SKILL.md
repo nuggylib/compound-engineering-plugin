@@ -1,6 +1,6 @@
 ---
 name: ce-ideate
-description: "Generate and critically evaluate grounded ideas about a topic. Use when asking what to improve, requesting idea generation, exploring surprising directions, or wanting the AI to proactively suggest strong options before brainstorming one in depth. Triggers on phrases like 'what should I improve', 'give me ideas', 'ideate on X', 'surprise me', 'what would you change', or any request for AI-generated suggestions rather than refining the user's own idea."
+description: "Generate and critically evaluate grounded improvement ideas for the current project. Use when asking what to improve, requesting idea generation, or wanting AI-suggested project directions."
 argument-hint: "[feature, focus area, or constraint]"
 ---
 
@@ -15,6 +15,13 @@ argument-hint: "[feature, focus area, or constraint]"
 - `ce-plan` answers: "How should it be built?"
 
 This workflow produces a ranked ideation artifact in `docs/ideation/`. It does **not** produce requirements, plans, or code.
+
+## When to Use
+
+Use this skill when the user:
+- Says "what should I improve", "give me ideas", "ideate on this project", "surprise me with improvements", or "what would you change"
+- Wants the AI to proactively suggest strong project directions before brainstorming
+- Is exploring what to improve or requesting idea generation for the current codebase
 
 ## Interaction Method
 

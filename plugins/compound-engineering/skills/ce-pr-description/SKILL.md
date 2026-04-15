@@ -12,6 +12,14 @@ Why a separate skill: several callers need the same writing logic without the si
 
 **Naming rationale:** `ce-pr-description`, not `git-pr-description`. Stacking and PR creation are GitHub features; the "PR" in the name refers to the GitHub artifact. Using the `ce-` prefix matches the plugin naming convention for all skills.
 
+## When to Use
+
+Use this skill when the user:
+- Says "write a PR description", "refresh the PR description", "regenerate the PR body", "rewrite this PR", "freshen the PR", "update the PR description", "draft a PR body for this diff", "describe this PR properly", or "generate the PR title"
+- Pastes a GitHub PR URL, `#NN`, or PR number and wants a description written or rewritten
+- Wants a value-first PR title and body without interactive confirmation or apply steps
+- Is invoked internally by `git-commit-push-pr` or `ce-pr-stack` for description generation
+
 ---
 
 ## Inputs

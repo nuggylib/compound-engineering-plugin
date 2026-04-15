@@ -1,11 +1,18 @@
 ---
 name: ce-clean-gone-branches
-description: Clean up local branches whose remote tracking branch is gone. Use when the user says "clean up branches", "delete gone branches", "prune local branches", "clean gone", or wants to remove stale local branches that no longer exist on the remote. Also handles removing associated worktrees for branches that have them.
+description: "Clean up local branches whose remote tracking branch is gone, including associated worktrees. Use when pruning stale local branches after remote deletion."
 ---
 
 # Clean Gone Branches
 
 Delete local branches whose remote tracking branch has been deleted, including any associated worktrees.
+
+## When to Use
+
+Use this skill when the user:
+- Says "clean up branches", "delete gone branches", "prune local branches", or "clean gone"
+- Wants to remove stale local branches that no longer exist on the remote
+- Needs to clean up associated worktrees for deleted remote branches
 
 ## Workflow
 
