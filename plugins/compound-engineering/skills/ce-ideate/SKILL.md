@@ -6,8 +6,6 @@ argument-hint: "[feature, focus area, or constraint]"
 
 # Generate Improvement Ideas
 
-**Note: The current year is 2026.** Use this when dating ideation documents and checking recent ideation artifacts.
-
 `ce-ideate` precedes `ce-brainstorm`.
 
 - `ce-ideate` answers: "What are the strongest ideas worth exploring?"

@@ -6,8 +6,6 @@ argument-hint: "[optional: feature description, requirements doc path, plan path
 
 # Create Technical Plan
 
-**Note: The current year is 2026.** Use this when dating plans and searching for recent documentation.
-
 `ce-brainstorm` defines **WHAT** to build. `ce-plan` defines **HOW** to build it. `ce-work` executes the plan. A prior brainstorm is useful context but never required — `ce-plan` works from any input: a requirements doc, a bug report, a feature idea, or a rough description.
 
 **When directly invoked, always plan.** Never classify a direct invocation as "not a planning task" and abandon the workflow. If the input is unclear, ask clarifying questions or use the planning bootstrap (Phase 0.4) to establish enough context — but always stay in the planning workflow.
