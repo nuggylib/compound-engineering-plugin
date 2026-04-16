@@ -212,10 +212,10 @@ Update this table as brainstorm/plan work progresses:
 | 5 | Dead Content Audit | 2 | done | done | done | `docs/plans/2026-04-15-004-refactor-dead-content-audit-plan.md`. 7 units executed across 6 commits. Contract tests fixed post-execution |
 | 10 | Token Guardrails | 2 | done | done | done | 3 checks live in release:validate. Budget 15,486/18,000 (86%). Description limit 250 chars |
 | 7 | On-Demand Loading | 3 | done | done | done | `docs/brainstorms/2026-04-16-on-demand-loading-requirements.md`, `docs/plans/2026-04-16-001-refactor-on-demand-loading-plan.md`. 5 @-inlines converted to stage-specific backtick-path reads. ~29KB deferred from trigger-time load |
-| 3 | Diff-Proportional Scaling | 3 | done | | | `docs/brainstorms/2026-04-16-diff-proportional-scaling-requirements.md`. 4-tier cap system, 10 requirements |
-| 8 | Cross-Skill Dedup | 3 | done | | | `docs/brainstorms/2026-04-16-cross-skill-instruction-dedup-requirements.md`. Recommends Option D: differentiate by category |
-| 21 | Pipeline Semantic Dedup | 3 | done | | | `docs/brainstorms/2026-04-16-pipeline-semantic-dedup-requirements.md`. Critical finding: "NEVER CODE" vs "implement" interference |
-| 2 | Lean Agent Dispatch | 3 | | | | |
+| 3 | Diff-Proportional Scaling | 3 | done | done | | `docs/brainstorms/2026-04-16-diff-proportional-scaling-requirements.md`, `docs/plans/2026-04-16-002-refactor-diff-proportional-scaling-plan.md`. 5 units: arg token, line counting, tier classification, priority selection, team announcement |
+| 8 | Cross-Skill Dedup | 3 | done | done | | `docs/brainstorms/2026-04-16-cross-skill-instruction-dedup-requirements.md`, `docs/plans/2026-04-16-003-refactor-cross-skill-pipeline-dedup-plan.md`. Combined plan with #21. Option D: differentiate by category |
+| 21 | Pipeline Semantic Dedup | 3 | done | done | | `docs/brainstorms/2026-04-16-pipeline-semantic-dedup-requirements.md`, `docs/plans/2026-04-16-003-refactor-cross-skill-pipeline-dedup-plan.md`. Combined plan with #8. 9 units, interference mitigation + semantic compression |
+| 2 | Lean Agent Dispatch | 3 | done | | | `docs/brainstorms/2026-04-16-lean-agent-dispatch-requirements.md`. Axis B (shared context dedup) delivers ~140-195 KB/review. Axis A (archetypes) deferred to post-#19 |
 | 19 | L3/Negative-Space | 4 | | | | |
 | 18 | Kolmogorov Compression | 4 | | | | |
 | 27 | Schelling Points | 4 | | | | |
