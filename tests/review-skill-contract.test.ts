@@ -292,7 +292,7 @@ describe("ce-code-review contract", () => {
 
     // Branch and standalone modes must stop on script error, not fall back
     expect(content).toContain(
-      "If the script outputs an error, stop instead of falling back to `git diff HEAD`",
+      "If the script outputs an error, stop. Do not fall back to `git diff HEAD`",
     )
   })
 

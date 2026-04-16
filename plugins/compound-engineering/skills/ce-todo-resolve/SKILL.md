@@ -18,6 +18,8 @@ Scan `.context/compound-engineering/todos/*.md` and legacy `todos/*.md`. Partiti
 
 If a specific todo ID or pattern was passed as an argument, filter to matching todos only (still must be `ready`).
 
+Residual work from `ce:review mode:autofix` (`safe_auto` pass) will already be `ready`.
+
 Skip any todo that recommends deleting, removing, or gitignoring files in `docs/brainstorms/`, `docs/plans/`, or `docs/solutions/` — these are intentional pipeline artifacts.
 
 ### 2. Plan
