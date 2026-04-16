@@ -150,7 +150,7 @@ Launch research subagents. Each returns text data to the orchestrator.
 
    1. Extract keywords from the problem context: module names, technical terms, error messages, component types
    2. If the problem category is clear, narrow search to the matching `docs/solutions/<category>/` directory
-   3. Use the native content-search tool (e.g., Grep in Claude Code) to pre-filter candidate files BEFORE reading any content. Run multiple searches in parallel, case-insensitive, targeting frontmatter fields. These are template patterns -- substitute actual keywords:
+3. Use the native content-search tool to pre-filter candidate files BEFORE reading content. Run multiple searches in parallel, case-insensitive, targeting frontmatter fields. Template patterns -- substitute actual keywords:
       - `title:.*<keyword>`
       - `tags:.*(<keyword1>|<keyword2>)`
       - `module:.*<module name>`

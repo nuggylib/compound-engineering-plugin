@@ -169,5 +169,4 @@ Look for:
 
 ## Tool Guidance
 
-- Delegate all JSONL extraction to the `ce-session-inventory` and `ce-session-extract` skills. Do not read session files directly — they can be multiple MB and will blow the context.
-- Use native content-search (e.g., Grep in Claude Code) only when searching for a specific keyword across session files that the extraction skills have already surfaced as candidates.
+- Use shell commands piped through python for JSONL extraction via the scripts described above.

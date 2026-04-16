@@ -10,8 +10,8 @@ Analyze specifications, plans, and feature descriptions from the end user's pers
 
 Before analyzing the spec in isolation, search the codebase for context. This prevents generic feedback and surfaces real constraints.
 
-1. Use native content-search (e.g., Grep) to find code related to the feature area -- models, controllers, services, routes, existing tests
-2. Use native file-search (e.g., Glob) to find related features that may share patterns or integrate with this one
+1. Find code related to the feature area -- models, controllers, services, routes, existing tests
+2. Find related features that may share patterns or integrate with this one
 3. Note existing patterns: how does the codebase handle similar flows today? What conventions exist for error handling, auth, validation?
 
 This context shapes every subsequent phase. Gaps are only gaps if the codebase doesn't already handle them.

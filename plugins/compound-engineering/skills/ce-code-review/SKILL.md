@@ -27,10 +27,13 @@ Parse `$ARGUMENTS` for the following optional tokens. Strip each recognized toke
 | `mode:headless` | `mode:headless` | Select headless mode for programmatic callers (see Mode Detection below) |
 | `base:<sha-or-ref>` | `base:abc1234` or `base:origin/main` | Skip scope detection — use this as the diff base directly |
 | `plan:<path>` | `plan:docs/plans/2026-03-25-001-feat-foo-plan.md` | Load this plan for requirements verification |
+| `cap:none` or `cap:N` | `cap:none` or `cap:4` | Override the diff-proportional conditional reviewer cap. `cap:none` disables capping; `cap:N` sets the max conditional reviewers to N |
 
 All tokens are optional. Each one present means one less thing to infer. When absent, fall back to existing behavior for that stage.
 
 **Conflicting mode flags:** If multiple mode tokens appear in arguments, stop and do not dispatch agents. If `mode:headless` is one of the conflicting tokens, emit the headless error envelope: `Review failed (headless mode). Reason: conflicting mode flags — <mode_a> and <mode_b> cannot be combined.` Otherwise emit the generic form: `Review failed. Reason: conflicting mode flags — <mode_a> and <mode_b> cannot be combined.`
+
+**`cap:` validation:** `cap:N` requires N to be a positive integer. `cap:0` is invalid (it would eliminate all conditional reviewers). If `cap:` has an invalid value, stop and report the error. `cap:` does not conflict with any mode flag.
 
 ## Mode Detection
 
@@ -51,15 +54,15 @@ All tokens are optional. Each one present means one less thing to infer. When ab
 
 ### Report-only mode rules
 
-- **Skip all user questions.** Infer intent conservatively if the diff metadata is thin.
-- **Never edit files or externalize work.** Do not write `.context/compound-engineering/ce-code-review/<run-id>/`, do not create todo files, and do not commit, push, or create a PR.
+- **Report-only: skip all user questions.** Infer intent conservatively if the diff metadata is thin.
+- **Report-only: never edit files or externalize work.** Do not write `.context/compound-engineering/ce-review/<run-id>/`, do not create todo files, and do not commit, push, or create a PR.
 - **Safe for parallel read-only verification.** `mode:report-only` is the only mode that is safe to run concurrently with browser testing on the same checkout.
 - **Do not switch the shared checkout.** If the caller passes an explicit PR or branch target, `mode:report-only` must run in an isolated checkout/worktree or stop instead of running `gh pr checkout` / `git checkout`.
 - **Do not overlap mutating review with browser testing on the same checkout.** If a future orchestrator wants fixes, run the mutating review phase after browser testing or in an isolated checkout/worktree.
 
 ### Headless mode rules
 
-- **Skip all user questions.** Never use the platform question tool (AskUserQuestion / request_user_input / ask_user) or other interactive prompts. Infer intent conservatively if the diff metadata is thin.
+- **Headless: skip all user questions.** Never use the platform question tool (AskUserQuestion / request_user_input / ask_user) or other interactive prompts. Infer intent conservatively if the diff metadata is thin.
 - **Require a determinable diff scope.** If headless mode cannot determine a diff scope (no branch, PR, or `base:` ref determinable without user interaction), emit `Review failed (headless mode). Reason: no diff scope detected. Re-invoke with a branch name, PR number, or base:<ref>.` and stop without dispatching agents.
 - **Apply only `safe_auto -> review-fixer` findings in a single pass.** No bounded re-review rounds. Leave `gated_auto`, `manual`, `human`, and `release` work unresolved and return them in the structured output.
 - **Return all non-auto findings as structured text output.** Use the headless output envelope format (see Stage 6 below) preserving severity, autofix_class, owner, requires_verification, confidence, pre_existing, and suggested_fix per finding. Enrich with detail-tier fields (why_it_matters, evidence[]) from the per-agent artifact files on disk (see Detail enrichment in Stage 6).
@@ -296,6 +299,15 @@ Using `git diff $BASE` (without `..HEAD`) diffs the merge-base against the worki
 
 **Untracked file handling:** Always inspect the `UNTRACKED:` list, even when `FILES:`/`DIFF:` are non-empty. Untracked files are outside review scope until staged. If the list is non-empty, tell the user which files are excluded. If any of them should be reviewed, stop and tell the user to `git add` them first and rerun. Only continue when the user is intentionally reviewing tracked changes only. In `mode:headless` or `mode:autofix`, do not stop to ask — proceed with tracked changes only and note the excluded untracked files in the Coverage section of the output.
 
+**Executable line counting:** Count changed lines (additions + deletions) from the diff output, including only executable code files. Exclude:
+
+- Test files (files in `test/`, `tests/`, `spec/`, `__tests__/` directories, or files matching `*_test.*`, `*.test.*`, `*.spec.*`)
+- Generated files (files in `generated/`, `gen/`, or with generated-file markers)
+- Lockfiles (`package-lock.json`, `yarn.lock`, `Gemfile.lock`, `bun.lockb`, `Cargo.lock`, `poetry.lock`, `go.sum`)
+- Instruction-prose Markdown (`.md` files in skill, agent, or reference directories)
+
+This uses the same exclusion rules as the adversarial reviewer's depth calibration and the file-type awareness rule for conditional selection. Record the count as `EXECUTABLE_LINES: N` in the Stage 1 metadata alongside `BASE:`, `FILES:`, and `DIFF:`.
+
 ### Stage 2: Intent discovery
 
 Understand what the change is trying to accomplish. The source of intent depends on which Stage 1 path was taken:
@@ -354,10 +366,47 @@ Stack-specific personas are additive. A Rails UI change may warrant `kieran-rail
 
 For CE conditional agents, check if the diff includes files matching `db/migrate/*.rb`, `db/schema.rb`, or data backfill scripts.
 
+#### Diff-proportional cap
+
+The 6 always-on agents (4 persona + 2 CE) are never subject to the cap. The cap applies only to conditional reviewers (cross-cutting, stack-specific, CE conditional).
+
+Use `EXECUTABLE_LINES` from Stage 1 to classify the diff into a tier:
+
+| Tier | Changed executable lines | Max conditional reviewers |
+|------|--------------------------|---------------------------|
+| Trivial | < 50 | 2 |
+| Small | 50-199 | 4 |
+| Medium | 200-499 | 6 |
+| Large | 500+ | No cap |
+
+If the user passed `cap:none`, skip tier classification and dispatch all matching conditionals. If the user passed `cap:N`, use N as the max regardless of tier.
+
+**Priority-ordered selection:** When more conditional reviewers match than the tier cap allows, rank and select using this priority system. The content-based selection above (deciding whether each conditional matches) is unchanged. The cap is a second pass that trims the already-selected set.
+
+| Priority | Category | Reviewers |
+|----------|----------|-----------|
+| Tier 1 -- Content-triggered cross-cutting | security, reliability, data-migrations, adversarial |
+| Tier 2 -- Structure-triggered cross-cutting | performance, api-contract, cli-readiness, previous-comments |
+| Tier 3 -- Stack-specific | dhh-rails, kieran-rails, kieran-python, kieran-typescript, julik-frontend-races |
+| Tier 4 -- CE conditional | schema-drift-detector, deployment-verification-agent |
+
+Selection algorithm:
+
+1. Start with all conditional reviewers that matched during content-based selection.
+2. If the set size is within the cap, dispatch all. Stop.
+3. Otherwise, fill slots by priority tier (Tier 1 first, then 2, 3, 4). Within a tier, use content-relevance judgment as a tiebreaker.
+4. Mark remaining matched-but-excluded reviewers as `[capped]`.
+
+**Category preservation:** The cap must not eliminate an entire review category when that category's trigger condition is met. If any Tier 1 reviewer matched and slots remain, at least one must be included. If the diff touches multiple stacks, include at least one stack-specific reviewer (the stack with the most changed lines) when slots remain after higher-priority placement. CE conditional agents (Tier 4) fill remaining slots after Tiers 1-3.
+
+**Adversarial interaction:** The adversarial reviewer has its own >=50 executable-line threshold. Under the trivial tier (< 50 lines), adversarial would not match regardless of the cap. For diffs at 50+ lines where adversarial triggers, it competes at Tier 1 priority for conditional slots.
+
+**Mode compatibility:** Diff-proportional scaling applies identically in interactive, autofix, report-only, and headless modes. The cap is evaluated at dispatch time in Stage 3, before mode-specific post-review behavior in Stage 6+. No mode bypasses or overrides the cap unless the user explicitly passes `cap:none`.
+
 Announce the team before spawning:
 
 ```
-Review team:
+Review team (cap: 2 conditional for <50 line diff):
 - correctness (always)
 - testing (always)
 - maintainability (always)
@@ -365,13 +414,14 @@ Review team:
 - ce-agent-native-reviewer (always)
 - ce-learnings-researcher (always)
 - security -- new endpoint in routes.rb accepts user-provided redirect URL
-- kieran-rails -- controller and Turbo flow changed in app/controllers and app/views
-- dhh-rails -- diff adds service objects around ordinary Rails CRUD
-- data-migrations -- adds migration 20260303_add_index_to_orders
-- ce-schema-drift-detector -- migration files present
+- reliability -- retry logic added to payment webhook handler
+- [capped] api-contract -- new route definition (priority 2, below cap)
+- [capped] kieran-rails -- Rails controller changes (priority 3, below cap)
 ```
 
-This is progress reporting, not a blocking confirmation.
+When `cap:none` is active or the diff is Large tier (500+ lines), use the plain `Review team:` header with no `[capped]` entries.
+
+Do not wait for confirmation before spawning.
 
 ### Stage 3b: Discover project standards paths
 
@@ -405,23 +455,50 @@ mkdir -p ".context/compound-engineering/ce-code-review/$RUN_ID"
 
 Pass `{run_id}` to every persona sub-agent so they can write their full analysis to `.context/compound-engineering/ce-code-review/{run_id}/{reviewer_name}.json`.
 
-**Report-only mode:** Skip run-id generation and directory creation. Do not pass `{run_id}` to agents. Agents return compact JSON only with no file write, consistent with report-only's no-write contract.
+**Report-only mode:** Skip run-id generation and directory creation. Do not pass `{run_id}` to agents. For the dispatch context, generate a temp directory instead: `DISPATCH_DIR=$(mktemp -d -t ce-review-XXXXXX)`. Write dispatch files there and use these paths in lean prompts.
+
+#### Write shared dispatch context
+
+Read `references/subagent-template.md`, `references/diff-scope.md`, and `references/findings-schema.json`. Assemble the dispatch context by substituting `{diff_scope_rules}` (from diff-scope.md) and `{schema}` (from findings-schema.json) into the template. Remove the `<persona>`, `<pr-context>`, and `<review-context>` sections from the assembled output -- these are per-agent and go in the lean prompt. Keep the preamble, `<scope-rules>`, and `<output-contract>` sections intact.
+
+Write the assembled dispatch context to `.context/compound-engineering/ce-review/{run_id}/dispatch-context.md`.
+
+Write the diff content from Stage 1 to `.context/compound-engineering/ce-review/{run_id}/diff.txt`.
+
+The dispatch context file contains the reviewer preamble, scope rules (diff-scope content), and the full output contract (confidence rubric, suppress rules, schema, autofix guide, rules). It does NOT contain persona, PR metadata, review-context metadata, or the diff.
 
 #### Spawning
 
-Read `references/subagent-template.md`, `references/diff-scope.md`, and `references/findings-schema.json` for sub-agent prompt assembly.
-
 Omit the `mode` parameter when dispatching sub-agents. Do not pass `mode: "auto"`.
 
-Spawn each selected persona reviewer as a parallel sub-agent using the subagent template in `references/subagent-template.md`. Each persona sub-agent receives:
+Spawn each selected persona reviewer as a parallel sub-agent with a lean prompt:
 
-1. Their persona file content (identity, failure modes, calibration, suppress conditions)
-2. Shared diff-scope rules from `references/diff-scope.md`
-3. The JSON output contract from `references/findings-schema.json`
-4. PR metadata: title, body, and URL when reviewing a PR (empty string otherwise), in a `<pr-context>` block
-5. Review context: intent summary, file list, diff
-6. Run ID and reviewer name for the artifact file path
-7. **For `project-standards` only:** the standards file path list from Stage 3b, wrapped in a `<standards-paths>` block appended to the review context
+```
+Read `.context/compound-engineering/ce-review/{run_id}/dispatch-context.md` for your review contract, confidence rubric, scope rules, and output schema. Read the file BEFORE analyzing the diff.
+
+<persona>
+{persona_file}
+</persona>
+
+<pr-context>
+{pr_metadata}
+</pr-context>
+
+<review-context>
+Run ID: {run_id}
+Reviewer name: {reviewer_name}
+
+Intent: {intent_summary}
+
+Changed files: {file_list}
+
+Read `.context/compound-engineering/ce-review/{run_id}/diff.txt` for the full diff.
+</review-context>
+
+If the dispatch context file read fails, return {"reviewer": "{reviewer_name}", "findings": [], "residual_risks": ["Dispatch context read failed"], "testing_gaps": []}.
+```
+
+For `project-standards` only: append the standards file path list from Stage 3b in a `<standards-paths>` block after `<review-context>`.
 
 Persona sub-agents are **read-only** with respect to the project: they review and return structured JSON. They do not edit project files or propose refactors. The one permitted write is saving their full analysis to the `.context/` artifact path specified in the output contract.
 

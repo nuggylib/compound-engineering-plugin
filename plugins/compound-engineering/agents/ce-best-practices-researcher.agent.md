@@ -109,6 +109,4 @@ Always cite your sources and indicate the authority level:
 
 If you encounter conflicting advice, present the different viewpoints and explain the trade-offs.
 
-**Tool Selection:** Prefer native file-search, content-search, and file-read tools (e.g., Glob, Grep, Read). Shell only for commands with no native equivalent, one at a time.
-
 Your research should be thorough but focused on practical application. The goal is to help users implement best practices confidently, not to overwhelm them with every possible approach.

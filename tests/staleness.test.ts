@@ -7,6 +7,7 @@ import {
   checkDeprecatedTools,
   checkOversizedSkills,
   checkBoilerplateDensity,
+  checkQuestionToolDrift,
   validateContentStaleness,
   OVERSIZED_SKILL_THRESHOLD,
   DEFAULT_BOILERPLATE_THRESHOLD,
@@ -278,6 +279,54 @@ describe("checkBoilerplateDensity", () => {
 
     const warningsAt5 = await checkBoilerplateDensity(root, 5);
     expect(warningsAt5).toEqual([]);
+  });
+});
+
+// --- checkQuestionToolDrift ---
+
+describe("checkQuestionToolDrift", () => {
+  test("warns when a file has 2 of 3 canonical tools", async () => {
+    const root = await makeTempRoot();
+    await mkdir(path.join(root, "skills", "partial-skill"), { recursive: true });
+    await writeFile(
+      path.join(root, "skills", "partial-skill", "SKILL.md"),
+      "Use AskUserQuestion or request_user_input to ask.\n",
+    );
+
+    const warnings = await checkQuestionToolDrift(root);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("drift");
+    expect(warnings[0]).toContain("ask_user");
+  });
+
+  test("does not warn when all 3 canonical tools present", async () => {
+    const root = await makeTempRoot();
+    await mkdir(path.join(root, "skills", "complete-skill"), { recursive: true });
+    await writeFile(
+      path.join(root, "skills", "complete-skill", "SKILL.md"),
+      "Use AskUserQuestion, request_user_input, or ask_user.\n",
+    );
+
+    const warnings = await checkQuestionToolDrift(root);
+    expect(warnings).toEqual([]);
+  });
+
+  test("does not warn when only 1 tool mentioned", async () => {
+    const root = await makeTempRoot();
+    await mkdir(path.join(root, "skills", "single-skill"), { recursive: true });
+    await writeFile(
+      path.join(root, "skills", "single-skill", "SKILL.md"),
+      "Use AskUserQuestion to ask questions.\n",
+    );
+
+    const warnings = await checkQuestionToolDrift(root);
+    expect(warnings).toEqual([]);
+  });
+
+  test("handles missing directories", async () => {
+    const root = await makeTempRoot();
+    const warnings = await checkQuestionToolDrift(root);
+    expect(warnings).toEqual([]);
   });
 });
 

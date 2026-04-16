@@ -175,22 +175,63 @@ export async function checkBoilerplateDensity(
 }
 
 /**
+ * The canonical set of cross-platform question tools.
+ * Defined in AGENTS.md "Cross-Platform Interaction Convention" section.
+ */
+export const CANONICAL_QUESTION_TOOLS = ["AskUserQuestion", "request_user_input", "ask_user"];
+
+/**
+ * Warn when a file mentions some but not all canonical question tools.
+ * Files with 2+ tools but missing one likely drifted from the canonical set.
+ */
+export async function checkQuestionToolDrift(pluginRoot: string): Promise<string[]> {
+  const warnings: string[] = [];
+  const dirs = [
+    path.join(pluginRoot, "skills"),
+    path.join(pluginRoot, "agents"),
+  ];
+
+  for (const dir of dirs) {
+    let files: string[] = [];
+    try {
+      files = await walkMdFiles(dir);
+    } catch {
+      continue;
+    }
+    for (const file of files) {
+      const content = await readText(file);
+      const found = CANONICAL_QUESTION_TOOLS.filter((tool) => content.includes(tool));
+      if (found.length >= 2 && found.length < CANONICAL_QUESTION_TOOLS.length) {
+        const missing = CANONICAL_QUESTION_TOOLS.filter((t) => !found.includes(t));
+        const relativePath = path.relative(pluginRoot, file);
+        warnings.push(
+          `[warn] Question-tool drift in ${relativePath}: has ${found.join(", ")} but missing ${missing.join(", ")}`,
+        );
+      }
+    }
+  }
+
+  return warnings;
+}
+
+/**
  * Run all staleness checks against a plugin root directory.
  */
 export async function validateContentStaleness(
   pluginRoot: string,
   boilerplateThreshold: number = DEFAULT_BOILERPLATE_THRESHOLD,
 ): Promise<StalenessResult> {
-  const [yearErrors, toolErrors, oversizedWarnings, boilerplateWarnings] =
+  const [yearErrors, toolErrors, oversizedWarnings, boilerplateWarnings, driftWarnings] =
     await Promise.all([
       checkHardcodedYears(pluginRoot),
       checkDeprecatedTools(pluginRoot),
       checkOversizedSkills(pluginRoot),
       checkBoilerplateDensity(pluginRoot, boilerplateThreshold),
+      checkQuestionToolDrift(pluginRoot),
     ]);
 
   return {
     errors: [...yearErrors, ...toolErrors],
-    warnings: [...oversizedWarnings, ...boilerplateWarnings],
+    warnings: [...oversizedWarnings, ...boilerplateWarnings, ...driftWarnings],
   };
 }

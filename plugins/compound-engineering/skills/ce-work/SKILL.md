@@ -6,7 +6,7 @@ argument-hint: "[Plan doc path or description of work. Blank to auto use latest 
 
 # Work Execution Command
 
-Execute work efficiently while maintaining quality and finishing features.
+During execution: work efficiently while maintaining quality and finishing features.
 
 ## Introduction
 
@@ -234,7 +234,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
      - Find existing test files for implementation files being changed (Test Discovery — see below)
      - If delegation_active: branch to the Codex Delegation Execution Loop
        (see `references/codex-delegation-workflow.md`)
-     - Otherwise: implement following existing conventions
+     - Otherwise: during execution, implement following existing conventions
      - Add, update, or remove tests to match implementation changes (see Test Discovery below)
      - Run System-Wide Test Check (see below)
      - Run tests after changes
@@ -253,14 +253,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
    **Test Discovery** — Before implementing changes to a file, find its existing test files (search for test/spec files that import, reference, or share naming patterns with the implementation file). When a plan specifies test scenarios or test files, start there, then check for additional test coverage the plan may not have enumerated. Changes to implementation files should be accompanied by corresponding test updates — new tests for new behavior, modified tests for changed behavior, removed or updated tests for deleted behavior.
 
-   **Test Scenario Completeness** — Before writing tests for a feature-bearing unit, check whether the plan's `Test scenarios` cover all categories that apply to this unit. If a category is missing or scenarios are vague (e.g., "validates correctly" without naming inputs and expected outcomes), supplement from the unit's own context before writing tests:
-
-   | Category | When it applies | How to derive if missing |
-   |----------|----------------|------------------------|
-   | **Happy path** | Always for feature-bearing units | Read the unit's Goal and Approach for core input/output pairs |
-   | **Edge cases** | When the unit has meaningful boundaries (inputs, state, concurrency) | Identify boundary values, empty/nil inputs, and concurrent access patterns |
-   | **Error/failure paths** | When the unit has failure modes (validation, external calls, permissions) | Enumerate invalid inputs the unit should reject, permission/auth denials it should enforce, and downstream failures it should handle |
-   | **Integration** | When the unit crosses layers (callbacks, middleware, multi-service) | Identify the cross-layer chain and write a scenario that exercises it without mocks |
+   **Test Scenario Completeness** -- Before writing tests, verify the plan's test scenarios cover all applicable categories (happy path, edge cases, error/failure paths, integration). Supplement gaps from the unit's own context before writing tests.
 
    **System-Wide Test Check** — Before marking a task done, pause and ask:
 
@@ -312,11 +305,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
 3. **Follow Existing Patterns**
 
-   - The plan should reference similar code - read those files first
-   - Match naming conventions exactly
-   - Reuse existing components where possible
-   - Follow project coding standards (see AGENTS.md; use CLAUDE.md only if the repo still keeps a compatibility shim)
-   - When in doubt, grep for similar implementations
+   Read each unit's `Patterns to follow` references first. Match naming conventions and reuse existing components. When working from a bare prompt, grep for similar implementations.
 
 4. **Test Continuously**
 
@@ -373,8 +362,8 @@ When `delegation_active` is true after argument parsing, read `references/codex-
 
 ### Start Fast, Execute Faster
 
-- Get clarification once at the start, then execute
-- Don't wait for perfect understanding - ask questions and move
+- During execution: get clarification once at the start, then execute
+- During execution: ask questions and move rather than waiting for perfect understanding
 - The goal is to **finish the feature**, not create perfect process
 
 ### The Plan is Your Guide

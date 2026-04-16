@@ -35,8 +35,6 @@ Before any design work, examine the codebase for existing design signals.
 - **Animation libraries**: Framer Motion, GSAP, anime.js, Motion One, Vue Transition imports
 - **Spacing / layout patterns**: Consistent spacing scale usage, grid systems, layout components
 
-Use the platform's native file-search and content-search tools (e.g., Glob/Grep in Claude Code) to scan for these signals. Do not use shell commands for routine file exploration.
-
 ### Mode Classification
 
 Based on detected signals, choose a mode:

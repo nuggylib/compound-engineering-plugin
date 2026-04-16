@@ -49,7 +49,7 @@ If the script fails or returns an error field, report the issue to the user and 
 
 ### Phase 2: Read Key Files
 
-Guided by the inventory, read files essential for understanding the codebase. Use the native file-read tool (not shell commands).
+Guided by the inventory, read files essential for understanding the codebase.
 
 Read files in parallel batches where there are no dependencies between them (e.g., batch README.md, entry points, and AGENTS.md/CLAUDE.md together).
 

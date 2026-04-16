@@ -52,8 +52,6 @@ dependencies: ["001"]     # Issue IDs this is blocked by
 
 ## Workflows
 
-> **Tool preference:** Use native file-search/content-search tools instead of shell commands. Shell only for operations with no native equivalent (`mv`, `mkdir -p`).
-
 ### Creating a New Todo
 
 1. `mkdir -p .context/compound-engineering/todos/`
