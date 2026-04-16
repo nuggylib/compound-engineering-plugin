@@ -1,7 +1,7 @@
 ---
 title: "refactor: On-Demand Loading for ce-review References"
 type: refactor
-status: active
+status: done
 date: 2026-04-16
 origin: docs/brainstorms/2026-04-16-on-demand-loading-requirements.md
 ---

@@ -106,7 +106,7 @@ Routing rules:
 
 ## Reviewers
 
-17 reviewer personas in layered conditionals, plus CE-specific agents. See the persona catalog included below for the full catalog.
+17 reviewer personas in layered conditionals, plus CE-specific agents. See `references/persona-catalog.md` for the full catalog.
 
 **Always-on (every review):**
 
@@ -342,7 +342,9 @@ If a plan is found, read its **Requirements Trace** (R1, R2, etc.) and **Impleme
 
 ### Stage 3: Select reviewers
 
-Read the diff and file list from Stage 1. The 4 always-on personas and 2 CE always-on agents are automatic. For each cross-cutting and stack-specific conditional persona in the persona catalog included below, decide whether the diff warrants it. This is agent judgment, not keyword matching.
+Read `references/persona-catalog.md` for the full reviewer persona catalog with selection criteria.
+
+Read the diff and file list from Stage 1. The 4 always-on personas and 2 CE always-on agents are automatic. For each cross-cutting and stack-specific conditional persona in the persona catalog, decide whether the diff warrants it.
 
 **File-type awareness for conditional selection:** Instruction-prose files (Markdown skill definitions, JSON schemas, config files) are product code but do not benefit from runtime-focused reviewers. The adversarial reviewer's techniques (race conditions, cascade failures, abuse cases) target executable code behavior. For diffs that only change instruction-prose files, skip adversarial unless the prose describes auth, payment, or data-mutation behavior. Count only executable code lines toward line-count thresholds.
 
@@ -407,14 +409,16 @@ Pass `{run_id}` to every persona sub-agent so they can write their full analysis
 
 #### Spawning
 
-Omit the `mode` parameter when dispatching sub-agents so the user's configured permission settings apply. Do not pass `mode: "auto"`.
+Read `references/subagent-template.md`, `references/diff-scope.md`, and `references/findings-schema.json` for sub-agent prompt assembly.
 
-Spawn each selected persona reviewer as a parallel sub-agent using the subagent template included below. Each persona sub-agent receives:
+Omit the `mode` parameter when dispatching sub-agents. Do not pass `mode: "auto"`.
+
+Spawn each selected persona reviewer as a parallel sub-agent using the subagent template in `references/subagent-template.md`. Each persona sub-agent receives:
 
 1. Their persona file content (identity, failure modes, calibration, suppress conditions)
-2. Shared diff-scope rules from the diff-scope reference included below
-3. The JSON output contract from the findings schema included below
-4. PR metadata: title, body, and URL when reviewing a PR (empty string otherwise). Passed in a `<pr-context>` block so reviewers can verify code against stated intent
+2. Shared diff-scope rules from `references/diff-scope.md`
+3. The JSON output contract from `references/findings-schema.json`
+4. PR metadata: title, body, and URL when reviewing a PR (empty string otherwise), in a `<pr-context>` block
 5. Review context: intent summary, file list, diff
 6. Run ID and reviewer name for the artifact file path
 7. **For `project-standards` only:** the standards file path list from Stage 3b, wrapped in a `<standards-paths>` block appended to the review context
@@ -485,7 +489,9 @@ Convert multiple reviewer compact JSON returns into one deduplicated, confidence
 
 ### Stage 6: Synthesize and present
 
-Assemble the final report using **pipe-delimited markdown tables for findings** from the review output template included below. The table format is mandatory for finding rows in interactive mode — do not render findings as freeform text blocks or horizontal-rule-separated prose. Other report sections (Applied Fixes, Learnings, Coverage, etc.) use bullet lists and the `---` separator before the verdict, as shown in the template.
+Read `references/review-output-template.md` for the report format template.
+
+Assemble the final report using **pipe-delimited markdown tables for findings** from `references/review-output-template.md`. Do not render findings as freeform text blocks or horizontal-rule-separated prose.
 
 1. **Header.** Scope, intent, mode, reviewer team with per-conditional justifications.
 2. **Findings.** Rendered as pipe-delimited tables grouped by severity (`### P0 -- Critical`, `### P1 -- High`, `### P2 -- Moderate`, `### P3 -- Low`). Each finding row shows `#`, file, issue, reviewer(s), confidence, and synthesized route. Omit empty severity levels. Never render findings as freeform text blocks or numbered lists.
@@ -735,26 +741,3 @@ If "Push fixes": push the branch with `git push` to update the existing PR.
 
 If the platform doesn't support parallel sub-agents, run reviewers sequentially. Everything else (stages, output format, merge pipeline) stays the same.
 
----
-
-## Included References
-
-### Persona Catalog
-
-@./references/persona-catalog.md
-
-### Subagent Template
-
-@./references/subagent-template.md
-
-### Diff Scope Rules
-
-@./references/diff-scope.md
-
-### Findings Schema
-
-@./references/findings-schema.json
-
-### Review Output Template
-
-@./references/review-output-template.md
