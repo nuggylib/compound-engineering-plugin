@@ -1,0 +1,87 @@
+diff --git a/plugins/compound-engineering/skills/ce-review/SKILL.md b/plugins/compound-engineering/skills/ce-review/SKILL.md
+index 4dae213..f6aa73c 100644
+--- a/plugins/compound-engineering/skills/ce-review/SKILL.md
++++ b/plugins/compound-engineering/skills/ce-review/SKILL.md
+@@ -101,7 +101,7 @@ Routing rules:
+
+ ## Reviewers
+
+-17 reviewer personas in layered conditionals, plus CE-specific agents. See the persona catalog included below for the full catalog.
++17 reviewer personas in layered conditionals, plus CE-specific agents. See `references/persona-catalog.md` for the full catalog.
+
+ **Always-on (every review):**
+
+@@ -338,6 +338,8 @@ If a plan is found, read its **Requirements Trace** (R1, R2, etc.) and **Impleme
+
+ ### Stage 3: Select reviewers
+
++Read `references/persona-catalog.md` for the full reviewer persona catalog with selection criteria.
++
+ Read the diff and file list from Stage 1. The 4 always-on personas and 2 CE always-on agents are automatic. For each cross-cutting and stack-specific conditional persona in the persona catalog, decide whether the diff warrants it.
+
+ **File-type awareness for conditional selection:** For diffs that only change instruction-prose files (Markdown skill definitions, JSON schemas, config files), skip adversarial unless the prose describes auth, payment, or data-mutation behavior. Count only executable code lines toward line-count thresholds.
+@@ -401,13 +403,15 @@ Pass `{run_id}` to every persona sub-agent so they can write their full analysis
+
+ #### Spawning
+
++Read `references/subagent-template.md`, `references/diff-scope.md`, and `references/findings-schema.json` for sub-agent prompt assembly.
++
+ Omit the `mode` parameter when dispatching sub-agents. Do not pass `mode: "auto"`.
+
+-Spawn each selected persona reviewer as a parallel sub-agent using the subagent template included below. Each persona sub-agent receives:
++Spawn each selected persona reviewer as a parallel sub-agent using the subagent template in `references/subagent-template.md`. Each persona sub-agent receives:
+
+ 1. Their persona file content (identity, failure modes, calibration, suppress conditions)
+-2. Shared diff-scope rules from the diff-scope reference included below
+-3. The JSON output contract from the findings schema included below
++2. Shared diff-scope rules from `references/diff-scope.md`
++3. The JSON output contract from `references/findings-schema.json`
+ 4. PR metadata: title, body, and URL when reviewing a PR (empty string otherwise), in a `<pr-context>` block
+ 5. Review context: intent summary, file list, diff
+ 6. Run ID and reviewer name for the artifact file path
+@@ -479,7 +483,9 @@ Convert multiple reviewer compact JSON returns into one deduplicated, confidence
+
+ ### Stage 6: Synthesize and present
+
+-Assemble the final report using **pipe-delimited markdown tables for findings** from the review output template included below. Do not render findings as freeform text blocks or horizontal-rule-separated prose.
++Read `references/review-output-template.md` for the report format template.
++
++Assemble the final report using **pipe-delimited markdown tables for findings** from `references/review-output-template.md`. Do not render findings as freeform text blocks or horizontal-rule-separated prose.
+
+ 1. **Header.** Scope, intent, mode, reviewer team with per-conditional justifications.
+ 2. **Findings.** Rendered as pipe-delimited tables grouped by severity (`### P0 -- Critical`, `### P1 -- High`, `### P2 -- Moderate`, `### P3 -- Low`). Each finding row shows `#`, file, issue, reviewer(s), confidence, and synthesized route. Omit empty severity levels. Never render findings as freeform text blocks or numbered lists.
+@@ -706,26 +712,3 @@ If "Push fixes": push the branch with `git push` to update the existing PR.
+
+ If the platform does not support parallel sub-agents, run reviewers sequentially.
+
+----
+-
+-## Included References
+-
+-### Persona Catalog
+-
+-@./references/persona-catalog.md
+-
+-### Subagent Template
+-
+-@./references/subagent-template.md
+-
+-### Diff Scope Rules
+-
+-@./references/diff-scope.md
+-
+-### Findings Schema
+-
+-@./references/findings-schema.json
+-
+-### Review Output Template
+-
+-@./references/review-output-template.md
+diff --git a/docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md b/docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md
+index abc1234..def5678 100644
+--- a/docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md
++++ b/docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md
+@@ -45,7 +45,7 @@ status: active
+ | 1 | On-demand reference loading | Convert @-inlined references to on-demand reads | medium | high |
+-| 1 | On-demand reference loading | Status: planned | | |
++| 1 | On-demand reference loading | Status: complete | | |

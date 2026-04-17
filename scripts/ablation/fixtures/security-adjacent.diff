@@ -1,0 +1,73 @@
+diff --git a/plugins/compound-engineering/agents/review/security-sentinel.md b/plugins/compound-engineering/agents/review/security-sentinel.md
+index 15e113b..5c5203d 100644
+--- a/plugins/compound-engineering/agents/review/security-sentinel.md
++++ b/plugins/compound-engineering/agents/review/security-sentinel.md
+@@ -2,6 +2,7 @@
+ name: security-sentinel
+ description: "Performs security audits for vulnerabilities, input validation, auth/authz, hardcoded secrets, and OWASP compliance. Use when reviewing code for security issues or before deployment."
+ model: inherit
++tools: Read, Grep, Glob, Bash
+ ---
+
+ You are an elite Application Security Specialist with deep expertise in identifying and mitigating security vulnerabilities. You think like an attacker, constantly asking: Where are the vulnerabilities? What could go wrong? How could this be exploited?
+diff --git a/plugins/compound-engineering/agents/document-review/security-lens-reviewer.md b/plugins/compound-engineering/agents/document-review/security-lens-reviewer.md
+index cc349c4..4a7429b 100644
+--- a/plugins/compound-engineering/agents/document-review/security-lens-reviewer.md
++++ b/plugins/compound-engineering/agents/document-review/security-lens-reviewer.md
+@@ -2,6 +2,7 @@
+ name: security-lens-reviewer
+ description: "Evaluates planning documents for security gaps at the plan level -- auth/authz assumptions, data exposure risks, API surface vulnerabilities, and missing threat model elements. Spawned by the document-review skill."
+ model: sonnet
++tools: Read, Grep, Glob, Bash
+ ---
+
+ You are a security architect evaluating whether this plan accounts for security at the planning level. Distinct from code-level security review -- you examine whether the plan makes security-relevant decisions and identifies its attack surface before implementation begins.
+diff --git a/plugins/compound-engineering/agents/review/data-integrity-guardian.md b/plugins/compound-engineering/agents/review/data-integrity-guardian.md
+index e9021ef..de66a87 100644
+--- a/plugins/compound-engineering/agents/review/data-integrity-guardian.md
++++ b/plugins/compound-engineering/agents/review/data-integrity-guardian.md
+@@ -2,6 +2,7 @@
+ name: data-integrity-guardian
+ description: "Reviews database migrations, data models, and persistent data code for safety. Use when checking migration safety, data constraints, transaction boundaries, or privacy compliance."
+ model: inherit
++tools: Read, Grep, Glob, Bash
+ ---
+
+ You are a Data Integrity Guardian, an expert in database design, data migration safety, and data governance. Your deep expertise spans relational database theory, ACID properties, data privacy regulations (GDPR, CCPA), and production database management.
+diff --git a/plugins/compound-engineering/agents/review/deployment-verification-agent.md b/plugins/compound-engineering/agents/review/deployment-verification-agent.md
+index 382b191..580a33f 100644
+--- a/plugins/compound-engineering/agents/review/deployment-verification-agent.md
++++ b/plugins/compound-engineering/agents/review/deployment-verification-agent.md
+@@ -2,6 +2,7 @@
+ name: deployment-verification-agent
+ description: "Produces Go/No-Go deployment checklists with SQL verification queries, rollback procedures, and monitoring plans. Use when PRs touch production data, migrations, or risky data changes."
+ model: inherit
++tools: Read, Grep, Glob, Bash
+ ---
+
+ You are a Deployment Verification Agent. Your mission is to produce concrete, executable checklists for risky data deployments so engineers aren't guessing at launch time.
+diff --git a/plugins/compound-engineering/skills/ce-review/references/resolve-base.sh b/plugins/compound-engineering/skills/ce-review/references/resolve-base.sh
+index 433d42b..9a87429 100644
+--- a/plugins/compound-engineering/skills/ce-review/references/resolve-base.sh
++++ b/plugins/compound-engineering/skills/ce-review/references/resolve-base.sh
+@@ -52,7 +52,9 @@ if [ -n "$REVIEW_BASE_BRANCH" ]; then
+   if [ -n "$PR_BASE_REPO" ]; then
+     PR_BASE_REMOTE=$(git remote -v | awk "index(\$2, \"github.com:$PR_BASE_REPO\") || index(\$2, \"github.com/$PR_BASE_REPO\") {print \$1; exit}")
+     if [ -n "$PR_BASE_REMOTE" ]; then
+-      git rev-parse --verify "$PR_BASE_REMOTE/$REVIEW_BASE_BRANCH" >/dev/null 2>&1 || git fetch --no-tags "$PR_BASE_REMOTE" "$REVIEW_BASE_BRANCH:refs/remotes/$PR_BASE_REMOTE/$REVIEW_BASE_BRANCH" 2>/dev/null || git fetch --no-tags "$PR_BASE_REMOTE" "$REVIEW_BASE_BRANCH" 2>/dev/null || true
++      # Always fetch -- a locally cached ref may be stale, producing a
++      # merge-base that predates squash-merged work and inflating the diff.
++      git fetch --no-tags "$PR_BASE_REMOTE" "$REVIEW_BASE_BRANCH:refs/remotes/$PR_BASE_REMOTE/$REVIEW_BASE_BRANCH" 2>/dev/null || git fetch --no-tags "$PR_BASE_REMOTE" "$REVIEW_BASE_BRANCH" 2>/dev/null || true
+       BASE_REF=$(git rev-parse --verify "$PR_BASE_REMOTE/$REVIEW_BASE_BRANCH" 2>/dev/null || true)
+     fi
+   fi
+@@ -60,7 +62,8 @@ if [ -n "$REVIEW_BASE_BRANCH" ]; then
+     # Only try origin if it exists as a remote; otherwise skip to avoid
+     # confusing errors in fork setups where origin points at the user's fork.
+     if git remote get-url origin >/dev/null 2>&1; then
+-      git rev-parse --verify "origin/$REVIEW_BASE_BRANCH" >/dev/null 2>&1 || git fetch --no-tags origin "$REVIEW_BASE_BRANCH:refs/remotes/origin/$REVIEW_BASE_BRANCH" 2>/dev/null || git fetch --no-tags origin "$REVIEW_BASE_BRANCH" 2>/dev/null || true
++      # Always fetch -- same rationale as the fork-safe path above.
++      git fetch --no-tags origin "$REVIEW_BASE_BRANCH:refs/remotes/origin/$REVIEW_BASE_BRANCH" 2>/dev/null || git fetch --no-tags origin "$REVIEW_BASE_BRANCH" 2>/dev/null || true
+       BASE_REF=$(git rev-parse --verify "origin/$REVIEW_BASE_BRANCH" 2>/dev/null || true)
+     fi
+     # Fall back to a bare local ref only if remote resolution failed
