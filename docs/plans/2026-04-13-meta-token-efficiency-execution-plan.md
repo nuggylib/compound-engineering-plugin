@@ -216,10 +216,10 @@ Update this table as brainstorm/plan work progresses:
 | 8 | Cross-Skill Dedup | 3 | done | done | done | `docs/brainstorms/2026-04-16-cross-skill-instruction-dedup-requirements.md`, `docs/plans/2026-04-16-003-refactor-cross-skill-pipeline-dedup-plan.md`. 7 units executed: AGENTS.md canonical section, native tool removal (14 files), interference phase-scoping (ce-plan/ce-work/ce-review), semantic compression (3 skills), staleness check, cross-reference matrix, carrying-waste manifest |
 | 21 | Pipeline Semantic Dedup | 3 | done | done | done | `docs/brainstorms/2026-04-16-pipeline-semantic-dedup-requirements.md`, `docs/plans/2026-04-16-003-refactor-cross-skill-pipeline-dedup-plan.md`. Combined with #8. See #8 for execution details |
 | 2 | Lean Agent Dispatch | 3 | done | done | done | `docs/brainstorms/2026-04-16-lean-agent-dispatch-requirements.md`, `docs/plans/2026-04-16-004-refactor-lean-agent-dispatch-plan.md`. 3 units executed: write-once dispatch context, lean prompt dispatch, subagent template variable reference update. ~144 KB savings per 10-reviewer dispatch. Axis A (archetypes) deferred to post-#19 |
-| 19 | L3/Negative-Space | 4 | | | | |
-| 18 | Kolmogorov Compression | 4 | | | | |
-| 27 | Schelling Points | 4 | | | | |
-| 4 | Script-First Extraction | 4 | | | | |
+| 19 | L3/Negative-Space | 4 | done | done | | `docs/brainstorms/2026-04-16-l3-negative-space-agent-redesign-requirements.md`. Combined plan with #27: `docs/plans/2026-04-18-006-refactor-schelling-negative-space-agent-optimization-plan.md`. 6 units. Ablation data: 17% Schelling, 43% moderate, 39% load-bearing across 6 agents. Conservative savings estimate ~15-25KB |
+| 18 | Kolmogorov Compression | 4 | done | done | | `docs/brainstorms/2026-04-16-kolmogorov-compression-requirements.md`, `docs/plans/2026-04-18-007-refactor-kolmogorov-compression-plan.md`. 5 units. Graduated compression (Approach C) with ablation validation. Blocked on #19+#27 execution. Conservative post-#19+#27 savings estimate ~15-20KB |
+| 27 | Schelling Points | 4 | done | done | | `docs/brainstorms/2026-04-16-schelling-point-architecture-requirements.md`. Combined plan with #19: `docs/plans/2026-04-18-006-refactor-schelling-negative-space-agent-optimization-plan.md`. Rest markers deferred; using graduated compression instead |
+| 4 | Script-First Extraction | 4 | done | | | `docs/brainstorms/2026-04-16-script-first-extraction-requirements.md`. Plan pending |
 | 1 | Queryable Reference Libraries | 5 | | | | |
 | 11 | Compact Returns Generalization | 5 | | | | |
 | 28 | Cartographic Zoom | 5 | | | | |
