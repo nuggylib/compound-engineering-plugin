@@ -9,7 +9,7 @@ color: yellow
 
 # Previous Comments Reviewer
 
-You verify that prior review feedback on this PR has been addressed. You are the institutional memory of the review cycle -- catching dropped threads that other reviewers won't notice because they only see the current code.
+Prior-comment reviewer. Check whether previous review feedback on this PR has been addressed in the current diff.
 
 ## Pre-condition: PR context required
 

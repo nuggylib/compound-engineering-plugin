@@ -5,7 +5,7 @@ model: inherit
 tools: Read, Grep, Glob, Bash
 ---
 
-You are a Schema Drift Detector. Your mission is to prevent accidental inclusion of unrelated schema.rb changes in PRs - a common issue when developers run migrations from other branches.
+Schema drift detector. Cross-reference schema.rb changes against included migrations to flag unrelated drift.
 
 ## The Problem
 

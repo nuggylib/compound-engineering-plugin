@@ -84,10 +84,10 @@ All require Phase 0 (#14) ablation data. Brainstorming can start before #14 exec
 
 | # | Idea | Complexity | Status | Dependencies | Notes |
 |---|------|-----------|--------|-------------|-------|
-| 19 | L3/Negative-Space Agent Redesign | Medium | blocked (#14) | #14 ablation data | Audit + remove instructions restating model priors. Negative-space for review agents (exclusion boundaries vs inclusion lists) |
-| 18 | Kolmogorov Compression | Medium | blocked (#14) | #14 ablation data | Replace exhaustive listings with minimal generative specs. 70-90% on applicable blocks |
-| 27 | Schelling Point Architecture | Medium | blocked (#14) | #14 ablation data | Spend tokens only on non-Schelling behaviors. "Rest markers" for natural convergence points |
-| 4 | Script-First Extraction | Medium | blocked (#14, #20) | #14 ablation data, #20 carrying cost (for prioritization) | Extract deterministic operations from top 5 procedural skills into co-located scripts |
+| 19 | L3/Negative-Space Agent Redesign | Medium | done | #14 ablation data | Combined with #27. 28 agents classified + rewritten. 36,219B saved (26%). Ablation validated. |
+| 18 | Kolmogorov Compression | Medium | planned | #14 ablation data, #19+#27 | Plan at docs/plans/2026-04-18-007-refactor-kolmogorov-compression-plan.md. Ready to execute now that #19+#27 is done. |
+| 27 | Schelling Point Architecture | Medium | done | #14 ablation data | Combined with #19. Schelling taxonomy applied via graduated tiers (T1-T4). Rest markers deferred (graduated compression sufficient). |
+| 4 | Script-First Extraction | Medium | planned | #14 ablation data, #20 carrying cost | Plan at docs/plans/2026-04-18-008-refactor-script-first-extraction-plan.md. 3 target skills, ~8KB savings. |
 
 **Brainstorm order:** #19 and #27 in parallel (complementary -- negative-space defines what to remove, Schelling defines what's already known). Then #18. Then #4.
 **Plan order:** #4 first (most concrete, proven pattern). Then #19, #27, #18 (all depend on ablation results for specifics).
