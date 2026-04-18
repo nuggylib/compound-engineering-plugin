@@ -93,13 +93,21 @@ export async function invokeClaudeCli(
   command: string,
   prompt: string,
 ): Promise<string> {
-  const proc = Bun.spawn([command, "--print", "-p", prompt], {
-    stdout: "pipe",
-    stderr: "pipe",
-  });
+  const proc = Bun.spawn(
+    [command, "--print", "--allowedTools", "", "-p", prompt],
+    {
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  );
 
   const output = await new Response(proc.stdout).text();
-  await proc.exited;
+  const exitCode = await proc.exited;
+
+  if (exitCode !== 0) {
+    const stderr = await new Response(proc.stderr).text();
+    console.error(`  [warn] claude exited with code ${exitCode}: ${stderr.trim().slice(0, 200)}`);
+  }
 
   return output;
 }
@@ -195,21 +203,30 @@ function majorityVote(allFindings: Finding[][]): Finding[] {
 
 /**
  * Check if two findings match using fuzzy title matching AND same file.
- * Match criteria: same file AND (exact title OR Levenshtein < 3 OR substring containment).
+ * Match criteria: same file AND (exact title, substring containment,
+ * Levenshtein < 5, or >50% keyword overlap in titles).
  */
 export function findingsMatch(a: Finding, b: Finding): boolean {
   if (a.file !== b.file) return false;
 
-  // Exact match
   if (a.title === b.title) return true;
 
-  // Substring containment
   const aLower = a.title.toLowerCase();
   const bLower = b.title.toLowerCase();
   if (aLower.includes(bLower) || bLower.includes(aLower)) return true;
+  if (levenshtein(aLower, bLower) < 5) return true;
 
-  // Levenshtein distance < 3
-  if (levenshtein(aLower, bLower) < 3) return true;
+  // Keyword overlap: >50% of significant words shared
+  const aWords = new Set(aLower.split(/\W+/).filter((w) => w.length > 3));
+  const bWords = new Set(bLower.split(/\W+/).filter((w) => w.length > 3));
+  if (aWords.size > 0 && bWords.size > 0) {
+    let shared = 0;
+    for (const w of aWords) {
+      if (bWords.has(w)) shared++;
+    }
+    const overlap = shared / Math.min(aWords.size, bWords.size);
+    if (overlap > 0.5) return true;
+  }
 
   return false;
 }

@@ -2,7 +2,7 @@
 import path from "path";
 import crypto from "crypto";
 import { parseArgs } from "util";
-import { parseSections } from "../../src/analysis/sections";
+import { parseSections, removeSection } from "../../src/analysis/sections";
 import { generateVariants } from "../../src/analysis/variants";
 import { evaluate, scoreQualityDelta, type EvaluationResult } from "../../src/analysis/evaluator";
 import { readText, writeJson, ensureDir, walkFiles, pathExists } from "../../src/utils/files";
@@ -10,39 +10,53 @@ import { readText, writeJson, ensureDir, walkFiles, pathExists } from "../../src
 const { values } = parseArgs({
   args: Bun.argv.slice(2),
   options: {
-    skill: { type: "string", default: "ce-review" },
+    skill: { type: "string" },
+    file: { type: "string" },
     section: { type: "string" },
     fixture: { type: "string" },
-    runs: { type: "string", default: "1" },
+    runs: { type: "string", default: "3" },
     "dry-run": { type: "boolean", default: false },
   },
   strict: true,
 });
 
-const skillName = values.skill!;
 const sectionFilter = values.section;
 const fixtureFilter = values.fixture;
 const runs = Math.min(parseInt(values.runs!, 10) || 1, 3);
 const dryRun = values["dry-run"]!;
 
 const repoRoot = process.cwd();
-const skillPath = path.join(repoRoot, "plugins", "compound-engineering", "skills", skillName);
 const fixturesDir = path.join(repoRoot, "scripts", "ablation", "fixtures");
-const resultsDir = path.join(repoRoot, ".context", "ablation", skillName);
+
+// Resolve target: --file takes a direct path, --skill resolves to SKILL.md
+let targetPath: string;
+let targetName: string;
+
+if (values.file) {
+  targetPath = path.resolve(values.file);
+  targetName = path.basename(targetPath, ".md");
+} else {
+  const skillName = values.skill ?? "ce-review";
+  targetPath = path.join(
+    repoRoot, "plugins", "compound-engineering", "skills", skillName, "SKILL.md",
+  );
+  targetName = skillName;
+}
+
+const resultsDir = path.join(repoRoot, ".context", "ablation", targetName);
 
 async function main() {
-  // 1. Validate skill path
-  const skillMdPath = path.join(skillPath, "SKILL.md");
-  if (!(await pathExists(skillMdPath))) {
-    console.error(`Skill not found: ${skillMdPath}`);
+  // 1. Validate target path
+  if (!(await pathExists(targetPath))) {
+    console.error(`Target not found: ${targetPath}`);
     process.exit(1);
   }
 
   // 2. Parse sections
-  const skillContent = await readText(skillMdPath);
-  const sections = parseSections(skillContent);
+  const content = await readText(targetPath);
+  const sections = parseSections(content);
 
-  console.log(`\nSkill: ${skillName}`);
+  console.log(`\nTarget: ${targetName} (${path.relative(repoRoot, targetPath)})`);
   console.log(`Sections found: ${sections.length}`);
   console.log(`Total bytes: ${sections.reduce((sum, s) => sum + s.bytes, 0).toLocaleString()}\n`);
 
@@ -75,7 +89,7 @@ async function main() {
   await ensureDir(resultsDir);
 
   // 5. Content hash for baseline caching
-  const contentHash = crypto.createHash("sha256").update(skillContent).digest("hex").slice(0, 12);
+  const contentHash = crypto.createHash("sha256").update(content).digest("hex").slice(0, 12);
   const baselinePath = path.join(resultsDir, `baseline-${contentHash}.json`);
 
   // 6. Run baseline evaluations (or load from cache)
@@ -90,8 +104,8 @@ async function main() {
       const fixtureName = path.basename(fixturePath, ".diff");
       const diffContent = await readText(fixturePath);
       console.log(`  Evaluating baseline against ${fixtureName}...`);
-      const result = await evaluate(skillContent, diffContent, { runs });
-      result.skillName = skillName;
+      const result = await evaluate(content, diffContent, { runs });
+      result.skillName = targetName;
       result.section = "baseline";
       result.taskItem = fixtureName;
       baselineResults[fixtureName] = result;
@@ -112,59 +126,105 @@ async function main() {
 
   console.log(`\nEvaluating ${targetSections.length} ablation variants...`);
 
-  const variants = await generateVariants(skillPath, sections, {
-    only: sectionFilter ? [sectionFilter] : undefined,
-  });
+  // For standalone files (--file), generate variants inline without copying dirs
+  const isStandaloneFile = !!values.file;
 
   const runId = `run-${Date.now()}`;
   const runResults: Record<string, unknown>[] = [];
 
-  for (const variant of variants) {
-    console.log(`\n  Ablating: "${variant.removedSection}" (${variant.removedBytes.toLocaleString()} bytes)`);
+  if (isStandaloneFile) {
+    // Standalone file: generate variants by removing sections from content
+    for (const section of targetSections) {
+      const modifiedContent = removeSection(content, section.name);
+      console.log(`\n  Ablating: "${section.name}" (${section.bytes.toLocaleString()} bytes)`);
 
-    const variantSkillContent = variant.modifiedContent;
-    const sectionResults: Record<string, unknown> = {
-      section: variant.removedSection,
-      removedBytes: variant.removedBytes,
-      fixtures: {} as Record<string, unknown>,
-    };
-
-    for (const fixturePath of fixtureFiles) {
-      const fixtureName = path.basename(fixturePath, ".diff");
-      const diffContent = await readText(fixturePath);
-
-      console.log(`    vs ${fixtureName}...`);
-      const variantResult = await evaluate(variantSkillContent, diffContent, { runs });
-      variantResult.skillName = skillName;
-      variantResult.section = variant.removedSection;
-      variantResult.taskItem = fixtureName;
-
-      const baseline = baselineResults[fixtureName];
-      const delta = baseline
-        ? scoreQualityDelta(baseline, variantResult)
-        : null;
-
-      (sectionResults.fixtures as Record<string, unknown>)[fixtureName] = {
-        evaluation: variantResult,
-        qualityDelta: delta,
+      const sectionResults: Record<string, unknown> = {
+        section: section.name,
+        removedBytes: section.bytes,
+        fixtures: {} as Record<string, unknown>,
       };
 
-      if (delta) {
-        console.log(`      composite: ${delta.composite.toFixed(3)} (cov=${delta.coverage.toFixed(2)} prec=${delta.precision.toFixed(2)} cal=${delta.calibration.toFixed(2)} comp=${delta.compliance.toFixed(2)})`);
+      for (const fixturePath of fixtureFiles) {
+        const fixtureName = path.basename(fixturePath, ".diff");
+        const diffContent = await readText(fixturePath);
+
+        console.log(`    vs ${fixtureName}...`);
+        const variantResult = await evaluate(modifiedContent, diffContent, { runs });
+        variantResult.skillName = targetName;
+        variantResult.section = section.name;
+        variantResult.taskItem = fixtureName;
+
+        const baseline = baselineResults[fixtureName];
+        const delta = baseline
+          ? scoreQualityDelta(baseline, variantResult)
+          : null;
+
+        (sectionResults.fixtures as Record<string, unknown>)[fixtureName] = {
+          evaluation: variantResult,
+          qualityDelta: delta,
+        };
+
+        if (delta) {
+          console.log(`      composite: ${delta.composite.toFixed(3)} (cov=${delta.coverage.toFixed(2)} prec=${delta.precision.toFixed(2)} cal=${delta.calibration.toFixed(2)} comp=${delta.compliance.toFixed(2)})`);
+        }
       }
+
+      runResults.push(sectionResults);
     }
+  } else {
+    // Skill directory: use variant generator (copies full skill dir)
+    const skillPath = path.dirname(targetPath);
+    const variants = await generateVariants(skillPath, sections, {
+      only: sectionFilter ? [sectionFilter] : undefined,
+    });
 
-    runResults.push(sectionResults);
+    for (const variant of variants) {
+      console.log(`\n  Ablating: "${variant.removedSection}" (${variant.removedBytes.toLocaleString()} bytes)`);
 
-    // Clean up temp dir
-    await Bun.$`rm -rf ${variant.tempDir}`.quiet();
+      const sectionResults: Record<string, unknown> = {
+        section: variant.removedSection,
+        removedBytes: variant.removedBytes,
+        fixtures: {} as Record<string, unknown>,
+      };
+
+      for (const fixturePath of fixtureFiles) {
+        const fixtureName = path.basename(fixturePath, ".diff");
+        const diffContent = await readText(fixturePath);
+
+        console.log(`    vs ${fixtureName}...`);
+        const variantResult = await evaluate(variant.modifiedContent, diffContent, { runs });
+        variantResult.skillName = targetName;
+        variantResult.section = variant.removedSection;
+        variantResult.taskItem = fixtureName;
+
+        const baseline = baselineResults[fixtureName];
+        const delta = baseline
+          ? scoreQualityDelta(baseline, variantResult)
+          : null;
+
+        (sectionResults.fixtures as Record<string, unknown>)[fixtureName] = {
+          evaluation: variantResult,
+          qualityDelta: delta,
+        };
+
+        if (delta) {
+          console.log(`      composite: ${delta.composite.toFixed(3)} (cov=${delta.coverage.toFixed(2)} prec=${delta.precision.toFixed(2)} cal=${delta.calibration.toFixed(2)} comp=${delta.compliance.toFixed(2)})`);
+        }
+      }
+
+      runResults.push(sectionResults);
+
+      // Clean up temp dir
+      await Bun.$`rm -rf ${variant.tempDir}`.quiet();
+    }
   }
 
   // 8. Write results
   const outputPath = path.join(resultsDir, `${runId}.json`);
   await writeJson(outputPath, {
     runId,
-    skill: skillName,
+    target: targetName,
+    targetPath: path.relative(repoRoot, targetPath),
     contentHash,
     timestamp: new Date().toISOString(),
     runs,
