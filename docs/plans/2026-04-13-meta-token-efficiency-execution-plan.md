@@ -85,7 +85,7 @@ All require Phase 0 (#14) ablation data. Brainstorming can start before #14 exec
 | # | Idea | Complexity | Status | Dependencies | Notes |
 |---|------|-----------|--------|-------------|-------|
 | 19 | L3/Negative-Space Agent Redesign | Medium | done | #14 ablation data | Combined with #27. 28 agents classified + rewritten. 36,219B saved (26%). Ablation validated. |
-| 18 | Kolmogorov Compression | Medium | planned | #14 ablation data, #19+#27 | Plan at docs/plans/2026-04-18-007-refactor-kolmogorov-compression-plan.md. Ready to execute now that #19+#27 is done. |
+| 18 | Kolmogorov Compression | Medium | done | #14 ablation data, #19+#27 | Executed: 90,771B saved (33%) across 20 agents + 5 skills. Three phases: P1 category-name (12,977B agents), P2 enum+example (21,565B), P3 process (57,812B). All contract tests pass. |
 | 27 | Schelling Point Architecture | Medium | done | #14 ablation data | Combined with #19. Schelling taxonomy applied via graduated tiers (T1-T4). Rest markers deferred (graduated compression sufficient). |
 | 4 | Script-First Extraction | Medium | planned | #14 ablation data, #20 carrying cost | Plan at docs/plans/2026-04-18-008-refactor-script-first-extraction-plan.md. 3 target skills, ~8KB savings. |
 

@@ -13,11 +13,8 @@ Production reliability and failure mode expert. Ask "what happens when this depe
 
 ## What you're hunting for
 
-- **Missing error handling on I/O boundaries** -- HTTP calls, database queries, file operations, or message queue interactions without try/catch or error callbacks. Every I/O operation can fail; code that assumes success is code that will crash in production.
-- **Retry loops without backoff or limits** -- retrying a failed operation immediately and indefinitely turns a temporary blip into a retry storm that overwhelms the dependency. Check for max attempts, exponential backoff, and jitter.
-- **Missing timeouts on external calls** -- HTTP clients, database connections, or RPC calls without explicit timeouts will hang indefinitely when the dependency is slow, consuming threads/connections until the service is unresponsive.
-- **Error swallowing (catch-and-ignore)** -- `catch (e) {}`, `.catch(() => {})`, or error handlers that log but don't propagate, return misleading defaults, or silently continue. The caller thinks the operation succeeded; the data says otherwise.
-- **Cascading failure paths** -- a failure in service A causes service B to retry aggressively, which overloads service C. Or: a slow dependency causes request queues to fill, which causes health checks to fail, which causes restarts, which causes cold-start storms. Trace the failure propagation path.
+<!-- why: Kolmogorov compression -- model reconstructs reliability failure modes from category labels -->
+Identify reliability-level issues: missing error handling on I/O boundaries, retry without backoff or limits, missing timeouts on external calls, error swallowing (catch-and-ignore), cascading failure paths. Trace failure propagation across service boundaries.
 
 ## Confidence calibration
 
@@ -27,10 +24,8 @@ Below 0.60: suppress.
 
 ## What you don't flag
 
-- Internal pure functions that can't fail (no I/O, no reliability concern).
-- Test helper error handling -- test reliability is not production reliability.
-- Error message formatting choices -- UX, not reliability.
-- Theoretical cascading failures without evidence -- flag concrete missing protections, not hypothetical scenarios.
+<!-- why: Kolmogorov compression -- model reconstructs exclusion rationale from category labels -->
+Internal pure functions (no I/O), error message formatting (UX concern), theoretical cascading failures without evidence. Test helper error handling -- test reliability is not production reliability.
 
 ## Output format
 

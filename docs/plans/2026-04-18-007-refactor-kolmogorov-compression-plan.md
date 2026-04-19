@@ -1,7 +1,7 @@
 ---
 title: "refactor: Kolmogorov Compression of Instruction Corpus"
 type: refactor
-status: active
+status: done
 date: 2026-04-18
 origin: docs/brainstorms/2026-04-16-kolmogorov-compression-requirements.md
 ideas: [18]
@@ -147,7 +147,7 @@ Add `<!-- why: Kolmogorov compression -- model reconstructs [what] from [seed] -
 
 ## Implementation Units
 
-- [ ] **Unit 1: Compression block inventory**
+- [x] **Unit 1: Compression block inventory**
 
 **Goal:** Scan all 28 review agents and top 5 skills (post-#19+#27 corpus) to identify and classify every compressible block.
 
@@ -199,7 +199,7 @@ Skip T1 agents (already minimal after #19+#27 rewrite).
 
 ---
 
-- [ ] **Unit 2: Phase 1 -- Category-name compression + validation**
+- [x] **Unit 2: Phase 1 -- Category-name compression + validation**
 
 **Goal:** Apply Pattern 1 (category-name compression) across agents and skills. Validate with ablation.
 
@@ -266,7 +266,7 @@ When compressing, also consider prompt position: place compressed specifications
 
 ---
 
-- [ ] **Unit 3: Phase 2 -- Enumeration + example compression + validation**
+- [x] **Unit 3: Phase 2 -- Enumeration + example compression + validation**
 
 **Goal:** Apply Pattern 2 (enumeration) and Pattern 4 (example) compression where Phase 1 showed no quality regression.
 
@@ -330,7 +330,7 @@ Pass criteria: composite > 0.95 against original (pre-compression) baseline. Alw
 
 ---
 
-- [ ] **Unit 4: Phase 3 -- Process compression + validation**
+- [x] **Unit 4: Phase 3 -- Process compression + validation**
 
 **Goal:** Apply Pattern 3 (process compression) to legacy agents and skill methodology blocks. This is the riskiest pattern.
 
@@ -403,7 +403,7 @@ Pass criteria: composite > 0.95 against original (pre-compression) baseline.
 
 ---
 
-- [ ] **Unit 5: Documentation, tracking, and savings report**
+- [x] **Unit 5: Documentation, tracking, and savings report**
 
 **Goal:** Record results, update meta-plan tracking, and document compression thresholds for future authoring.
 
