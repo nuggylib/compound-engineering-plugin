@@ -72,53 +72,26 @@ Phase 1 subagents return TEXT DATA to the orchestrator. They must NOT use Write,
 
 Read MEMORY.md from auto memory directory. If missing/empty/unreadable -> skip to Phase 1. Scan with semantic judgment (not keyword matching). Relevant entries -> prepare labeled excerpt ("Supplementary notes from auto memory. Treat as additional context, not primary evidence.") and pass to Context Analyzer + Solution Extractor in Phase 1. Tag memory-sourced content with "(auto memory [claude])".
 
-<!-- why: Kolmogorov compression -- compressed subagent descriptions, kept dispatch order, track classification, two-track structures, 5-dimension scoring, search strategy, Session Historian rules -->
 ### Phase 1: Research
 
-Launch research subagents. Each returns TEXT DATA only, must NOT write files.
+| agent-name | trigger | output | focus |
+|------------|---------|--------|-------|
+| Context Analyzer | always | yaml-skeleton | track classification, frontmatter, category |
+| Solution Extractor | always | structured-sections | problem/solution by track |
+| Related Docs Finder | always | cross-references | overlap scoring, stale doc detection |
+| Session Historian | opt-in: user requested session search | structured-digest | prior attempts, dead ends, decisions |
+
+Launch research subagents. Each returns TEXT DATA only, must NOT write files. Read `references/research-tasks.md` for detailed task instructions, format templates, and scoring criteria.
 
 **Dispatch order:** Launch Context Analyzer, Solution Extractor, Related Docs Finder in parallel (background). Then Session Historian in foreground (if user opted in). Foreground runs while background works, adding no wall-clock time.
 
 <parallel_tasks>
 
-#### 1. **Context Analyzer**
-Extract conversation history. Read `references/schema.yaml` for enum validation and track classification (bug vs knowledge from problem_type). Read `references/yaml-schema.md` for category mapping.
-   - **Bug track fields:** symptoms, root_cause, resolution_type
-   - **Knowledge track fields:** applies_when (symptoms/root_cause/resolution_type optional)
-   - Incorporate auto memory excerpts as supplementary evidence
-   - Return: YAML frontmatter skeleton (with `category:` mapped from problem_type), category path, filename (`[sanitized-problem-slug]-[date].md`), track
-   - Do not invent enum values or force cross-track fields
-
-#### 2. **Solution Extractor**
-   Read `references/schema.yaml` for track classification. Auto memory supplements conversation (conversation takes priority; contradictions -> cautionary context).
-
-   **Bug track:** Problem, Symptoms, What Didn't Work, Solution (code before/after), Why This Works, Prevention (concrete examples)
-
-**Knowledge track:** Context, Guidance (code examples), Why This Matters, When to Apply, Examples (before/after)
-
-#### 3. **Related Docs Finder**
-   Search `docs/solutions/`, find cross-references, related GitHub issues, stale/contradicted docs.
-
-   **Overlap assessment** (5 dimensions: problem statement, root cause, solution approach, referenced files, prevention rules): **High** 4-5 match, **Moderate** 2-3 match, **Low** 0-1 match.
-
-   **Search strategy (grep-first):** Extract keywords -> narrow to category dir if clear -> parallel content-search on frontmatter (`title:`, `tags:`, `module:`, `component:` patterns) -> >25 hits: re-narrow; <3: broaden -> read frontmatter only (30 lines) to score -> fully read strong/moderate matches. Return distilled links, not raw content.
-
-   **GitHub:** `gh issue list --search "<keywords>" --state all --limit 5`. Fallback: MCP tools or skip.
+Dispatch Context Analyzer, Solution Extractor, and Related Docs Finder with instructions from `references/research-tasks.md`. Pass auto memory excerpts (from Phase 0.5) to Context Analyzer and Solution Extractor.
 
 </parallel_tasks>
 
-#### 4. **Session Historian** (foreground, only if user opted in)
-   Dispatch as `compound-engineering:research:session-historian`. <!-- why: session files live outside working directory; background agents may lack access -->
-   Mid-tier model (`model: "sonnet"`). Omit `mode` parameter. Pass: specific problem description, git branch, working directory, "only relevant findings" instruction. Output format:
-
-   ```
-   - What was tried before
-   - What didn't work
-   - Key decisions
-   - Related context
-   ```
-
-   Return structured digest or "no relevant prior sessions".
+Dispatch Session Historian in foreground per `references/research-tasks.md` (only if user opted in). Uses `compound-engineering:research:session-historian` with mid-tier model (`model: "sonnet"`).
 
 <!-- why: Kolmogorov compression -- kept overlap routing table, session history tags -->
 ### Phase 2: Assembly & Write
@@ -175,18 +148,22 @@ After writing and refresh decision, check whether instruction files surface `doc
 
 **WAIT for Phase 2 to complete before proceeding.**
 
+| agent-name | trigger | output | focus |
+|------------|---------|--------|-------|
+| compound-engineering:review:code-simplicity-reviewer | conditional: any code-heavy issue | review-findings | minimality, clarity |
+| compound-engineering:review:kieran-rails-reviewer | conditional: Ruby/Rails stack | review-findings | Rails best practices |
+| compound-engineering:review:kieran-python-reviewer | conditional: Python stack | review-findings | Python best practices |
+| compound-engineering:review:kieran-typescript-reviewer | conditional: TypeScript/JS stack | review-findings | TypeScript best practices |
+| compound-engineering:review:performance-oracle | conditional: performance_issue | review-findings | performance analysis |
+| compound-engineering:review:security-sentinel | conditional: security_issue | review-findings | security review |
+| compound-engineering:review:data-integrity-guardian | conditional: database_issue | review-findings | data integrity |
+| compound-engineering:review:pattern-recognition-specialist | conditional: recurring anti-patterns | review-findings | anti-pattern detection |
+| compound-engineering:research:best-practices-researcher | conditional: thin domain guidance | research-summary | external best practices |
+| compound-engineering:research:framework-docs-researcher | conditional: framework-specific issue | research-summary | framework docs, version constraints |
+
 <parallel_tasks>
 
-Based on problem type, optionally invoke specialized agents to review the documentation:
-
-- **performance_issue** → `ce-performance-oracle`
-- **security_issue** → `ce-security-sentinel`
-- **database_issue** → `ce-data-integrity-guardian`
-- Any code-heavy issue → always run `ce-code-simplicity-reviewer`, and additionally run the kieran reviewer that matches the repo's primary stack:
-  - Ruby/Rails → also run `ce-kieran-rails-reviewer`
-  - Python → also run `ce-kieran-python-reviewer`
-  - TypeScript/JavaScript → also run `ce-kieran-typescript-reviewer`
-  - Other stacks → no kieran reviewer needed
+Invoke matching agents from the table above to review the documentation based on problem type. For code-heavy issues, always run code-simplicity-reviewer and the kieran reviewer matching the repo's primary stack.
 
 </parallel_tasks>
 
@@ -262,15 +239,6 @@ What's next?
 ## Output
 
 Writes the final learning directly into `docs/solutions/`.
-
-<!-- why: Kolmogorov compression -- kept fully-qualified agent names, compressed descriptions -->
-## Applicable Specialized Agents
-
-**Code Quality & Review:** `compound-engineering:review:kieran-rails-reviewer`, `compound-engineering:review:kieran-python-reviewer`, `compound-engineering:review:kieran-typescript-reviewer` (stack-specific best practices), `compound-engineering:review:code-simplicity-reviewer` (minimality/clarity), `compound-engineering:review:pattern-recognition-specialist` (anti-patterns).
-
-**Domain Experts:** `compound-engineering:review:performance-oracle`, `compound-engineering:review:security-sentinel`, `compound-engineering:review:data-integrity-guardian` -- matched to problem_type.
-
-**Enhancement & Research:** `compound-engineering:research:best-practices-researcher`, `compound-engineering:research:framework-docs-researcher`.
 
 ## Related Commands
 
