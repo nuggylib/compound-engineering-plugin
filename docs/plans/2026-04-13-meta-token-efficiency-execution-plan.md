@@ -87,7 +87,7 @@ All require Phase 0 (#14) ablation data. Brainstorming can start before #14 exec
 | 19 | L3/Negative-Space Agent Redesign | Medium | done | #14 ablation data | Combined with #27. 28 agents classified + rewritten. 36,219B saved (26%). Ablation validated. |
 | 18 | Kolmogorov Compression | Medium | done | #14 ablation data, #19+#27 | Executed: 90,771B saved (33%) across 20 agents + 5 skills. Three phases: P1 category-name (12,977B agents), P2 enum+example (21,565B), P3 process (57,812B). All contract tests pass. |
 | 27 | Schelling Point Architecture | Medium | done | #14 ablation data | Combined with #19. Schelling taxonomy applied via graduated tiers (T1-T4). Rest markers deferred (graduated compression sufficient). |
-| 4 | Script-First Extraction | Medium | planned | #14 ablation data, #20 carrying cost | Plan at docs/plans/2026-04-18-008-refactor-script-first-extraction-plan.md. 3 target skills, ~8KB savings. |
+| 4 | Script-First Extraction | Medium | done | #14 ablation data, #20 carrying cost | Executed. 3 skills refactored, 18 golden-output tests, ~1,492B SKILL.md reduction. |
 
 **Brainstorm order:** #19 and #27 in parallel (complementary -- negative-space defines what to remove, Schelling defines what's already known). Then #18. Then #4.
 **Plan order:** #4 first (most concrete, proven pattern). Then #19, #27, #18 (all depend on ablation results for specifics).
@@ -101,10 +101,10 @@ Builds on Phases 1-3 work. Each idea restructures how content is organized or lo
 
 | # | Idea | Complexity | Status | Dependencies | Notes |
 |---|------|-----------|--------|-------------|-------|
-| 1 | Queryable Reference Libraries | Medium | blocked (#20) | #20 carrying cost (for priority), Phase 2 structural work | Convert 3 encyclopedia skills (361KB) to thin routers with on-demand section loading |
-| 11 | Compact Returns Generalization | Medium | blocked (Phase 2) | #2 lean dispatch (pattern to generalize) | Extend compact returns from ce-review to all sub-agent-dispatching skills |
-| 28 | Cartographic Zoom / Cartouches | Low-Medium | blocked (Phase 2) | #2, #8 (need clean agent/skill boundaries first) | 3-5 line cartouches for orchestrator routing. Orchestrators carry ~300 bytes/downstream skill |
-| 15 | Plugin Module Unbundling | High | blocked (Phases 1-3) | #9 description trim, #5 dead content audit, #10 guardrails | Split plugin into core + specialist modules. Depends on knowing final skill inventory |
+| 1 | Queryable Reference Libraries | Medium | brainstormed | #20 carrying cost (for priority), Phase 2 structural work | Convert 3 encyclopedia skills (316KB post-compression) to thin routers with on-demand section loading |
+| 11 | Compact Returns Generalization | Medium | brainstormed | #2 lean dispatch (pattern to generalize) | Scoped to document-review only. Write-once dispatch + compact returns. ~63-75KB savings per session |
+| 28 | Cartographic Zoom / Cartouches | Low-Medium | done | #2, #8 (need clean agent/skill boundaries first) | Executed: ~65% reduction in inline description bytes (~23KB -> ~8KB). 7 units across 6 orchestrators + AGENTS.md codification. Plan: `docs/plans/2026-04-19-001-refactor-cartographic-zoom-plan.md` |
+| 15 | Plugin Module Unbundling | High | brainstormed | #9 description trim, #5 dead content audit, #10 guardrails | 5 modules (core, git, review, frameworks, extras). Core-only install: 86% -> 57% always-loaded budget |
 
 **Brainstorm order:** #11 and #28 in parallel (both about reducing what orchestrators carry). Then #1 (larger restructuring). Then #15 last (needs stable skill inventory from prior phases).
 **Plan order:** #28 first (low-medium complexity, clear deliverable). #11 second (extends proven pattern). #1 third. #15 last (highest complexity, needs most prior work complete).
@@ -216,14 +216,14 @@ Update this table as brainstorm/plan work progresses:
 | 8 | Cross-Skill Dedup | 3 | done | done | done | `docs/brainstorms/2026-04-16-cross-skill-instruction-dedup-requirements.md`, `docs/plans/2026-04-16-003-refactor-cross-skill-pipeline-dedup-plan.md`. 7 units executed: AGENTS.md canonical section, native tool removal (14 files), interference phase-scoping (ce-plan/ce-work/ce-review), semantic compression (3 skills), staleness check, cross-reference matrix, carrying-waste manifest |
 | 21 | Pipeline Semantic Dedup | 3 | done | done | done | `docs/brainstorms/2026-04-16-pipeline-semantic-dedup-requirements.md`, `docs/plans/2026-04-16-003-refactor-cross-skill-pipeline-dedup-plan.md`. Combined with #8. See #8 for execution details |
 | 2 | Lean Agent Dispatch | 3 | done | done | done | `docs/brainstorms/2026-04-16-lean-agent-dispatch-requirements.md`, `docs/plans/2026-04-16-004-refactor-lean-agent-dispatch-plan.md`. 3 units executed: write-once dispatch context, lean prompt dispatch, subagent template variable reference update. ~144 KB savings per 10-reviewer dispatch. Axis A (archetypes) deferred to post-#19 |
-| 19 | L3/Negative-Space | 4 | done | done | | `docs/brainstorms/2026-04-16-l3-negative-space-agent-redesign-requirements.md`. Combined plan with #27: `docs/plans/2026-04-18-006-refactor-schelling-negative-space-agent-optimization-plan.md`. 6 units. Ablation data: 17% Schelling, 43% moderate, 39% load-bearing across 6 agents. Conservative savings estimate ~15-25KB |
-| 18 | Kolmogorov Compression | 4 | done | done | | `docs/brainstorms/2026-04-16-kolmogorov-compression-requirements.md`, `docs/plans/2026-04-18-007-refactor-kolmogorov-compression-plan.md`. 5 units. Graduated compression (Approach C) with ablation validation. Blocked on #19+#27 execution. Conservative post-#19+#27 savings estimate ~15-20KB |
-| 27 | Schelling Points | 4 | done | done | | `docs/brainstorms/2026-04-16-schelling-point-architecture-requirements.md`. Combined plan with #19: `docs/plans/2026-04-18-006-refactor-schelling-negative-space-agent-optimization-plan.md`. Rest markers deferred; using graduated compression instead |
-| 4 | Script-First Extraction | 4 | done | | | `docs/brainstorms/2026-04-16-script-first-extraction-requirements.md`. Plan pending |
-| 1 | Queryable Reference Libraries | 5 | | | | |
-| 11 | Compact Returns Generalization | 5 | | | | |
-| 28 | Cartographic Zoom | 5 | | | | |
-| 15 | Module Unbundling | 5 | | | | |
+| 19 | L3/Negative-Space | 4 | done | done | done | `docs/brainstorms/2026-04-16-l3-negative-space-agent-redesign-requirements.md`. Combined plan with #27: `docs/plans/2026-04-18-006-refactor-schelling-negative-space-agent-optimization-plan.md`. 6 units. 36,219B saved (26%). |
+| 18 | Kolmogorov Compression | 4 | done | done | done | `docs/brainstorms/2026-04-16-kolmogorov-compression-requirements.md`, `docs/plans/2026-04-18-007-refactor-kolmogorov-compression-plan.md`. 90,771B saved (33%) across 20 agents + 5 skills. Three phases: P1 category-name, P2 enum+example, P3 process. |
+| 27 | Schelling Points | 4 | done | done | done | `docs/brainstorms/2026-04-16-schelling-point-architecture-requirements.md`. Combined with #19. Graduated tiers (T1-T4). Rest markers deferred. |
+| 4 | Script-First Extraction | 4 | done | done | done | `docs/brainstorms/2026-04-16-script-first-extraction-requirements.md`, `docs/plans/2026-04-18-008-refactor-script-first-extraction-plan.md`. 3 skills refactored, ~1,492B SKILL.md reduction, 18 golden-output tests. |
+| 1 | Queryable Reference Libraries | 5 | done | | | `docs/brainstorms/2026-04-19-queryable-reference-libraries-requirements.md`. 3 encyclopedia skills (orchestrating-swarms, agent-native-architecture, dspy-ruby). 75KB SKILL.md -> ~14KB thin routers. ~62KB always-loaded reduction, ~2.9M byte-calls carrying cost savings. |
+| 11 | Compact Returns Generalization | 5 | done | | | `docs/brainstorms/2026-04-19-compact-returns-generalization-requirements.md`. Scoped to document-review. Write-once dispatch (~5.8KB shared context) + compact returns (evidence-only detail tier). ~63-75KB savings per 5-agent session. P1/P2 review findings applied. |
+| 28 | Cartographic Zoom | 5 | done | | | `docs/brainstorms/2026-04-19-cartographic-zoom-requirements.md`. 6 orchestrators carry ~29KB inline agent descriptions. Cartouche tables (~150-300B/agent) reduce to ~8-10KB (65-72% reduction). Highest-value: agent-native-audit (60% SKILL.md is descriptions). |
+| 15 | Module Unbundling | 5 | done | | | `docs/brainstorms/2026-04-19-module-unbundling-requirements.md`. Split plugin into 5 modules (core, git, review, frameworks, extras). Core-only install reduces always-loaded from 86% to 57%. Multi-plugin architecture using existing plugin system. |
 | 16 | Circuit Breaker + Resumption | 6 | | | | |
 | 17 | JIT Specialization | 6 | | | | |
 | 24 | RG Flow | 6 | | | | |
