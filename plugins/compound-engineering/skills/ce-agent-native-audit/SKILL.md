@@ -45,7 +45,7 @@ Launch 8 parallel sub-agents using the Task tool with `subagent_type: Explore`, 
 | Capability Discovery auditor | always | scored-audit | 7 discovery mechanisms |
 | Prompt-Native Features auditor | always | scored-audit | prompts over hardcoded logic |
 
-Read `references/audit-prompts.md` for the sub-agent prompt matching the target principle(s). Each prompt contains the audit tasks and output format template. For single-principle dispatch, use only the matching prompt section. For all-principles dispatch, read the file once and dispatch all 8.
+Read `references/audit-prompts.md` for the sub-agent prompt matching the target principle(s). Each prompt contains the audit tasks and output format template. For single-principle dispatch, use only the matching prompt section. For all-principles dispatch, read the file once and dispatch all 8. If `references/audit-prompts.md` cannot be read, the audit cannot proceed — report the read failure and stop.
 
 ### Step 3: Compile Summary Report
 

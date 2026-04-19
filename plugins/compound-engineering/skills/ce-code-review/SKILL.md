@@ -264,7 +264,7 @@ If found, read its Requirements Trace and Implementation Units; store for Stage 
 
 ### Stage 3: Select reviewers
 
-Use the Reviewers cartouche table above for the full agent list and triggers. Read `references/persona-catalog.md` for detailed selection criteria and selection rules.
+Use the Reviewers cartouche table above for the full agent list and triggers. Read `references/persona-catalog.md` for detailed selection criteria and selection rules. If `references/persona-catalog.md` cannot be read, use the cartouche trigger fields for selection decisions and note the read failure.
 
 Read the diff and file list from Stage 1. The 6 always-on agents are automatic. For each conditional agent in the cartouche, read the detailed criteria in persona-catalog.md and decide whether the diff warrants it.
 

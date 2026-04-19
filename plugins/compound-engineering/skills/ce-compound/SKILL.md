@@ -81,7 +81,7 @@ Read MEMORY.md from auto memory directory. If missing/empty/unreadable -> skip t
 | Related Docs Finder | always | cross-references | overlap scoring, stale doc detection |
 | Session Historian | opt-in: user requested session search | structured-digest | prior attempts, dead ends, decisions |
 
-Launch research subagents. Each returns TEXT DATA only, must NOT write files. Read `references/research-tasks.md` for detailed task instructions, format templates, and scoring criteria.
+Launch research subagents. Each returns TEXT DATA only, must NOT write files. Read `references/research-tasks.md` for detailed task instructions, format templates, and scoring criteria. If `references/research-tasks.md` cannot be read, use the cartouche focus fields as minimal task guidance and note the read failure.
 
 **Dispatch order:** Launch Context Analyzer, Solution Extractor, Related Docs Finder in parallel (background). Then Session Historian in foreground (if user opted in). Foreground runs while background works, adding no wall-clock time.
 

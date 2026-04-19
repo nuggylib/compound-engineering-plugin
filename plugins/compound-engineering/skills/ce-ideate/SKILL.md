@@ -151,7 +151,7 @@ Use reasonable interpretation rather than formal parsing.
 
 Before generating ideas, gather codebase context. Run agents in parallel in the **foreground** (do not use background dispatch).
 
-Read `references/dispatch-prompts.md` for the Phase 1 quick context scan prompt. Dispatch `Quick context scan` using the platform's cheapest capable model (e.g., `model: "haiku"` in Claude Code) with that prompt, substituting `{focus_hint}`.
+Read `references/dispatch-prompts.md` for the Phase 1 quick context scan prompt. If `references/dispatch-prompts.md` cannot be read, dispatch agents with the cartouche focus fields as minimal context and note the read failure. Dispatch `Quick context scan` using the platform's cheapest capable model (e.g., `model: "haiku"` in Claude Code) with that prompt, substituting `{focus_hint}`.
 
 Dispatch `learnings-researcher` with a brief summary of the ideation focus.
 
