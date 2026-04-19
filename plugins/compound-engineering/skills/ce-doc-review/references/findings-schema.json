@@ -82,5 +82,13 @@
       "description": "Questions that should be resolved in a later workflow stage (planning, implementation)",
       "items": { "type": "string" }
     }
+  },
+
+  "_meta": {
+    "return_tiers": {
+      "description": "Finding fields are split into two tiers. The full schema (with all required fields) applies to the artifact file on disk. The compact return to the orchestrator omits detail-tier fields. Both are valid uses of this schema in different contexts.",
+      "merge_tier": "Returned to orchestrator: title, severity, section, why_it_matters, finding_type, autofix_class, suggested_fix (optional), confidence. Plus top-level reviewer, residual_risks, deferred_questions.",
+      "detail_tier": "Required in artifact file, omitted from compact return: evidence. The artifact file must pass full schema validation including all required fields."
+    }
   }
 }
