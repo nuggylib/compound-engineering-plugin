@@ -108,6 +108,23 @@ When adding or modifying skills, verify compliance with the skill spec:
 
 Skill content loaded at trigger time is carried in every subsequent message — every tool call, agent dispatch, and response. This carrying cost compounds across the session. For skills that orchestrate many tool or agent calls, extract blocks to `references/` when they are conditional (only execute under specific conditions) or late-sequence (only needed after many prior calls) and represent a meaningful share of the skill (~20%+). The more tool/agent calls a skill makes, the more aggressively to extract. Replace extracted blocks with a 1-3 line stub stating the condition and a backtick path reference (e.g., "Read `references/deepening-workflow.md`"). Never use `@` for extracted blocks — it inlines content at load time, defeating the extraction.
 
+### Cartouche Format (Orchestrator Agent Tables)
+
+Skills that dispatch 3+ agents replace verbose inline descriptions with a 4-column cartouche table for routing overview:
+
+```
+| agent-name | trigger | output | focus |
+|------------|---------|--------|-------|
+| compound-engineering:category:agent-name | always / conditional: criteria | output-type | 3-8 word summary |
+```
+
+- **agent-name:** Fully-qualified agent name (or descriptive task name for anonymous inline sub-agents)
+- **trigger:** `always` for unconditional dispatch; `conditional: <summary>` for criteria-gated; `opt-in: <condition>` for user-requested
+- **output:** Output type (e.g., `structured-findings`, `research-summary`, `flow-analysis`)
+- **focus:** 3-8 word summary suitable for team announcements
+
+When trigger criteria exceed the cartouche field, extract detailed criteria to a `references/` file and add a bulk lookup instruction (e.g., "Read `references/persona-routing.md` and identify all matching agents"). Include an explicit fallback for read failures. Dispatch instructions reference agents by short name from the cartouche table, which provides the FQN mapping.
+
 ### Writing Style
 
 - [ ] Use imperative/infinitive form (verb-first instructions)
