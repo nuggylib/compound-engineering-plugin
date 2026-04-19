@@ -22,7 +22,7 @@ describe("ce-code-review contract", () => {
     )
     expect(content).toContain("mode:report-only cannot switch the shared checkout to review a PR target")
     expect(content).toContain("mode:report-only cannot switch the shared checkout to review another branch")
-    expect(content).toContain("Resolve the base ref from the PR's actual base repository, not by assuming `origin`")
+    expect(content).toContain("Resolve the base ref from the PR's actual base repository using `scripts/resolve-pr-base.sh`")
     expect(content).not.toContain("Which severities should I fix?")
   })
 
@@ -279,8 +279,12 @@ describe("ce-code-review contract", () => {
     expect(content).not.toContain("git diff -U10 HEAD")
     expect(content).not.toContain("git diff --cached")
 
-    // PR mode still has an inline error for unresolved base
-    expect(content).toContain('echo "ERROR: Unable to resolve PR base branch')
+    // PR mode delegates to resolve-pr-base.sh and checks its ERROR: output
+    expect(content).toContain("scripts/resolve-pr-base.sh")
+    const prBaseScript = await readRepoFile(
+      "plugins/compound-engineering/skills/ce-review/scripts/resolve-pr-base.sh",
+    )
+    expect(prBaseScript).toContain("ERROR:Unable to resolve PR base branch")
 
     // Branch and standalone modes delegate to resolve-base.sh and check its ERROR: output.
     // The script itself emits ERROR: when the base is unresolved.

@@ -102,13 +102,13 @@ Report the PR URL.
 
 Use the context above.
 
-The remote default branch value returns something like `origin/main`. Strip the `origin/` prefix. If it returned `DEFAULT_BRANCH_UNRESOLVED` or a bare `HEAD`, try:
+**Resolve default branch, base branch, and PR metadata** via `scripts/resolve-context.sh`. Pass `--default-branch <name>` when the remote default branch resolved (strip `origin/` prefix, skip if `DEFAULT_BRANCH_UNRESOLVED` or bare `HEAD`). Pass `--pr-base <baseRefName> --pr-url <url>` when the existing PR check returned `state: OPEN`. Omit flags for unresolved values -- the script runs its own cascade.
 
 ```bash
-gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
+bash scripts/resolve-context.sh [--default-branch <name>] [--pr-base <branch> --pr-url <url>]
 ```
 
-If both fail, fall back to `main`.
+Parse output into variables: `DEFAULT_BRANCH`, `BASE_BRANCH`, `BASE_REMOTE`, `BASE_REF_LOCAL`, `PR_EXISTS`, `PR_URL`, `PR_BASE`. Stop on `ERROR:` output.
 
 If the current branch is empty (detached HEAD), explain that a branch is required. Ask whether to create a feature branch now.
 - If yes, derive a branch name from the change content, create with `git checkout -b <branch-name>`, and use that for the rest of the workflow.
@@ -164,33 +164,14 @@ git push -u origin HEAD
 
 The PR description must cover **all commits** in the PR, not just the working-tree diff.
 
-**Detect the base branch and remote.** Resolve both the base branch and the remote (fork-based PRs may use a remote other than `origin`). Stop at the first that succeeds:
+**Use the base branch and remote from Step 1.** `BASE_BRANCH`, `BASE_REMOTE`, and `BASE_REF_LOCAL` were resolved by `scripts/resolve-context.sh`. If `BASE_BRANCH` is empty or errored, ask the user to specify the target branch.
 
-1. **PR metadata** (if existing PR found in Step 3):
-   ```bash
-   gh pr view --json baseRefName,url
-   ```
-   Extract `baseRefName`. Match `owner/repo` from the PR URL against `git remote -v` fetch URLs to find the base remote. Fall back to `origin`.
-2. **Remote default branch from context** -- if resolved, strip `origin/` prefix. Use `origin`.
-3. **GitHub metadata:**
-   ```bash
-   gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
-   ```
-   Use `origin`.
-4. **Common names** -- check `main`, `master`, `develop`, `trunk` in order:
-   ```bash
-   git rev-parse --verify origin/<candidate>
-   ```
-   Use `origin`.
-
-If none resolve, ask the user to specify the target branch.
-
-**Gather the full branch diff (before evidence decision).** Compute the branch diff explicitly against the base resolved above. Only fetch when the local ref is not available — if `<base-remote>/<base-branch>` already resolves locally, diff from local state <!-- why: so offline / restricted-network / expired-auth environments don't hard-fail -->:
+**Gather the full branch diff (before evidence decision).** Only fetch when `BASE_REF_LOCAL` is `no` <!-- why: so offline / restricted-network / expired-auth environments don't hard-fail when the ref is already cached -->:
 
 ```bash
-git rev-parse --verify <base-remote>/<base-branch> >/dev/null 2>&1 \
-  || git fetch --no-tags <base-remote> <base-branch>
-git diff <base-remote>/<base-branch>...HEAD
+git rev-parse --verify <BASE_REMOTE>/<BASE_BRANCH> >/dev/null 2>&1 \
+  || git fetch --no-tags <BASE_REMOTE> <BASE_BRANCH>
+git diff <BASE_REMOTE>/<BASE_BRANCH>...HEAD
 ```
 
 If the branch diff is empty (HEAD already merged or no unique commits), skip the evidence prompt and continue to delegation.

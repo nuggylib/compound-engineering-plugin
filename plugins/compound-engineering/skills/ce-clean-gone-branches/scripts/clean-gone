@@ -1,8 +1,84 @@
 #!/usr/bin/env bash
-# clean-gone: List local branches whose remote tracking branch is gone.
-# Outputs one branch name per line, or nothing if none found.
+# clean-gone: Discover and delete local branches whose remote tracking branch is gone.
+#
+# Usage:
+#   bash scripts/clean-gone              List gone branches (one per line, or __NONE__).
+#   bash scripts/clean-gone delete B1 B2 Delete the named branches (and their worktrees).
+#
+# Output (delete mode):
+#   WORKTREE_REMOVED:<path>       — worktree removed before branch deletion
+#   DELETED:<branch>              — branch successfully deleted
+#   ERROR:<branch>:<message>      — branch deletion failed (processing continues)
+#   ERROR:no branches specified   — delete called with no branch arguments
 
 set -euo pipefail
+
+# ── delete subcommand ────────────────────────────────────────────────
+if [[ "${1:-}" == "delete" ]]; then
+  shift
+
+  if [[ $# -eq 0 ]]; then
+    echo "ERROR:no branches specified"
+    exit 0
+  fi
+
+  # Build a map of branch -> worktree path from porcelain output.
+  # We avoid associative arrays (bash 4+) for bash 3.2 compatibility.
+  wt_branches=""
+  wt_paths=""
+  current_path=""
+
+  while IFS= read -r line; do
+    case "$line" in
+      worktree\ *)
+        current_path="${line#worktree }"
+        ;;
+      branch\ refs/heads/*)
+        branch_name="${line#branch refs/heads/}"
+        wt_branches="${wt_branches}${branch_name}"$'\n'
+        wt_paths="${wt_paths}${current_path}"$'\n'
+        ;;
+    esac
+  done < <(git worktree list --porcelain 2>/dev/null)
+
+  for branch in "$@"; do
+    # Look up worktree path for this branch.
+    wt_path=""
+    idx=1
+    while IFS= read -r b; do
+      if [[ "$b" == "$branch" ]]; then
+        wt_path=$(echo "$wt_paths" | sed -n "${idx}p")
+        break
+      fi
+      idx=$((idx + 1))
+    done <<< "$wt_branches"
+
+    # Remove worktree if one exists (skip main repo root).
+    if [[ -n "$wt_path" ]]; then
+      main_root=$(git rev-parse --show-toplevel 2>/dev/null || true)
+      if [[ "$wt_path" != "$main_root" ]]; then
+        if git worktree remove --force "$wt_path" 2>/dev/null; then
+          echo "WORKTREE_REMOVED:${wt_path}"
+        else
+          echo "ERROR:${branch}:failed to remove worktree ${wt_path}"
+          continue
+        fi
+      fi
+    fi
+
+    # Delete the branch.
+    err_msg=$(git branch -D "$branch" 2>&1) && rc=0 || rc=$?
+    if [[ $rc -eq 0 ]]; then
+      echo "DELETED:${branch}"
+    else
+      echo "ERROR:${branch}:${err_msg}"
+    fi
+  done
+
+  exit 0
+fi
+
+# ── discovery (default, no args) ─────────────────────────────────────
 
 # Ensure we have current remote state
 git fetch --prune 2>/dev/null

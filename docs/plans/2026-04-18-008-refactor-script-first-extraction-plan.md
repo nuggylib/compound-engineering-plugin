@@ -72,7 +72,7 @@ Skill SKILL.md files carry procedural shell recipes in context across every tool
 
 ## Implementation Units
 
-- [ ] **Unit 1: git-clean-gone-branches -- Add delete subcommand to clean-gone script**
+- [x] **Unit 1: git-clean-gone-branches -- Add delete subcommand to clean-gone script**
 
   **Goal:** Extract the Step 3 deletion loop from SKILL.md into the existing clean-gone script as a `delete` subcommand.
 
@@ -107,7 +107,7 @@ Skill SKILL.md files carry procedural shell recipes in context across every tool
   - SKILL.md Step 3 is 2-3 lines referencing the script instead of 12 lines of inline shell
   - Net reduction: ~450 bytes from SKILL.md
 
-- [ ] **Unit 2: git-commit-push-pr -- Create resolve-context.sh**
+- [x] **Unit 2: git-commit-push-pr -- Create resolve-context.sh**
 
   **Goal:** Extract default branch resolution, existing PR detection, and base branch detection from SKILL.md into a new `scripts/resolve-context.sh`.
 
@@ -160,7 +160,7 @@ Skill SKILL.md files carry procedural shell recipes in context across every tool
   - SKILL.md Steps 1 and 6 replaced with script invocation + decision logic
   - Net reduction: ~3,000 bytes from SKILL.md (24%)
 
-- [ ] **Unit 3: ce-review -- Extract PR-path scope detection into script**
+- [x] **Unit 3: ce-review -- Extract PR-path scope detection into script**
 
   **Goal:** Extract the PR-path fork-safe remote resolution code blocks (SKILL.md lines 211-231, ~21 lines of shell within the broader PR-path section) into a script, unifying it with the existing resolve-base.sh approach.
 
@@ -200,7 +200,7 @@ Skill SKILL.md files carry procedural shell recipes in context across every tool
   - Net reduction: ~2,500-3,800 bytes from SKILL.md PR-path section (range depends on how much surrounding prose can be trimmed)
   - Standalone/branch paths unchanged, still using resolve-base.sh
 
-- [ ] **Unit 4: Golden-output script tests**
+- [x] **Unit 4: Golden-output script tests**
 
   **Goal:** Establish a test pattern for co-located Bash scripts using the existing bun test infrastructure.
 

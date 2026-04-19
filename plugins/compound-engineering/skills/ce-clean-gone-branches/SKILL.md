@@ -48,21 +48,16 @@ Do not offer multi-selection or per-branch choices.
 
 ### Step 3: Delete confirmed branches
 
-If the user confirms, delete each branch. For each branch:
+If the user confirms, run the delete subcommand with the confirmed branch list:
 
-1. Check if it has an associated worktree (`git worktree list | grep "\\[$branch\\]"`)
-2. If a worktree exists and is not the main repo root, remove it first: `git worktree remove --force "$worktree_path"`
-3. Delete the branch: `git branch -D "$branch"`
-
-Report results as you go:
-
-```
-Removed worktree: .worktrees/feature/old-thing
-Deleted branch: feature/old-thing
-Deleted branch: bugfix/resolved-issue
-Deleted branch: experiment/abandoned
-
-Cleaned up 3 branches.
+```bash
+bash scripts/clean-gone delete <branch1> <branch2> ...
 ```
 
-If the user declines, acknowledge and stop without deleting anything.
+Parse the output lines:
+
+- `WORKTREE_REMOVED:<path>` — a worktree was removed before branch deletion
+- `DELETED:<branch>` — branch was successfully deleted
+- `ERROR:<branch>:<message>` — branch deletion failed
+
+Report results to the user. If the user declines, acknowledge and stop.

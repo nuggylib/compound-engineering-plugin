@@ -4,13 +4,15 @@ import os from "os"
 import path from "path"
 import { pathToFileURL } from "url"
 
-const gitEnv = {
-  ...process.env,
-  GIT_AUTHOR_NAME: "Test",
-  GIT_AUTHOR_EMAIL: "test@example.com",
-  GIT_COMMITTER_NAME: "Test",
-  GIT_COMMITTER_EMAIL: "test@example.com",
-}
+import {
+  type RunResult,
+  commitFile,
+  createStubBin,
+  gitEnv,
+  initRepo as initRepoBase,
+  runCommand,
+  runGit,
+} from "./helpers/setup-test-repo"
 
 const resolveBaseScript = path.join(
   import.meta.dir,
@@ -23,114 +25,8 @@ const resolveBaseScript = path.join(
   "resolve-base.sh",
 )
 
-type RunResult = {
-  exitCode: number
-  stderr: string
-  stdout: string
-}
-
-async function runCommand(
-  cmd: string[],
-  cwd: string,
-  env?: NodeJS.ProcessEnv,
-): Promise<RunResult> {
-  const proc = Bun.spawn(cmd, {
-    cwd,
-    env: env ?? process.env,
-    stderr: "pipe",
-    stdout: "pipe",
-  })
-
-  const [exitCode, stdout, stderr] = await Promise.all([
-    proc.exited,
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-  ])
-
-  return { exitCode, stderr, stdout }
-}
-
-async function runGit(args: string[], cwd: string, env?: NodeJS.ProcessEnv): Promise<string> {
-  const result = await runCommand(["git", ...args], cwd, env ?? gitEnv)
-  if (result.exitCode !== 0) {
-    throw new Error(
-      `git ${args.join(" ")} failed (exit ${result.exitCode}).\nstdout: ${result.stdout}\nstderr: ${result.stderr}`,
-    )
-  }
-
-  return result.stdout.trim()
-}
-
 async function initRepo(initialBranch = "main"): Promise<string> {
-  const repoRoot = await fs.mkdtemp(path.join(os.tmpdir(), "resolve-base-repo-"))
-  await runGit(["init", "-b", initialBranch], repoRoot)
-  return repoRoot
-}
-
-async function commitFile(
-  repoRoot: string,
-  relativePath: string,
-  content: string,
-  message: string,
-): Promise<string> {
-  const filePath = path.join(repoRoot, relativePath)
-  await fs.mkdir(path.dirname(filePath), { recursive: true })
-  await fs.writeFile(filePath, content)
-  await runGit(["add", relativePath], repoRoot)
-  await runGit(["commit", "-m", message], repoRoot)
-  return runGit(["rev-parse", "HEAD"], repoRoot)
-}
-
-async function writeExecutable(filePath: string, content: string): Promise<void> {
-  await fs.writeFile(filePath, content)
-  await fs.chmod(filePath, 0o755)
-}
-
-async function createStubBin(mode: "gh-fails" | "pr-metadata"): Promise<string> {
-  const binDir = await fs.mkdtemp(path.join(os.tmpdir(), "resolve-base-bin-"))
-
-  if (mode === "gh-fails") {
-    await writeExecutable(path.join(binDir, "gh"), "#!/usr/bin/env bash\nexit 1\n")
-    return binDir
-  }
-
-  await writeExecutable(
-    path.join(binDir, "gh"),
-    `#!/usr/bin/env bash
-set -euo pipefail
-if [ "$#" -ge 2 ] && [ "$1" = "pr" ] && [ "$2" = "view" ]; then
-  printf '%s' '{"baseRefName":"main","url":"https://github.com/EveryInc/compound-engineering-plugin/pull/123"}'
-  exit 0
-fi
-exit 1
-`,
-  )
-
-  await writeExecutable(
-    path.join(binDir, "jq"),
-    `#!/usr/bin/env bun
-const args = process.argv.slice(2).filter((arg) => arg !== "-r")
-const query = args[args.length - 1] ?? ""
-const input = await new Response(Bun.stdin.stream()).text()
-const data = input.trim() ? JSON.parse(input) : {}
-
-let output = ""
-if (query === ".baseRefName // empty") {
-  output = data.baseRefName ?? ""
-} else if (query === ".url // empty") {
-  output = data.url ?? ""
-} else if (query === ".defaultBranchRef.name") {
-  output = data.defaultBranchRef?.name ?? ""
-} else {
-  console.error(\`unsupported jq query: \${query}\`)
-  process.exit(1)
-}
-
-process.stdout.write(String(output))
-`,
-  )
-
-  return binDir
+  return initRepoBase(initialBranch, "resolve-base-repo-")
 }
 
 async function runResolveBase(

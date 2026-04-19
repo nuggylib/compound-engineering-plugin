@@ -212,27 +212,15 @@ gh pr checkout <number-or-url>
 gh pr view <number-or-url> --json title,body,baseRefName,headRefName,url
 ```
 
-Use the repository portion of the returned PR URL as `<base-repo>`. Resolve the base ref from the PR's actual base repository, not by assuming `origin` points at that repo:
+Extract `baseRefName` as the base branch and the repository portion of the PR URL as `<base-repo>` from `gh pr view` output. Resolve the base ref from the PR's actual base repository using `scripts/resolve-pr-base.sh`:
 
 ```
-PR_BASE_REMOTE=$(git remote -v | awk 'index($2, "github.com:<base-repo>") || index($2, "github.com/<base-repo>") {print $1; exit}')
-if [ -n "$PR_BASE_REMOTE" ]; then PR_BASE_REMOTE_REF="$PR_BASE_REMOTE/<base>"; else PR_BASE_REMOTE_REF=""; fi
-PR_BASE_REF=$(git rev-parse --verify "$PR_BASE_REMOTE_REF" 2>/dev/null || git rev-parse --verify <base> 2>/dev/null || true)
-if [ -z "$PR_BASE_REF" ]; then
-  if [ -n "$PR_BASE_REMOTE_REF" ]; then
-    git fetch --no-tags "$PR_BASE_REMOTE" <base>:refs/remotes/"$PR_BASE_REMOTE"/<base> 2>/dev/null || git fetch --no-tags "$PR_BASE_REMOTE" <base> 2>/dev/null || true
-    PR_BASE_REF=$(git rev-parse --verify "$PR_BASE_REMOTE_REF" 2>/dev/null || git rev-parse --verify <base> 2>/dev/null || true)
-  else
-    if git fetch --no-tags https://github.com/<base-repo>.git <base> 2>/dev/null; then
-      PR_BASE_REF=$(git rev-parse --verify FETCH_HEAD 2>/dev/null || true)
-    fi
-    if [ -z "$PR_BASE_REF" ]; then PR_BASE_REF=$(git rev-parse --verify <base> 2>/dev/null || true); fi
-  fi
-fi
-if [ -n "$PR_BASE_REF" ]; then BASE=$(git merge-base HEAD "$PR_BASE_REF" 2>/dev/null) || BASE=""; else BASE=""; fi
+RESOLVE_OUT=$(bash scripts/resolve-pr-base.sh --base <baseRefName> --base-repo <base-repo>)
+if echo "$RESOLVE_OUT" | grep -q '^ERROR:'; then echo "$RESOLVE_OUT"; exit 1; fi
+BASE=$(echo "$RESOLVE_OUT" | sed 's/^BASE://')
 ```
 
-If BASE is non-empty, run the shared output command. If empty: `echo "ERROR: Unable to resolve PR base branch <base> locally. Fetch the base branch and rerun."` and stop.
+Run the shared output command with the resolved BASE. If the script outputs an error, stop.
 
 <!-- why: gh pr diff reflects remote PR state only, missing local fix commits until pushed -->
 Do not use `gh pr diff` as the review scope after checkout.
