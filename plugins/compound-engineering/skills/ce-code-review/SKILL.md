@@ -115,52 +115,31 @@ Routing rules:
 
 ## Reviewers
 
-17 reviewer personas in layered conditionals, plus CE-specific agents. See `references/persona-catalog.md` for the full catalog.
+| agent-name | trigger | output | focus |
+|------------|---------|--------|-------|
+| compound-engineering:review:correctness-reviewer | always | structured-json | logic errors, edge cases, state bugs |
+| compound-engineering:review:testing-reviewer | always | structured-json | coverage gaps, weak assertions, brittle tests |
+| compound-engineering:review:maintainability-reviewer | always | structured-json | coupling, complexity, naming, dead code |
+| compound-engineering:review:project-standards-reviewer | always | structured-json | CLAUDE.md/AGENTS.md compliance |
+| compound-engineering:review:agent-native-reviewer | always | unstructured | new features agent-accessible |
+| compound-engineering:research:learnings-researcher | always | unstructured | past issues from docs/solutions/ |
+| compound-engineering:review:security-reviewer | conditional: auth, endpoints, user input, permissions | structured-json | auth and input security |
+| compound-engineering:review:performance-reviewer | conditional: DB queries, data transforms, caching, async | structured-json | query and data-path performance |
+| compound-engineering:review:api-contract-reviewer | conditional: routes, serializers, type signatures, versioning | structured-json | API surface and contract stability |
+| compound-engineering:review:data-migrations-reviewer | conditional: migrations, schema changes, backfills | structured-json | migration safety and data integrity |
+| compound-engineering:review:reliability-reviewer | conditional: error handling, retries, timeouts, background jobs | structured-json | fault tolerance and recovery |
+| compound-engineering:review:adversarial-reviewer | conditional: >=50 executable lines or high-risk domains | structured-json | adversarial edge cases and abuse paths |
+| compound-engineering:review:cli-readiness-reviewer | conditional: CLI commands, argument parsing, handlers | structured-json | CLI ergonomics and correctness |
+| compound-engineering:review:previous-comments-reviewer | conditional: PR with existing review comments (PR-only) | structured-json | prior feedback thread continuity |
+| compound-engineering:review:dhh-rails-reviewer | conditional: Rails architecture, service objects, Hotwire-vs-SPA | structured-json | Rails conventions and simplicity |
+| compound-engineering:review:kieran-rails-reviewer | conditional: Rails controllers, models, views, jobs | structured-json | Rails clarity and conventions |
+| compound-engineering:review:kieran-python-reviewer | conditional: Python modules, endpoints, scripts | structured-json | Python idioms and type safety |
+| compound-engineering:review:kieran-typescript-reviewer | conditional: TypeScript components, services, hooks, types | structured-json | TypeScript patterns and type design |
+| compound-engineering:review:julik-frontend-races-reviewer | conditional: Stimulus/Turbo, DOM events, async UI flows | structured-json | frontend race conditions and timing |
+| compound-engineering:review:schema-drift-detector | conditional: migration files (db/migrate/, schema.rb) | unstructured | schema.rb drift against migrations |
+| compound-engineering:review:deployment-verification-agent | conditional: migration files (db/migrate/, schema.rb) | unstructured | deployment checklist with SQL verification |
 
-**Always-on (every review):**
-
-| Agent | Focus |
-|-------|-------|
-| `ce-correctness-reviewer` | Logic errors, edge cases, state bugs, error propagation |
-| `ce-testing-reviewer` | Coverage gaps, weak assertions, brittle tests |
-| `ce-maintainability-reviewer` | Coupling, complexity, naming, dead code, abstraction debt |
-| `ce-project-standards-reviewer` | CLAUDE.md and AGENTS.md compliance -- frontmatter, references, naming, portability |
-| `ce-agent-native-reviewer` | Verify new features are agent-accessible |
-| `ce-learnings-researcher` | Search docs/solutions/ for past issues related to this PR |
-
-**Cross-cutting conditional (selected per diff):**
-
-| Agent | Select when diff touches... |
-|-------|---------------------------|
-| `ce-security-reviewer` | Auth, public endpoints, user input, permissions |
-| `ce-performance-reviewer` | DB queries, data transforms, caching, async |
-| `ce-api-contract-reviewer` | Routes, serializers, type signatures, versioning |
-| `ce-data-migrations-reviewer` | Migrations, schema changes, backfills |
-| `ce-reliability-reviewer` | Error handling, retries, timeouts, background jobs |
-| `ce-adversarial-reviewer` | Diff >=50 changed non-test/non-generated/non-lockfile lines, or auth, payments, data mutations, external APIs |
-| `ce-cli-readiness-reviewer` | CLI command definitions, argument parsing, CLI framework usage, command handler implementations |
-| `ce-previous-comments-reviewer` | Reviewing a PR that has existing review comments or threads |
-
-**Stack-specific conditional (selected per diff):**
-
-| Agent | Select when diff touches... |
-|-------|---------------------------|
-| `ce-dhh-rails-reviewer` | Rails architecture, service objects, session/auth choices, or Hotwire-vs-SPA boundaries |
-| `ce-kieran-rails-reviewer` | Rails application code where conventions, naming, and maintainability are in play |
-| `ce-kieran-python-reviewer` | Python modules, endpoints, scripts, or services |
-| `ce-kieran-typescript-reviewer` | TypeScript components, services, hooks, utilities, or shared types |
-| `ce-julik-frontend-races-reviewer` | Stimulus/Turbo controllers, DOM events, timers, animations, or async UI flows |
-
-**CE conditional (migration-specific):**
-
-| Agent | Select when diff includes migration files |
-|-------|------------------------------------------|
-| `ce-schema-drift-detector` | Cross-references schema.rb against included migrations |
-| `ce-deployment-verification-agent` | Produces deployment checklist with SQL verification queries |
-
-## Review Scope
-
-Every review spawns all 4 always-on personas plus the 2 CE always-on agents, then adds whichever cross-cutting and stack-specific conditionals fit the diff. The model naturally right-sizes: a small config change triggers 0 conditionals = 6 reviewers. A Rails auth feature might trigger security + reliability + kieran-rails + dhh-rails = 10 reviewers.
+See `references/persona-catalog.md` for detailed selection criteria and selection rules.
 
 ## Protected Artifacts
 
@@ -285,9 +264,9 @@ If found, read its Requirements Trace and Implementation Units; store for Stage 
 
 ### Stage 3: Select reviewers
 
-Read `references/persona-catalog.md` for the full reviewer persona catalog with selection criteria.
+Use the Reviewers cartouche table above for the full agent list and triggers. Read `references/persona-catalog.md` for detailed selection criteria and selection rules.
 
-Read the diff and file list from Stage 1. The 4 always-on personas and 2 CE always-on agents are automatic. For each cross-cutting and stack-specific conditional persona in the persona catalog, decide whether the diff warrants it.
+Read the diff and file list from Stage 1. The 6 always-on agents are automatic. For each conditional agent in the cartouche, read the detailed criteria in persona-catalog.md and decide whether the diff warrants it.
 
 **File-type awareness for conditional selection:** Instruction-prose files (Markdown skill definitions, JSON schemas, config files) are product code but do not benefit from runtime-focused reviewers. The adversarial reviewer's techniques (race conditions, cascade failures, abuse cases) target executable code behavior. For diffs that only change instruction-prose files, skip adversarial unless the prose describes auth, payment, or data-mutation behavior. Count only executable code lines toward line-count thresholds.
 
