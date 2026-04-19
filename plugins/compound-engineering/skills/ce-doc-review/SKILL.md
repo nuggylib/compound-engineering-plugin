@@ -49,48 +49,23 @@ After reading, classify the document:
 - **requirements** -- from `docs/brainstorms/`, focuses on what to build and why
 - **plan** -- from `docs/plans/`, focuses on how to build it with implementation details
 
+### Review Personas
+
+| agent-name | trigger | output | focus |
+|------------|---------|--------|-------|
+| ce-coherence-reviewer | always | structured-json | internal consistency, logic gaps |
+| ce-feasibility-reviewer | always | structured-json | technical viability, risks |
+| ce-product-lens-reviewer | conditional: challengeable premise claims or strategic weight | structured-json | product direction, opportunity cost |
+| ce-design-lens-reviewer | conditional: UI/UX, user flows, or visual design references | structured-json | design quality, interaction patterns |
+| ce-security-lens-reviewer | conditional: auth, data handling, or trust boundaries | structured-json | security posture, threat surface |
+| ce-scope-guardian-reviewer | conditional: multiple priority tiers, large scope, or misaligned boundaries | structured-json | scope control, priority alignment |
+| ce-adversarial-document-reviewer | conditional: 5+ requirements, explicit rationale, high-stakes domains, or new abstractions | structured-json | assumptions, blind spots, weak rationale |
+
 ### Select Conditional Personas
 
-Analyze the document content to determine which conditional personas to activate. Check for these signals:
+Read `references/persona-routing.md` and identify all conditional agents whose criteria match the document under review. Combine the matching conditional agents with the two always-on agents (coherence-reviewer, feasibility-reviewer) to form the review team.
 
-**product-lens** -- activate when the document makes challengeable claims about what to build and why, or when the proposed work carries strategic weight beyond the immediate problem. The system's users may be end users, developers, operators, maintainers, or any other audience -- the criteria are domain-agnostic. Check for either leg:
-
-*Leg 1 — Premise claims:* The document stakes a position on what to build or why that a knowledgeable stakeholder could reasonably challenge -- not merely describing a task or restating known requirements:
-- Problem framing where the stated need is non-obvious or debatable, not self-evident from existing context
-- Solution selection where alternatives plausibly exist (implicit or explicit)
-- Prioritization decisions that explicitly rank what gets built vs deferred
-- Goal statements that predict specific user outcomes, not just restate constraints or describe deliverables
-
-*Leg 2 — Strategic weight:* The proposed work could affect system trajectory, user perception, or competitive positioning, even if the premise is sound:
-- Changes that shape how the system is perceived or what it becomes known for
-- Complexity or simplicity bets that affect adoption, onboarding, or cognitive load
-- Work that opens or closes future directions (path dependencies, architectural commitments)
-- Opportunity cost implications -- building this means not building something else
-
-**design-lens** -- activate when the document contains:
-- UI/UX references, frontend components, or visual design language
-- User flows, wireframes, screen/page/view mentions
-- Interaction descriptions (forms, buttons, navigation, modals)
-- References to responsive behavior or accessibility
-
-**security-lens** -- activate when the document contains:
-- Auth/authorization mentions, login flows, session management
-- API endpoints exposed to external clients
-- Data handling, PII, payments, tokens, credentials, encryption
-- Third-party integrations with trust boundary implications
-
-**scope-guardian** -- activate when the document contains:
-- Multiple priority tiers (P0/P1/P2, must-have/should-have/nice-to-have)
-- Large requirement count (>8 distinct requirements or implementation units)
-- Stretch goals, nice-to-haves, or "future work" sections
-- Scope boundary language that seems misaligned with stated goals
-- Goals that don't clearly connect to requirements
-
-**adversarial** -- activate when the document contains:
-- More than 5 distinct requirements or implementation units
-- Explicit architectural or scope decisions with stated rationale
-- High-stakes domains (auth, payments, data migrations, external integrations)
-- Proposals of new abstractions, frameworks, or significant architectural patterns
+If `references/persona-routing.md` cannot be read, dispatch always-on agents only and note the read failure.
 
 ## Phase 2: Announce and Dispatch Personas
 
