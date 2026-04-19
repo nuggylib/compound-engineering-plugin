@@ -119,16 +119,22 @@ Unclear -> ask one targeted question, then continue.
 <!-- why: Kolmogorov compression -- compressed research dispatch, kept parallel agents, Slack opt-in, posture detection, reclassify rule, flow analysis conditional -->
 ### Phase 1: Gather Context
 
+| agent-name | trigger | output | focus |
+|------------|---------|--------|-------|
+| compound-engineering:research:repo-research-analyst | always | research-summary | tech stack, patterns, architecture |
+| compound-engineering:research:learnings-researcher | always | research-summary | institutional learnings |
+| compound-engineering:research:slack-researcher | opt-in: Slack available + user requested | research-summary | Slack context |
+| compound-engineering:research:best-practices-researcher | conditional: thin patterns or high-risk | research-summary | external best practices |
+| compound-engineering:research:framework-docs-researcher | conditional: thin patterns or high-risk | research-summary | framework docs, version constraints |
+| compound-engineering:workflow:spec-flow-analyzer | conditional: Standard/Deep plans | flow-analysis | user flows, edge cases, gaps |
+
 #### 1.1 Local Research (Always Runs)
 
-Prepare a concise planning context summary from origin doc or feature description. Run in parallel:
-
-- Task compound-engineering:research:repo-research-analyst(Scope: technology, architecture, patterns. {planning context summary})
-- Task compound-engineering:research:learnings-researcher(planning context summary)
+Prepare a concise planning context summary from origin doc or feature description. Dispatch `repo-research-analyst` and `learnings-researcher` in parallel with the planning context summary. Scope repo-research-analyst to technology, architecture, and patterns.
 
 Collect: technology stack/versions, architectural patterns, implementation patterns/files/tests, AGENTS.md guidance, institutional learnings from `docs/solutions/`.
 
-**Slack context** (opt-in) -- never auto-dispatch. Dispatch `compound-engineering:research:slack-researcher` only when tools available and user asked.
+**Slack context** (opt-in) -- never auto-dispatch. Dispatch `slack-researcher` only when tools available and user asked.
 
 #### 1.1b Detect Execution Posture Signals
 
@@ -146,10 +152,7 @@ Announce briefly before continuing.
 
 #### 1.3 External Research (Conditional)
 
-If 1.2 indicates useful, run in parallel:
-
-- Task ce-best-practices-researcher(planning context summary)
-- Task ce-framework-docs-researcher(planning context summary)
+If 1.2 indicates useful, dispatch `best-practices-researcher` and `framework-docs-researcher` in parallel with the planning context summary.
 
 #### 1.4 Consolidate Research
 
@@ -161,9 +164,7 @@ Reclassify **Lightweight** to **Standard** if work touches: environment variable
 
 #### 1.5 Flow and Edge-Case Analysis (Conditional)
 
-For **Standard** or **Deep** plans, or unclear user flow completeness:
-
-- Task ce-spec-flow-analyzer(planning context summary, research findings)
+For **Standard** or **Deep** plans, or unclear user flow completeness, dispatch `spec-flow-analyzer` with the planning context summary and research findings.
 
 Use output to identify missing edge cases, state transitions, handoff gaps. Add only flow details that materially improve the plan.
 
