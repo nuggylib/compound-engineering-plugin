@@ -6,34 +6,26 @@ argument-hint: "[mode:headless] [path/to/document.md]"
 
 # Document Review
 
-Review requirements or plan documents through multi-persona analysis. Dispatches specialized reviewer agents in parallel, auto-applies `safe_auto` fixes, and routes remaining findings through a four-option interaction (per-finding walk-through, LFG, Append-to-Open-Questions, Report-only) for user decision.
-
-## Interactive mode rules
-
-- **Pre-load the platform question tool before any question fires.** In Claude Code, `AskUserQuestion` is a deferred tool — its schema is not available at session start. At the start of Interactive-mode work (before the routing question, per-finding walk-through questions, bulk-preview Proceed/Cancel, and Phase 5 terminal question), call `ToolSearch` with query `select:AskUserQuestion` to load the schema. Load it once, eagerly, at the top of the Interactive flow — do not wait for the first question site. On Codex and Gemini this preload is not required.
-- **The numbered-list fallback applies only when the harness genuinely lacks a blocking question tool** — `ToolSearch` returns no match, the tool call explicitly fails, or the runtime mode does not expose it (e.g., Codex edit modes where `request_user_input` is unavailable). A pending schema load is not a fallback trigger; call `ToolSearch` first per the pre-load rule. In genuine-fallback cases, present options as a numbered list and wait for the user's reply — never silently skip the question. Rendering a question as narrative text because the tool feels inconvenient, because the model is in report-formatting mode, or because the instruction was buried in a long skill is a bug. A question that calls for a user decision must either fire the tool or fall back loudly.
+Review requirements or plan documents through multi-persona analysis. Dispatch specialized reviewer agents in parallel, auto-fix quality issues, and present strategic questions for user decision.
 
 ## Phase 0: Detect Mode
 
-Check the skill arguments for `mode:headless`. Arguments may contain a document path, `mode:headless`, or both. Tokens starting with `mode:` are flags, not file paths — strip them from the arguments and use the remaining token (if any) as the document path for Phase 1.
+Check the skill arguments for `mode:headless`. Arguments may contain a document path, `mode:headless`, or both. Tokens starting with `mode:` are flags, not file paths -- strip them from the arguments and use the remaining token (if any) as the document path for Phase 1.
 
 If `mode:headless` is present, set **headless mode** for the rest of the workflow.
 
-**Headless mode** changes the interaction model, not the classification boundaries. ce-doc-review still applies the same judgment about which tier each finding belongs in. The only difference is how non-safe_auto findings are delivered:
-
-- `safe_auto` fixes are applied silently (same as interactive)
-- `gated_auto`, `manual`, and FYI findings are returned as structured text for the caller to handle — no AskUserQuestion prompts, no interactive routing
-- Phase 5 returns immediately with "Review complete" (no routing question, no terminal question)
-
-The caller receives findings with their original classifications intact and decides what to do with them.
+**Headless mode** keeps the same classification boundaries. Non-auto findings change delivery only:
+- `auto` fixes are applied silently (same as interactive)
+- `present` findings are returned as structured text for the caller to handle -- no AskUserQuestion prompts, no interactive approval
+- Phase 5 returns immediately with "Review complete" (no refine/complete question)
 
 Callers invoke headless mode by including `mode:headless` in the skill arguments, e.g.:
-
 ```
-Skill("ce-doc-review", "mode:headless docs/plans/my-plan.md")
+Skill("compound-engineering:document-review", "mode:headless docs/plans/my-plan.md")
 ```
 
-If `mode:headless` is not present, the skill runs in its default interactive mode with the routing question, walk-through, and bulk-preview behaviors documented in `references/walkthrough.md` and `references/bulk-preview.md`.
+
+If `mode:headless` is not present, run in default interactive mode.
 
 ## Phase 1: Get and Analyze Document
 
@@ -41,7 +33,7 @@ If `mode:headless` is not present, the skill runs in its default interactive mod
 
 **If no document is specified (interactive mode):** Ask which document to review, or find the most recent in `docs/brainstorms/` or `docs/plans/` using a file-search/glob tool (e.g., Glob in Claude Code).
 
-**If no document is specified (headless mode):** Output "Review failed: headless mode requires a document path. Re-invoke with: Skill(\"ce-doc-review\", \"mode:headless <path>\")" without dispatching agents.
+**If no document is specified (headless mode):** Output "Review failed: headless mode requires a document path. Re-invoke with: Skill(\"compound-engineering:document-review\", \"mode:headless <path>\")" without dispatching agents.
 
 ### Classify Document Type
 
@@ -71,99 +63,86 @@ If `references/persona-routing.md` cannot be read, dispatch always-on agents onl
 
 ### Announce the Review Team
 
-Tell the user which personas will review and why. For conditional personas, include the justification:
+Tell the user which personas will review and why. For conditional personas, include the justification (use the cartouche focus field for always-on agents):
 
 ```
 Reviewing with:
-- ce-coherence-reviewer (always-on)
-- ce-feasibility-reviewer (always-on)
-- ce-scope-guardian-reviewer -- plan has 12 requirements across 3 priority levels
-- ce-security-lens-reviewer -- plan adds API endpoints with auth flow
+- coherence-reviewer (always-on)
+- feasibility-reviewer (always-on)
+- scope-guardian-reviewer -- plan has 12 requirements across 3 priority levels
+- security-lens-reviewer -- plan adds API endpoints with auth flow
 ```
 
-### Build Agent List
+### Generate Run ID and Assemble Dispatch Context
 
-Always include:
-- `ce-coherence-reviewer`
-- `ce-feasibility-reviewer`
+Generate a unique run ID and assemble shared dispatch content before spawning agents:
 
-Add activated conditional personas:
-- `ce-product-lens-reviewer`
-- `ce-design-lens-reviewer`
-- `ce-security-lens-reviewer`
-- `ce-scope-guardian-reviewer`
-- `ce-adversarial-document-reviewer`
+```bash
+RUN_ID=$(date +%Y%m%d-%H%M%S)-$(head -c4 /dev/urandom | od -An -tx1 | tr -d ' ')
+mkdir -p ".context/compound-engineering/document-review/$RUN_ID"
+```
+
+Assemble the dispatch context:
+1. Read `references/subagent-template.md` (the template body inside the code block)
+2. Read `references/findings-schema.json`
+3. Resolve `{schema}` in the template with the full schema content
+4. Strip `<persona>` and `<review-context>` blocks (these move to the lean prompt)
+5. Keep the preamble and `<output-contract>` -- the output contract stays in the dispatch context with `{run_id}` and `{reviewer_name}` as unresolved placeholders that agents resolve from their lean prompt metadata
+6. Write the assembled content to `.context/compound-engineering/document-review/{run_id}/dispatch-context.md`
+
+**R8 fallback:** If the dispatch context write fails, fall back to inline dispatch -- fill the full template per agent with all variables resolved (current behavior) and dispatch without disk artifacts. Warn the user that compact returns are disabled for this run.
 
 ### Dispatch
 
-Dispatch all agents in **parallel** using the platform's task/agent tool (e.g., Agent tool in Claude Code, spawn in Codex). Omit the `mode` parameter so the user's configured permission settings apply. Each agent receives the prompt built from the subagent template included below with these variables filled:
+Dispatch all agents in **parallel** using the platform's task/agent tool (e.g., Agent tool in Claude Code, spawn in Codex). Omit the `mode` parameter so the user's configured permission settings apply.
+
+Each agent receives a **lean prompt** instead of the full inlined template:
+
+```
+Read `.context/compound-engineering/document-review/{run_id}/dispatch-context.md` for your review contract, output schema, and analysis instructions. Read the file BEFORE analyzing the document.
+
+<persona>
+{persona_file}
+</persona>
+
+<review-context>
+Run ID: {run_id}
+Reviewer name: {reviewer_name}
+Document type: {document_type}
+Document path: {document_path}
+Read the document at {document_path} for the full content.
+</review-context>
+
+If the dispatch context file read fails, return {"reviewer": "{reviewer_name}", "findings": [], "residual_risks": [], "deferred_questions": []}.
+```
 
 | Variable | Value |
 |----------|-------|
 | `{persona_file}` | Full content of the agent's markdown file |
-| `{schema}` | Content of the findings schema included below |
 | `{document_type}` | "requirements" or "plan" from Phase 1 classification |
 | `{document_path}` | Path to the document |
-| `{document_content}` | Full text of the document |
-| `{decision_primer}` | Cumulative prior-round decisions in the current session, or an empty `<prior-decisions>` block on round 1. See "Decision primer" below. |
-
-Pass each agent the **full document** — do not split into sections.
-
-### Decision primer
-
-On round 1 (no prior decisions), set `{decision_primer}` to:
-
-```
-<prior-decisions>
-Round 1 — no prior decisions.
-</prior-decisions>
-```
-
-On round 2+ (after one or more prior rounds in the current interactive session), accumulate prior-round decisions and render them as:
-
-```
-<prior-decisions>
-Round 1 — applied (N entries):
-- {section}: "{title}" ({reviewer}, {confidence})
-  Evidence: "{evidence_snippet}"
-
-Round 1 — rejected (M entries):
-- {section}: "{title}" — Skipped because {reason}
-  Evidence: "{evidence_snippet}"
-- {section}: "{title}" — Deferred to Open Questions because {reason or "no reason provided"}
-  Evidence: "{evidence_snippet}"
-- {section}: "{title}" — Acknowledged without applying because {reason or "no suggested_fix — user acknowledged"}
-  Evidence: "{evidence_snippet}"
-
-Round 2 — applied (N entries):
-...
-</prior-decisions>
-```
-
-Each entry carries an `Evidence:` line because synthesis R29 (rejected-finding suppression) and R30 (fix-landed verification) both use an evidence-substring overlap check as part of their matching predicate — without the evidence snippet in the primer, the orchestrator cannot compute the `>50%` overlap test and has to fall back to fingerprint-only matching, which either re-surfaces rejected findings or suppresses too aggressively. The `{evidence_snippet}` is the first evidence quote from the finding, truncated to the first ~120 characters (preserving whole words at the boundary) and with internal quotes escaped. If a finding has multiple evidence entries, use the first one; the rest live in the run artifact and are not needed for the overlap check.
-
-Accumulate across all rounds in the current session. Skip, Defer, and Acknowledge actions all count as "rejected" for suppression purposes — each signals the user decided the finding wasn't worth actioning this round (Acknowledge is the no-fix-guard variant: the user saw a finding with no `suggested_fix`, chose not to defer or skip explicitly, and recorded acknowledgement instead; for round-to-round suppression that is semantically equivalent to Skip). Applied findings stay on the applied list so round-N+1 personas can verify fixes landed (see R30 in `references/synthesis-and-presentation.md`).
-
-Cross-session persistence is out of scope. A new invocation of ce-doc-review on the same document starts with a fresh round 1 and no carried primer, even if prior sessions deferred findings into the document's Open Questions section.
+| `{run_id}` | The generated run ID |
+| `{reviewer_name}` | Agent short name (e.g., "coherence", "feasibility") |
 
 **Error handling:** If an agent fails or times out, proceed with findings from agents that completed. Note the failed agent in the Coverage section. Do not block the entire review on a single agent failure.
 
-**Dispatch limit:** Even at maximum (7 agents), use parallel dispatch. These are document reviewers with bounded scope reading a single document -- parallel is safe and fast.
+**Dispatch limit:** Even at maximum (7 agents), use parallel dispatch.
 
 ## Phases 3-5: Synthesis, Presentation, and Next Action
 
-After all dispatched agents return, read `references/synthesis-and-presentation.md` for the synthesis pipeline (validate, per-severity gate, dedup, cross-persona agreement boost, resolve contradictions, auto-promotion, route by three tiers with FYI subsection), `safe_auto` fix application, headless-envelope output, and the handoff to the routing question.
+After all dispatched agents return, read `references/synthesis-and-presentation.md` for the synthesis pipeline (validate, gate, dedup, promote, resolve contradictions, route by autofix class), auto-fix application, finding presentation, and next-action menu. Pass the run ID to the synthesis pipeline for artifact-based evidence loading. Do not load this file before agent dispatch completes.
 
-For the four-option routing question and per-finding walk-through (interactive mode), read `references/walkthrough.md`. For the bulk-action preview used by LFG, Append-to-Open-Questions, and walk-through `LFG-the-rest`, read `references/bulk-preview.md`. Do not load these files before agent dispatch completes.
+After Phase 5 completes successfully, clean up the run directory:
+```bash
+rm -rf ".context/compound-engineering/document-review/$RUN_ID"
+```
 
 ---
 
-## Included References
+## Reference Files
 
-### Subagent Template
-
-@./references/subagent-template.md
-
-### Findings Schema
-
-@./references/findings-schema.json
+- Subagent template: `references/subagent-template.md`
+- Findings schema: `references/findings-schema.json`
+- Synthesis pipeline: `references/synthesis-and-presentation.md`
+- Persona routing: `references/persona-routing.md`
+- Review output template: `references/review-output-template.md`
