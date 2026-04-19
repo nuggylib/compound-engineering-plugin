@@ -136,41 +136,34 @@ Honor clear overrides such as:
 
 Use reasonable interpretation rather than formal parsing.
 
-#### 0.4 Light Context Intake (Elsewhere Mode, Software Topics Only)
+<!-- why: cartouche routing table + extracted dispatch prompts for token efficiency -->
+### Dispatched Agents
 
-Skip this step in repo mode (Phase 1 grounding agents do the work) and in non-software elsewhere mode (the universal facilitation reference governs intake).
+| agent-name | trigger | output | focus |
+|------------|---------|--------|-------|
+| Quick context scan (anonymous) | always | codebase-summary | project shape, patterns, pain points |
+| compound-engineering:research:learnings-researcher | always | research-summary | institutional learnings from docs/solutions/ |
+| compound-engineering:research:issue-intelligence-analyst | conditional: issue-tracker intent detected | issue-themes | issue patterns, trends, theme clusters |
+| compound-engineering:research:slack-researcher | opt-in: Slack available + user requested | research-summary | organizational context from Slack |
+| Ideation sub-agents (3-4 anonymous) | always in Phase 2 | raw-candidates | divergent idea generation per frame |
 
-Run agents in parallel in the **foreground** (do not use background dispatch):
+### Phase 1: Codebase Scan
 
-1. **Quick context scan** — dispatch a general-purpose sub-agent using the platform's cheapest capable model (e.g., `model: "haiku"` in Claude Code) with this prompt:
+Before generating ideas, gather codebase context. Run agents in parallel in the **foreground** (do not use background dispatch).
 
-   > Read the project's AGENTS.md (or CLAUDE.md only as compatibility fallback, then README.md if neither exists), then discover the top-level directory layout using native file-search tools. Return a concise summary (under 30 lines) covering:
-   > - project shape (language, framework, top-level directory layout)
-   > - notable patterns or conventions
-   > - obvious pain points or gaps
-   > - likely leverage points for improvement
-   >
-   > Keep the scan shallow — read only top-level documentation and directory structure. Do not analyze GitHub issues, templates, or contribution guidelines. Do not do deep code search.
-   >
-   > Focus hint: {focus_hint}
+Read `references/dispatch-prompts.md` for the Phase 1 quick context scan prompt. Dispatch `Quick context scan` using the platform's cheapest capable model (e.g., `model: "haiku"` in Claude Code) with that prompt, substituting `{focus_hint}`.
 
-2. **Learnings search** — dispatch `ce-learnings-researcher` with a brief summary of the ideation focus.
+Dispatch `learnings-researcher` with a brief summary of the ideation focus.
 
-3. **Issue intelligence** (conditional) — if issue-tracker intent was detected in Phase 0.2, dispatch `compound-engineering:research:issue-intelligence-analyst` with the focus hint. If a focus hint is present, pass it. Run this in parallel with agents 1 and 2.
+If issue-tracker intent was detected in Phase 0.2, dispatch `issue-intelligence-analyst` with the focus hint in parallel with the other agents. On error (gh not installed, no remote, auth failure), log a warning ("Issue analysis unavailable: {reason}. Proceeding with standard ideation.") and continue. If fewer than 5 total issues, note "Insufficient issue signal for theme analysis" and proceed with default ideation frames in Phase 2.
 
-4. **Issue intelligence** (conditional) — if issue-tracker intent was detected in Phase 0.3, dispatch `ce-issue-intelligence-analyst` with the focus hint. Run in parallel with the other agents.
+Consolidate results into a short grounding summary with distinct sections: codebase context, past learnings, and issue intelligence (when present -- preserve theme titles, descriptions, issue counts, trend directions).
 
-   If the agent returns an error (gh not installed, no remote, auth failure), log a warning to the user ("Issue analysis unavailable: {reason}. Proceeding with standard ideation.") and continue with the remaining grounding.
+**Slack context** (opt-in) -- never auto-dispatch. Route by condition:
 
-   If the agent reports fewer than 5 total issues, note "Insufficient issue signal for theme analysis" and proceed with default ideation frames in Phase 2.
-
-Consolidate all results into a short grounding summary. When issue intelligence is present, keep it as a distinct section:
-
-1. **User-context synthesis** — dispatch a general-purpose sub-agent (cheapest capable model) to read the user-supplied context from Phase 0.4 intake plus any rich-prompt material, and return a structured grounding summary that mirrors the codebase-context shape (project shape → topic shape; notable patterns → stated constraints; pain points → user-named pain points; leverage points → opportunity hooks the context implies). This keeps Phase 2 sub-agents agnostic to grounding source.
-
-2. **Learnings search** *(elsewhere-software only; skipped by default in elsewhere-non-software)* — dispatch `ce-learnings-researcher` with the topic summary in case relevant institutional knowledge exists (skill-design patterns, prior solutions in similar shape). Skip for elsewhere-non-software: the CWD's `docs/solutions/` is unlikely to be topically relevant for non-digital topics, and running it risks polluting generation with unrelated engineering patterns.
-
-3. **Web research** — same as repo mode (see subsection below).
+- **Tools available + user asked**: Dispatch `slack-researcher` with the focus hint in parallel. Include findings in the grounding summary.
+- **Tools available + user didn't ask**: Note: "Slack tools detected. Ask me to search Slack for organizational context at any point, or include it in your next prompt."
+- **No tools + user asked**: Note: "Slack context was requested but no Slack tools are available. Install and authenticate the Slack plugin to enable organizational context search."
 
 Issue intelligence does not apply in elsewhere mode. Slack research is opt-in for both modes (see "Slack context" below).
 
@@ -200,24 +193,7 @@ Consolidate all dispatched results into a short grounding summary using these se
 
 Generate the full candidate list before critiquing any idea.
 
-Dispatch 3-4 parallel ideation sub-agents on the inherited model (do not tier down). <!-- why: creative ideation needs the orchestrator's reasoning level --> Omit the `mode` parameter. Each targets ~8-10 ideas (yielding ~30 raw ideas, ~20-25 after dedupe). Adjust per-agent targets when volume overrides apply (e.g., "100 ideas" raises it, "top 3" may lower the survivor count instead).
-
-Give each sub-agent: the grounding summary, the focus hint, the per-agent volume target, and an instruction to generate raw candidates only (not critique). Push past obvious first ideas. Ground every idea in the Phase 1 scan.
-
-Assign each sub-agent a different ideation frame as a **starting bias, not a constraint**. Prompt each to begin from its assigned perspective but follow any promising thread.
-
-**Frame selection (mode-symmetric — same six frames in repo and elsewhere modes):**
-
-1. **Pain and friction** — user, operator, or topic-level pain points; what is consistently slow, broken, or annoying.
-2. **Inversion, removal, or automation** — invert a painful step, remove it entirely, or automate it away.
-3. **Assumption-breaking and reframing** — what is being treated as fixed that is actually a choice; reframe one level up or sideways.
-4. **Leverage and compounding** — choices that, once made, make many future moves cheaper or stronger; second-order effects.
-5. **Cross-domain analogy** — generate ideas by asking how completely different fields solve a structurally analogous problem. The grounding domain is the user's topic; the analogy domain is anywhere else (other industries, biology, games, infrastructure, history). Push past the obvious analogy to non-obvious ones.
-6. **Constraint-flipping** — invert the obvious constraint to its opposite or extreme. What if the budget were 10x or 0? What if the team were 100 people or 1? What if there were no users, or 1M? Use the resulting design as a candidate even if the constraint flip itself is not realistic.
-
-**Issue-tracker mode override (repo mode only).** When issue-tracker intent is active and themes were returned by the issue intelligence agent: each high/medium-confidence theme becomes a frame. Pad with frames from the 6-frame default pool (in the order listed above) if fewer than 3 cluster-derived frames. Cap at 4 total — issue-tracker mode keeps its tighter dispatch by design.
-
-Ask each sub-agent to return a compact structure per idea: title, summary, why_it_matters, evidence/grounding hooks, optional boldness or focus_fit signal.
+Read `references/dispatch-prompts.md` for Phase 2 ideation sub-agent dispatch instructions, including frame selection rules, per-agent prompt structure, and volume adjustment. Dispatch `Ideation sub-agents` accordingly.
 
 After all sub-agents return:
 
