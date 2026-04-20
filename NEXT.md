@@ -29,10 +29,15 @@ Branch: token-improvements. Use compound engineering workflows.
 
 ## What's next
 
-### Immediate: Plan remaining batch 5 ideas
+### Immediate: Refine #1 plan, then plan #15
 
-#28 and #11 are planned and executed. Next in plan order:
-1. #1 (Queryable Reference Libraries) -- run `/ce:plan`
+#28 and #11 are planned and executed. #1 is planned with document review findings to address.
+
+1. #1 (Queryable Reference Libraries) -- plan written, needs refinement pass
+   - 2 auto-fixes applied (R11/R12 deferral notes, S1-S5 success criteria)
+   - 8 present findings (3 P1, 5 P2) from document review to address before execution
+   - Key findings: budget math needs real measurements, unit dependencies are artificial (can parallelize), orchestrating-swarms needs section-to-file mapping, dspy-ruby testing-observability.md overlaps existing observability.md
+   - Run `/ce:plan` with "deepen" to refine, or address findings manually then execute
 2. #15 (Module Unbundling) -- run `/ce:plan`
 
 ### Then: Execute remaining batch 5
@@ -48,6 +53,7 @@ Per meta-plan: "Is #15 module unbundling worth the complexity? Check if Phases 1
 - Meta-plan: `docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md`
 - #28 plan (done): `docs/plans/2026-04-19-001-refactor-cartographic-zoom-plan.md`
 - #11 plan (done): `docs/plans/2026-04-19-002-refactor-compact-returns-generalization-plan.md`
+- #1 plan (review findings pending): `docs/plans/2026-04-19-003-refactor-queryable-reference-libraries-plan.md`
 - #1 requirements: `docs/brainstorms/2026-04-19-queryable-reference-libraries-requirements.md`
 - #15 requirements: `docs/brainstorms/2026-04-19-module-unbundling-requirements.md`
 - Ablation framework: `scripts/ablation/run.ts`
