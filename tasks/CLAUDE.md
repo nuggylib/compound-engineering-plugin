@@ -94,6 +94,14 @@ Write entries when starting, making key decisions, hitting blockers, or finishin
 
 Run `taskmd validate` before committing to check for missing fields, invalid values, duplicate IDs, circular dependencies, and broken references.
 
+## Workflow
+
+Use the compound engineering workflow skills for brainstorming, planning, and working on tasks in this project. Specifically:
+
+- **Brainstorming:** Use `/compound-engineering:ce-brainstorm`
+- **Planning:** Use `/compound-engineering:ce-plan`
+- **Working:** Use `/compound-engineering:ce-work`
+
 ## Reference
 
 - Full specification: `TASKMD_SPEC.md`

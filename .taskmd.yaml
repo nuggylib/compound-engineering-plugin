@@ -2,11 +2,9 @@ dir: ./tasks
 
 id:
   strategy: ulid
-  length: 6
+  length: 8
 
 workflow: solo
-
-worklogs: true
 
 web:
   port: 3000
