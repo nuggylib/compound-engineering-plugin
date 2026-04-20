@@ -26,23 +26,31 @@ Branch: token-improvements. Use compound engineering workflows.
   - All tests pass (780/782, 2 pre-existing), release:validate passes
 - Brainstormed all 4 batch 5 ideas (#28, #11, #1, #15)
 - Fixed P1/P2 findings on #11 requirements doc
+- Refined #1 plan (Queryable Reference Libraries)
+  - Addressed all 8 review findings (3 P1, 5 P2):
+    - P1: Added measured router byte budgets (agent-native ~4,030B, orchestrating-swarms ~3,800B, dspy-ruby ~4,521B)
+    - P1: Removed artificial unit dependencies -- Units 1-3 run in parallel (all follow dhh-rails-style template)
+    - P1: Added section-to-file mapping with measured line ranges for orchestrating-swarms
+    - P2: Fixed dspy-ruby overlap -- testing-observability.md -> testing.md, observability routes to existing reference
+    - P2: Updated R9 consolidated file list
+    - P2: Defined abbreviation targets (Primitives 2,672B->500B, Two Ways 2,049B->300B, etc.)
+    - P2: Fixed routing table/section index references for observability
+    - P2: Added 30 representative S3 verification queries (10 per skill)
+  - Updated meta-plan tracking for #1 (planned), #11 (done), #28 (done)
+  - All tests pass (765/782, 17 pre-existing), release:validate passes
 
 ## What's next
 
-### Immediate: Refine #1 plan, then plan #15
+### Immediate: Execute #1, then plan #15
 
-#28 and #11 are planned and executed. #1 is planned with document review findings to address.
-
-1. #1 (Queryable Reference Libraries) -- plan written, needs refinement pass
-   - 2 auto-fixes applied (R11/R12 deferral notes, S1-S5 success criteria)
-   - 8 present findings (3 P1, 5 P2) from document review to address before execution
-   - Key findings: budget math needs real measurements, unit dependencies are artificial (can parallelize), orchestrating-swarms needs section-to-file mapping, dspy-ruby testing-observability.md overlaps existing observability.md
-   - Run `/ce:plan` with "deepen" to refine, or address findings manually then execute
+1. #1 (Queryable Reference Libraries) -- **plan refined, ready for execution**
+   - 4 units: 3 skill conversions (parallel) + cross-skill validation
+   - Execute with `/ce:work` or parallel sub-agents (Units 1-3 are independent)
 2. #15 (Module Unbundling) -- run `/ce:plan`
 
-### Then: Execute remaining batch 5
+### Then: Execute #15 if justified
 
-After plans are complete, execute in plan order (#1 -> #15).
+After #1 execution, plan and execute #15.
 
 ### Decision point after batch 5
 
@@ -53,7 +61,7 @@ Per meta-plan: "Is #15 module unbundling worth the complexity? Check if Phases 1
 - Meta-plan: `docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md`
 - #28 plan (done): `docs/plans/2026-04-19-001-refactor-cartographic-zoom-plan.md`
 - #11 plan (done): `docs/plans/2026-04-19-002-refactor-compact-returns-generalization-plan.md`
-- #1 plan (review findings pending): `docs/plans/2026-04-19-003-refactor-queryable-reference-libraries-plan.md`
+- #1 plan (refined, ready): `docs/plans/2026-04-19-003-refactor-queryable-reference-libraries-plan.md`
 - #1 requirements: `docs/brainstorms/2026-04-19-queryable-reference-libraries-requirements.md`
 - #15 requirements: `docs/brainstorms/2026-04-19-module-unbundling-requirements.md`
 - Ablation framework: `scripts/ablation/run.ts`
