@@ -24,7 +24,7 @@ You produce up to two outputs depending on whether a run ID was provided:
    If no Run ID is provided (the field is empty or absent), skip this step entirely -- do not attempt any file write.
 
 2. **Compact return (always).** RETURN compact JSON to the parent with ONLY merge-tier fields per finding:
-   title, severity, section, why_it_matters, finding_type, autofix_class, suggested_fix, confidence.
+   title, severity, section, why_it_matters, finding_type, autofix_class, suggested_fix (when present), confidence.
    Do NOT include evidence in the returned JSON.
    Include reviewer, residual_risks, and deferred_questions at the top level.
 
