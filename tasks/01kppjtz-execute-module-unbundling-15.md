@@ -5,6 +5,7 @@ status: blocked
 priority: medium
 effort: large
 type: feature
+parent: "01kppn87"
 dependencies: ["01kppjtp"]
 tags: ["token-efficiency", "architecture"]
 context: ["docs/brainstorms/2026-04-19-module-unbundling-requirements.md"]
@@ -23,6 +24,9 @@ Execute the Module Unbundling plan once created and approved. Split compound-eng
 - [ ] Verify module boundaries are correct
 - [ ] Validate each module works independently
 - [ ] Run `bun test` and `bun run release:validate`
+- [ ] Update meta-plan tracking table with execution status
+- [ ] Update plugin README with new module structure
+- [ ] Update AGENTS.md if plugin architecture section needs revision
 
 ## Acceptance Criteria
 

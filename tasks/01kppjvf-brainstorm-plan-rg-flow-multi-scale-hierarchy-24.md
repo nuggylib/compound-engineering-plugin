@@ -5,7 +5,8 @@ status: blocked
 priority: low
 effort: medium
 type: feature
-dependencies: ["01kppjtz"]
+parent: "01kppn8b"
+dependencies: ["01kppjvm"]
 tags: ["token-efficiency", "architecture"]
 context: ["docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md"]
 created_at: 2026-04-20
@@ -22,6 +23,8 @@ Brainstorm and plan idea #24 (RG Flow Multi-Scale Hierarchy). Three self-consist
 - [ ] Run `/ce:brainstorm` for RG Flow
 - [ ] Run `/ce:plan` from brainstorm output
 - [ ] Get plan reviewed
+- [ ] Run `taskmd validate` to verify task dependencies
+- [ ] Update meta-plan tracking table with brainstorm/plan status
 
 ## Acceptance Criteria
 

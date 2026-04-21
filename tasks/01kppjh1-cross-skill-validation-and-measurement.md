@@ -5,6 +5,7 @@ status: pending
 priority: high
 effort: small
 type: chore
+parent: "01kppn7z"
 dependencies: ["01kppj", "01kppjgr", "01kppjgw"]
 tags: ["token-efficiency", "thin-router"]
 context: ["docs/plans/2026-04-19-003-refactor-queryable-reference-libraries-plan.md"]
@@ -28,6 +29,8 @@ Run comprehensive validation across all three converted skills, measure aggregat
 - [ ] Verify S4: system cost drops proportionally to SKILL.md size reduction
 - [ ] Verify S5: cross-cutting queries span 2+ topics with multi-reference answers
 - [ ] Document final measurements in plan file
+- [ ] Update meta-plan tracking table with execution status
+- [ ] Update plugin README with aggregate size reduction metrics
 
 ## Acceptance Criteria
 

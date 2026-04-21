@@ -5,6 +5,7 @@ status: blocked
 priority: low
 effort: medium
 type: feature
+parent: "01kppn8b"
 dependencies: ["01kppjtz"]
 tags: ["token-efficiency", "session-lifecycle"]
 context: ["docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md"]
@@ -22,6 +23,8 @@ Brainstorm and plan idea #16: self-diagnostic at phase boundaries with continuat
 - [ ] Run `/ce:brainstorm` for Circuit Breaker + Resumption
 - [ ] Run `/ce:plan` from brainstorm output
 - [ ] Get plan reviewed
+- [ ] Run `taskmd validate` to verify task dependencies
+- [ ] Update meta-plan tracking table with brainstorm/plan status
 
 ## Acceptance Criteria
 

@@ -5,6 +5,7 @@ status: pending
 priority: high
 effort: medium
 type: improvement
+parent: "01kppn7z"
 dependencies: []
 tags: ["token-efficiency", "thin-router"]
 context: ["docs/plans/2026-04-19-003-refactor-queryable-reference-libraries-plan.md"]
@@ -32,6 +33,8 @@ Extract 5 inline sections from `plugins/compound-engineering/skills/agent-native
 - [ ] Add fallback and cross-cutting routing instructions
 - [ ] Verify SKILL.md under 5,000B
 - [ ] Run `bun test` and `bun run release:validate`
+- [ ] Update meta-plan tracking table with execution status
+- [ ] Update plugin README if skill behavior or reference layout changed
 
 ## Acceptance Criteria
 

@@ -5,7 +5,8 @@ status: blocked
 priority: low
 effort: medium
 type: feature
-dependencies: ["01kppjtz"]
+parent: "01kppn8b"
+dependencies: ["01kppjv4"]
 tags: ["token-efficiency", "session-lifecycle"]
 context: ["docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md"]
 created_at: 2026-04-20
@@ -22,6 +23,8 @@ Brainstorm and plan idea #17: mode-conditional branch resolution at invoke time 
 - [ ] Run `/ce:brainstorm` for JIT Skill Specialization
 - [ ] Run `/ce:plan` from brainstorm output
 - [ ] Get plan reviewed
+- [ ] Run `taskmd validate` to verify task dependencies
+- [ ] Update meta-plan tracking table with brainstorm/plan status
 
 ## Acceptance Criteria
 

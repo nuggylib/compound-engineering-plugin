@@ -5,7 +5,8 @@ status: blocked
 priority: low
 effort: medium
 type: feature
-dependencies: ["01kppjv4"]
+parent: "01kppn80"
+dependencies: ["01kppjvf"]
 tags: ["token-efficiency", "experimental"]
 context: ["docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md"]
 created_at: 2026-04-20
@@ -23,6 +24,8 @@ Brainstorm and plan idea #25: formalized minimal grammar for agent instructions 
 - [ ] Run `/ce:plan` from brainstorm output
 - [ ] Get plan reviewed
 - [ ] Go/skip gate: validate confidence level >= 60%
+- [ ] Run `taskmd validate` to verify task dependencies
+- [ ] Update meta-plan tracking table with brainstorm/plan status and go/skip decision
 
 ## Acceptance Criteria
 

@@ -5,6 +5,7 @@ status: pending
 priority: high
 effort: medium
 type: feature
+parent: "01kppn87"
 dependencies: ["01kppjh1"]
 tags: ["token-efficiency", "architecture"]
 context: ["docs/brainstorms/2026-04-19-module-unbundling-requirements.md", "docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md"]
@@ -23,6 +24,8 @@ Run `/ce:plan` on idea #15 (Module Unbundling) to create an implementation plan 
 - [ ] Evaluate decision point: "Is #15 module unbundling worth the complexity?"
 - [ ] If justified, run `/ce:plan` to create implementation plan
 - [ ] Get plan reviewed and refined
+- [ ] Run `taskmd validate` to verify task dependencies
+- [ ] Update meta-plan tracking table with plan status
 
 ## Acceptance Criteria
 

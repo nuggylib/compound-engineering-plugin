@@ -25,6 +25,8 @@ Replace legacy repo-local config and storage assumptions with a two-scope state 
 - [ ] Unit 4: Artifact skills repoint to new per-run paths
 - [ ] Unit 5: Converter/test surface cleanup (remove old contract references)
 - [ ] Run `bun test` and `bun run release:validate`
+- [ ] Update plugin README with new storage model
+- [ ] Update AGENTS.md config/storage documentation if not covered by Unit 1
 
 ## Acceptance Criteria
 
