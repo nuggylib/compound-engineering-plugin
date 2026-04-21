@@ -1,6 +1,6 @@
 # Sub-agent Prompt Template
 
-This template is used by the orchestrator to spawn each reviewer sub-agent. Variable substitution slots are filled at spawn time.
+This template is used by the orchestrator to spawn each reviewer sub-agent. At dispatch time, the orchestrator pre-resolves `{diff_scope_rules}` and `{schema}` into the template body, writes the result to `dispatch-context.md`, and writes the diff to `diff.txt`. Sub-agents Read `dispatch-context.md` as their first action. Per-agent variables (`{persona_file}`, metadata) are inlined in the lean prompt.
 
 ---
 
@@ -117,14 +117,14 @@ Diff:
 
 ## Variable Reference
 
-| Variable | Source | Description |
-|----------|--------|-------------|
-| `{persona_file}` | Agent markdown file content | The full persona definition (identity, failure modes, calibration, suppress conditions) |
-| `{diff_scope_rules}` | `references/diff-scope.md` content | Primary/secondary/pre-existing tier rules |
-| `{schema}` | `references/findings-schema.json` content | The JSON schema reviewers must conform to |
-| `{intent_summary}` | Stage 2 output | 2-3 line description of what the change is trying to accomplish |
-| `{pr_metadata}` | Stage 1 output | PR title, body, and URL when reviewing a PR. Empty string when reviewing a branch or standalone checkout |
-| `{file_list}` | Stage 1 output | List of changed files from the scope step |
-| `{diff}` | Stage 1 output | The actual diff content to review |
-| `{run_id}` | Stage 4 output | Unique review run identifier for the artifact directory |
-| `{reviewer_name}` | Stage 3 output | Persona or agent name used as the artifact filename stem |
+| Variable | Source | Resolution | Description |
+|----------|--------|------------|-------------|
+| `{diff_scope_rules}` | `references/diff-scope.md` content | Pre-resolved into dispatch-context.md | Primary/secondary/pre-existing tier rules |
+| `{schema}` | `references/findings-schema.json` content | Pre-resolved into dispatch-context.md | The JSON schema reviewers must conform to |
+| `{persona_file}` | Agent markdown file content | Per-agent (inlined in lean prompt) | The full persona definition (identity, failure modes, calibration, suppress conditions) |
+| `{intent_summary}` | Stage 2 output | Per-agent (inlined in lean prompt) | 2-3 line description of what the change is trying to accomplish |
+| `{pr_metadata}` | Stage 1 output | Per-agent (inlined in lean prompt) | PR title, body, and URL when reviewing a PR. Empty string when reviewing a branch or standalone checkout |
+| `{file_list}` | Stage 1 output | Per-agent (inlined in lean prompt) | List of changed files from the scope step |
+| `{diff}` | Stage 1 output | File-referenced (diff.txt) | The actual diff content to review |
+| `{run_id}` | Stage 4 output | Per-agent (inlined in lean prompt) | Unique review run identifier for the artifact directory |
+| `{reviewer_name}` | Stage 3 output | Per-agent (inlined in lean prompt) | Persona or agent name used as the artifact filename stem |

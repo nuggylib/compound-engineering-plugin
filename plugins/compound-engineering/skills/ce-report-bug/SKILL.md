@@ -7,11 +7,9 @@ disable-model-invocation: true
 
 # Report a Compound Engineering Plugin Bug
 
-Report bugs encountered while using the compound-engineering plugin. This skill gathers structured information and creates a GitHub issue for the maintainer.
-
 ## Step 1: Gather Bug Information
 
-Ask the user the following questions using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini. Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question:
+Collect answers via the platform question tool (AskUserQuestion / request_user_input / ask_user), or present numbered options and wait for a reply:
 
 **Question 1: Bug Category**
 - What type of issue are you experiencing?
@@ -23,23 +21,19 @@ Ask the user the following questions using the platform's blocking question tool
 
 **Question 3: What Happened (Actual Behavior)**
 - Ask: "What happened when you used this component?"
-- Get a clear description of the actual behavior
 
 **Question 4: What Should Have Happened (Expected Behavior)**
 - Ask: "What did you expect to happen instead?"
-- Get a clear description of expected behavior
 
 **Question 5: Steps to Reproduce**
 - Ask: "What steps did you take before the bug occurred?"
-- Get reproduction steps
 
 **Question 6: Error Messages**
 - Ask: "Did you see any error messages? If so, please share them."
-- Capture any error output
 
 ## Step 2: Collect Environment Information
 
-Automatically gather environment details. Detect the coding agent platform and collect what is available:
+Detect the coding agent platform and gather:
 
 **OS info (all platforms):**
 ```bash
@@ -60,7 +54,7 @@ If any of these fail, note "unknown" and continue — do not block the report.
 
 ## Step 3: Format the Bug Report
 
-Create a well-structured bug report with:
+Use this template:
 
 ```markdown
 ## Bug Description
@@ -146,12 +140,3 @@ The maintainer will review your report and respond as soon as possible.
 - If issue creation fails: display the formatted report so the user can manually create the issue
 - If required information is missing: re-prompt for that specific field
 
-## Privacy Notice
-
-This skill does NOT collect:
-- Personal information
-- API keys or credentials
-- Private code from projects
-- File paths beyond basic OS info
-
-Only technical information about the bug is included in the report.

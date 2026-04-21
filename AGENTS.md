@@ -164,6 +164,28 @@ Do not attempt to resolve the version at runtime.
 
 This applies equally to any platform's variables — a skill converted from Codex, Gemini, or any other platform will have the same problem if it assumes platform-only variables exist without a fallback.
 
+## Sub-Agent Communication Patterns
+
+Skills that dispatch multiple agents with shared context should use write-once dispatch and compact returns to minimize orchestrator context consumption.
+
+### Write-Once Dispatch
+
+Assemble shared content (templates, schemas, scope rules) into a single dispatch-context file written to `.context/compound-engineering/<skill-name>/{run_id}/dispatch-context.md`. Each agent receives a lean prompt containing only: a Read instruction for the dispatch context, inlined persona content, and per-agent metadata. The dispatch context carries unresolved per-agent variable placeholders (e.g., `{run_id}`, `{reviewer_name}`) that agents resolve from their lean prompt metadata.
+
+Generate run IDs with `date +%Y%m%d-%H%M%S` plus a random suffix. If the dispatch context write fails, fall back to inline dispatch (current behavior) and warn.
+
+### Compact Returns
+
+Agents write full findings (all schema fields) to a per-agent artifact file at `{run_id}/{reviewer_name}.json`. They return only merge-tier fields to the orchestrator. Document the tier split in the schema's `_meta.return_tiers` section.
+
+The synthesis pipeline batch-loads artifact files before dedup to recover detail-tier fields (e.g., evidence). If an artifact is missing, check whether the compact return contains detail-tier fields inline (fallback from artifact write failure) and use them directly. If neither source has the data, degrade gracefully.
+
+### When to Apply
+
+Use these patterns when a skill dispatches 3+ agents that share substantial context (templates, schemas, documents >2KB). The savings scale with agent count and shared content size. For skills dispatching 1-2 agents with minimal shared context, inline dispatch is simpler and sufficient.
+
+**Implementations:** `ce-review` (Stage 4 dispatch, Stage 5 detail enrichment), `document-review` (Phase 2 dispatch, Phase 3.3 evidence loading).
+
 ## Repository Docs Convention
 
 - **Requirements** live in `docs/brainstorms/` — requirements exploration and ideation.

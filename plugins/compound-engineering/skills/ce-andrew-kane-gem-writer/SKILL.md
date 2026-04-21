@@ -1,15 +1,22 @@
 ---
 name: ce-andrew-kane-gem-writer
-description: This skill should be used when writing Ruby gems following Andrew Kane's proven patterns and philosophy. It applies when creating new Ruby gems, refactoring existing gems, designing gem APIs, or when clean, minimal, production-ready Ruby library code is needed. Triggers on requests like "create a gem", "write a Ruby library", "design a gem API", or mentions of Andrew Kane's style.
+description: "Write Ruby gems following Andrew Kane's proven patterns and philosophy for clean, minimal, production-ready libraries. Use when creating or refactoring Ruby gems."
 ---
 
 # Andrew Kane Gem Writer
 
-Write Ruby gems following Andrew Kane's battle-tested patterns from 100+ gems with 374M+ downloads (Searchkick, PgHero, Chartkick, Strong Migrations, Lockbox, Ahoy, Blazer, Groupdate, Neighbor, Blind Index).
+Write Ruby gems following Andrew Kane's patterns from 100+ gems with 374M+ downloads (Searchkick, PgHero, Chartkick, Strong Migrations, Lockbox, Ahoy, Blazer, Groupdate, Neighbor, Blind Index).
+
+## When to Use
+
+Triggers:
+- "create a gem", "write a Ruby library", "design a gem API"
+- Writing or refactoring Ruby gems in Andrew Kane's clean, minimal style
+- Production-ready Ruby library code with zero or minimal dependencies
 
 ## Core Philosophy
 
-**Simplicity over cleverness.** Zero or minimal dependencies. Explicit code over metaprogramming. Rails integration without Rails coupling. Every pattern serves production use cases.
+**Simplicity over cleverness.** Zero or minimal dependencies. Explicit code over metaprogramming. Rails integration without Rails coupling.
 
 ## Entry Point Structure
 
@@ -42,7 +49,7 @@ end
 
 ## Class Macro DSL Pattern
 
-The signature Kane pattern—single method call configures everything:
+Single method call configures everything:
 
 ```ruby
 # Usage
@@ -176,7 +183,7 @@ end
 
 ## Reference Files
 
-For deeper patterns, see:
+Additional references:
 - `references/module-organization.md` - Directory layouts, method decomposition
 - `references/rails-integration.md` - Railtie, Engine, on_load patterns
 - `references/database-adapters.md` - Multi-database support patterns

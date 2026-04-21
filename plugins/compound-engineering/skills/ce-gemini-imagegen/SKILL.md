@@ -1,6 +1,6 @@
 ---
 name: ce-gemini-imagegen
-description: This skill should be used when generating and editing images using the Gemini API (Nano Banana Pro). It applies when creating images from text prompts, editing existing images, applying style transfers, generating logos with text, creating stickers, product mockups, or any image generation/manipulation task. Supports text-to-image, image editing, multi-turn refinement, and composition from multiple reference images.
+description: "Generate and edit images using the Gemini API. Use when creating images from prompts, editing existing images, applying style transfers, or any image generation task."
 ---
 
 # Gemini Image Generation (Nano Banana Pro)
@@ -13,7 +13,7 @@ Generate and edit images using Google's Gemini API. The environment variable `GE
 |-------|------------|----------|
 | `gemini-3-pro-image-preview` | 1K-4K | All image generation (default) |
 
-**Note:** Always use this Pro model. Only use a different model if explicitly requested.
+Always use this Pro model unless a different model is explicitly requested.
 
 ## Quick Reference
 
@@ -106,8 +106,6 @@ image_config=types.ImageConfig(aspect_ratio="4:3")
 
 ## Editing Images
 
-Pass existing images with text prompts:
-
 ```python
 from PIL import Image
 
@@ -122,8 +120,6 @@ response = client.models.generate_content(
 ```
 
 ## Multi-Turn Refinement
-
-Use chat for iterative editing:
 
 ```python
 from google.genai import types
@@ -151,7 +147,7 @@ Specify style explicitly:
 > "A kawaii-style sticker of a happy red panda, bold outlines, cel-shading, white background"
 
 ### Text in Images
-Be explicit about font style and placement:
+Specify font style and placement explicitly:
 > "Create a logo with text 'Daily Grind' in clean sans-serif, black and white, coffee bean motif"
 
 ### Product Mockups
@@ -161,7 +157,6 @@ Describe lighting setup and surface:
 ## Advanced Features
 
 ### Google Search Grounding
-Generate images based on real-time data:
 
 ```python
 response = client.models.generate_content(
@@ -175,7 +170,6 @@ response = client.models.generate_content(
 ```
 
 ### Multiple Reference Images (Up to 14)
-Combine elements from multiple sources:
 
 ```python
 response = client.models.generate_content(
@@ -204,9 +198,9 @@ image.save("output.jpg")
 image.save("output.png")  # Creates JPEG with PNG extension!
 ```
 
-### Converting to PNG (if needed)
+### Converting to PNG
 
-If you specifically need PNG format:
+Optional: convert to PNG when that format is required.
 
 ```python
 from PIL import Image
@@ -221,8 +215,6 @@ for part in response.parts:
 
 ### Verifying Image Format
 
-Check actual format vs extension with the `file` command:
-
 ```bash
 file image.png
 # If output shows "JPEG image data" - rename to .jpg!
@@ -233,5 +225,5 @@ file image.png
 - All generated images include SynthID watermarks
 - Gemini returns **JPEG format by default** - always use `.jpg` extension
 - Image-only mode (`responseModalities: ["IMAGE"]`) won't work with Google Search grounding
-- For editing, describe changes conversationally—the model understands semantic masking
+- For editing, describe changes conversationally <!-- why: the model understands semantic masking -->
 - Default to 1K resolution for speed; use 2K/4K when quality is critical

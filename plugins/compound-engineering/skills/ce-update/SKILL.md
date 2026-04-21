@@ -1,28 +1,20 @@
 ---
 name: ce-update
-description: |
-  Check if the compound-engineering plugin is up to date and fix stale cache if not.
-  Use when the user says "update compound engineering", "check compound engineering version",
-  "ce update", "is compound engineering up to date", "update ce plugin", or reports issues
-  that might stem from a stale compound-engineering plugin version. This skill only works
-  in Claude Code — it relies on the plugin harness cache layout.
+description: "Check if the compound-engineering plugin is up to date and fix stale cache. Use when reporting plugin version issues or wanting to update the plugin."
 disable-model-invocation: true
 ce_platforms: [claude]
 ---
 
 # Check & Fix Plugin Version
 
-Verify the installed compound-engineering plugin version matches the latest released
-version, and fix stale marketplace/cache state if it doesn't. Claude Code only.
+## When to Use
+
+Triggers:
+- Says "update compound engineering", "ce update", "check compound engineering version", or "update ce plugin"
+- Says "is compound engineering up to date"
+- Reports issues that might stem from a stale compound-engineering plugin version
 
 ## Pre-resolved context
-
-The three sections below contain pre-resolved data. Only the **Plugin root
-path** determines whether this session is Claude Code — if it contains an error
-sentinel, an empty value, or a literal `${CLAUDE_PLUGIN_ROOT}` string, tell the
-user this skill only works in Claude Code and stop. The other two sections may
-contain error sentinels even in valid Claude Code sessions; the decision logic
-below handles those cases.
 
 **Plugin root path:**
 !`echo "${CLAUDE_PLUGIN_ROOT}" 2>/dev/null || echo '__CE_UPDATE_ROOT_FAILED__'`

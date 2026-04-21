@@ -85,7 +85,7 @@ When adding or modifying skills, verify compliance with the skill spec:
 ### YAML Frontmatter (Required)
 
 - [ ] `name:` present and matches directory name (lowercase-with-hyphens)
-- [ ] `description:` present and describes **what it does and when to use it** (per official spec: "Explains code with diagrams. Use when exploring how code works.")
+- [ ] `description:` present, describes **what it does and when to use it**, and is **250 characters or fewer** (per official spec: "Explains code with diagrams. Use when exploring how code works." -- trigger phrases, implementation details, and feature lists belong in the body, not the description)
 - [ ] `description:` value is quoted (single or double) if it contains colons -- unquoted colons break `js-yaml` strict parsing and crash `install --to opencode/codex`. Run `bun test tests/frontmatter.test.ts` to verify.
 - [ ] `description:` value does not contain raw angle-bracket tokens like `<skill-name>`, `<tag>`, or `<placeholder>` -- Cowork's plugin validator parses descriptions as HTML and rejects unknown tags with a generic "Plugin validation failed" banner (see issue #602). Claude Code tolerates them, so the bug only surfaces downstream. Backtick-wrap the token (`` `<skill-name>` ``) or rephrase. Enforced by `tests/frontmatter.test.ts`.
 
@@ -108,6 +108,23 @@ When adding or modifying skills, verify compliance with the skill spec:
 
 Skill content loaded at trigger time is carried in every subsequent message — every tool call, agent dispatch, and response. This carrying cost compounds across the session. For skills that orchestrate many tool or agent calls, extract blocks to `references/` when they are conditional (only execute under specific conditions) or late-sequence (only needed after many prior calls) and represent a meaningful share of the skill (~20%+). The more tool/agent calls a skill makes, the more aggressively to extract. Replace extracted blocks with a 1-3 line stub stating the condition and a backtick path reference (e.g., "Read `references/deepening-workflow.md`"). Never use `@` for extracted blocks — it inlines content at load time, defeating the extraction.
 
+### Cartouche Format (Orchestrator Agent Tables)
+
+Skills that dispatch 3+ agents replace verbose inline descriptions with a 4-column cartouche table for routing overview:
+
+```
+| agent-name | trigger | output | focus |
+|------------|---------|--------|-------|
+| compound-engineering:category:agent-name | always / conditional: criteria | output-type | 3-8 word summary |
+```
+
+- **agent-name:** Fully-qualified agent name (or descriptive task name for anonymous inline sub-agents)
+- **trigger:** `always` for unconditional dispatch; `conditional: <summary>` for criteria-gated; `opt-in: <condition>` for user-requested
+- **output:** Output type (e.g., `structured-findings`, `research-summary`, `flow-analysis`)
+- **focus:** 3-8 word summary suitable for team announcements
+
+When trigger criteria exceed the cartouche field, extract detailed criteria to a `references/` file and add a bulk lookup instruction (e.g., "Read `references/persona-routing.md` and identify all matching agents"). Include an explicit fallback for read failures. Dispatch instructions reference agents by short name from the cartouche table, which provides the FQN mapping.
+
 ### Writing Style
 
 - [ ] Use imperative/infinitive form (verb-first instructions)
@@ -121,26 +138,19 @@ Keep rationale at the highest-level location that covers it; restate behavioral 
 
 ### Cross-Platform User Interaction
 
-- [ ] When a skill needs to ask the user a question, instruct use of the platform's blocking question tool and name the known equivalents (`AskUserQuestion` in Claude Code, `request_user_input` in Codex, `ask_user` in Gemini)
-- [ ] For Claude Code, also instruct to load `AskUserQuestion` via `ToolSearch` with `select:AskUserQuestion` first if its schema isn't already loaded — `AskUserQuestion` is a deferred tool and won't be available at session start. A pending schema load is not a valid reason to fall back to text.
-- [ ] Include a fallback: when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes where `request_user_input` is unavailable, or `ToolSearch` returns no match), present numbered options in chat and wait for the user's reply — never silently skip the question.
+- [ ] When a skill needs to ask the user a question, instruct use of the platform's blocking question tool and name the known equivalents (see Cross-Platform Interaction Convention below for the canonical list)
+- [ ] Include a fallback for environments without a question tool (present numbered options and wait for the user's reply before proceeding)
 
-> **Platform-behavior note (April 2026, may change):** The specifics above reflect current behavior — `AskUserQuestion` is deferred in Claude Code, and `request_user_input` in Codex is exposed only in Plan mode. If Anthropic changes `AskUserQuestion` to a non-deferred tool, or Codex exposes `request_user_input` in edit modes, revisit this guidance rather than carrying the workaround forward indefinitely. Verify before assuming these constraints still hold.
+### Cross-Platform Interaction Convention (Canonical Reference)
 
-### Interactive Question Tool Design
+This is the authoritative definition. Per-file copies in skills are portable summaries of this section. When adding or updating a skill's interaction method, copy from here.
 
-Design rules for blocking question menus (`AskUserQuestion` / `request_user_input` / `ask_user`). Violations silently degrade the UX in harnesses where secondary description text is hidden or labels are truncated.
+Use the platform's blocking question tool when available:
+- Claude Code: `AskUserQuestion`
+- Codex: `request_user_input`
+- Gemini: `ask_user`
 
-- [ ] Each option label must be self-contained — some harnesses render only the label, not the accompanying description; the label alone must convey what the option does
-- [ ] Keep total options to 4 or fewer (`AskUserQuestion` caps at 4 across platforms we target)
-- [ ] Do not offer "still working" / "I'll come back" options — the blocking tool already waits; such options are no-op wrappers. If the user needs to go do something, they simply leave the prompt open
-- [ ] Refer to the agent in third person ("the agent") in labels and stems — first-person "me" / "I'll" is ambiguous in a tool-mediated exchange where it's unclear whether the speaker is the user, the agent, or the tool
-- [ ] Phrase labels from the user's intent, not the system's internal state — each option should complete "I want to ___" from the user's POV; avoid leaking mode names like "end-sync" or "phase-3" into labels
-- [ ] Use the question stem as a teaching surface for first-time mechanics — teach the mechanic there (e.g., "Highlight text in Proof to leave a comment"), not in option descriptions that may be hidden
-- [ ] When renaming a display label, rename its matching routing block (`**If user selects "X":**`) in the same edit — the model matches selections by verbatim label string, so a missed rename silently breaks routing
-- [ ] Front-load the distinguishing word when options share a prefix — "Proceed to planning" vs "Proceed directly to work" look identical when truncated; put the differentiator in the first 3-4 words
-- [ ] Name the target when an artifact is ambiguous — "save to my local file" beats "save to my file" when multiple artifacts (Proof doc, local markdown, cached copy) coexist
-- [ ] Keep voice consistent across a menu — mixing imperative ("Pause") with user-voice status ("I'm done — save…") within the same set reads as authored by different agents
+Fallback: present numbered options and wait for the user's reply before proceeding.
 
 ### Cross-Platform Task Tracking
 

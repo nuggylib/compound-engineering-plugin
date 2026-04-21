@@ -41,7 +41,8 @@ If there are uncommitted changes, warn the user to commit first.
 
 ## Step 3: Deployment Instructions
 
-Since GitHub Pages deployment requires a workflow file with special permissions, provide these instructions:
+<!-- why: GitHub Pages workflow needs contents:read, pages:write, id-token:write permissions -->
+Provide these deployment instructions:
 
 ### First-time Setup
 
@@ -95,7 +96,7 @@ jobs:
 
 ## Step 4: Report Status
 
-Provide a summary:
+Print this summary template:
 
 ```
 ## Deployment Readiness

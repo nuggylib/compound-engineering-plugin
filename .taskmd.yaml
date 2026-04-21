@@ -1,0 +1,52 @@
+dir: ./tasks
+
+id:
+  strategy: ulid
+  length: 8
+
+workflow: solo
+
+web:
+  port: 3000
+  auto_open_browser: true
+
+todos:
+  exclude:
+    - "node_modules/**"
+    - "dist/**"
+    - ".git/**"
+    - "vendor/**"
+
+scopes:
+  cli:
+    description: "CLI entry point, parsers, converters, target writers"
+    paths:
+      - "src/"
+  compound-engineering:
+    description: "Main compound-engineering plugin"
+    paths:
+      - "plugins/compound-engineering/"
+  coding-tutor:
+    description: "Secondary coding-tutor plugin"
+    paths:
+      - "plugins/coding-tutor/"
+  marketplace:
+    description: "Claude marketplace catalog metadata"
+    paths:
+      - ".claude-plugin/"
+  tests:
+    description: "Test suite and fixtures"
+    paths:
+      - "tests/"
+  docs:
+    description: "Plans, specs, solutions, brainstorms"
+    paths:
+      - "docs/"
+  ci:
+    description: "CI/CD workflows"
+    paths:
+      - ".github/workflows/"
+  scripts:
+    description: "Build, release, and skill scripts"
+    paths:
+      - "scripts/"

@@ -1,17 +1,22 @@
 ---
 name: ce-clean-gone-branches
-description: Clean up local branches whose remote tracking branch is gone. Use when the user says "clean up branches", "delete gone branches", "prune local branches", "clean gone", or wants to remove stale local branches that no longer exist on the remote. Also handles removing associated worktrees for branches that have them.
+description: "Clean up local branches whose remote tracking branch is gone, including associated worktrees. Use when pruning stale local branches after remote deletion."
 ---
 
 # Clean Gone Branches
 
-Delete local branches whose remote tracking branch has been deleted, including any associated worktrees.
+## When to Use
+
+Use this skill when the user:
+- Says "clean up branches", "delete gone branches", "prune local branches", or "clean gone"
+- Wants to remove stale local branches that no longer exist on the remote
+- Needs to clean up associated worktrees for deleted remote branches
 
 ## Workflow
 
 ### Step 1: Discover gone branches
 
-Run the discovery script to fetch the latest remote state and identify gone branches:
+Run the discovery script:
 
 ```bash
 bash scripts/clean-gone
@@ -37,27 +42,22 @@ These local branches have been deleted from the remote:
 Delete all of them? (y/n)
 ```
 
-Wait for the user's answer using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini. Fall back to presenting the list in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
+Wait for the user's answer via the platform question tool (AskUserQuestion / request_user_input / ask_user). Fallback: present the list and wait for a reply.
 
-This is a yes-or-no decision on the entire list -- do not offer multi-selection or per-branch choices.
+Do not offer multi-selection or per-branch choices.
 
 ### Step 3: Delete confirmed branches
 
-If the user confirms, delete each branch. For each branch:
+If the user confirms, run the delete subcommand with the confirmed branch list:
 
-1. Check if it has an associated worktree (`git worktree list | grep "\\[$branch\\]"`)
-2. If a worktree exists and is not the main repo root, remove it first: `git worktree remove --force "$worktree_path"`
-3. Delete the branch: `git branch -D "$branch"`
-
-Report results as you go:
-
-```
-Removed worktree: .worktrees/feature/old-thing
-Deleted branch: feature/old-thing
-Deleted branch: bugfix/resolved-issue
-Deleted branch: experiment/abandoned
-
-Cleaned up 3 branches.
+```bash
+bash scripts/clean-gone delete <branch1> <branch2> ...
 ```
 
-If the user declines, acknowledge and stop without deleting anything.
+Parse the output lines:
+
+- `WORKTREE_REMOVED:<path>` — a worktree was removed before branch deletion
+- `DELETED:<branch>` — branch was successfully deleted
+- `ERROR:<branch>:<message>` — branch deletion failed
+
+Report results to the user. If the user declines, acknowledge and stop.

@@ -23,59 +23,15 @@ class WeatherLookup < DSPy::Tools::Base
 end
 ```
 
-Key points:
-
-- Inherit from `DSPy::Tools::Base`, not `DSPy::Tool`.
-- Use `tool_name` (class method) to set the name the LLM sees. Without it, the class name is lowercased as a fallback.
-- Use `tool_description` (class method) to set the human-readable description surfaced in the tool schema.
-- The `call` method must use **keyword arguments**. Positional arguments are supported but keyword arguments produce better schemas.
-- Always attach a Sorbet `sig` to `call`. Without a signature, the generated schema has empty properties and the LLM cannot determine parameter types.
+Key points: Inherit from `DSPy::Tools::Base` (not `DSPy::Tool`). Set `tool_name` and `tool_description` as class methods. Use **keyword arguments** in `call`. Always attach a Sorbet `sig` -- without it, the schema has empty properties.
 
 ### Schema Generation
 
-`call_schema_object` introspects the Sorbet signature on `call` and returns a hash representing the JSON Schema `parameters` object:
-
-```ruby
-WeatherLookup.call_schema_object
-# => {
-#   type: "object",
-#   properties: {
-#     city:  { type: "string", description: "Parameter city" },
-#     units: { type: "string", description: "Parameter units (optional)" }
-#   },
-#   required: ["city"]
-# }
-```
-
-`call_schema` wraps this in the full LLM tool-calling format:
-
-```ruby
-WeatherLookup.call_schema
-# => {
-#   type: "function",
-#   function: {
-#     name: "call",
-#     description: "Call the WeatherLookup tool",
-#     parameters: { ... }
-#   }
-# }
-```
+`call_schema_object` introspects the Sorbet signature on `call` and returns a hash with `type`, `properties`, and `required` keys. `call_schema` wraps this in the full LLM tool-calling format (`type: "function", function: { name:, description:, parameters: }`).
 
 ### Using Tools with ReAct
 
-Pass tool instances in an array to `DSPy::ReAct`:
-
-```ruby
-agent = DSPy::ReAct.new(
-  MySignature,
-  tools: [WeatherLookup.new, AnotherTool.new]
-)
-
-result = agent.call(question: "What is the weather in Berlin?")
-puts result.answer
-```
-
-Access output fields with dot notation (`result.answer`), not hash access (`result[:answer]`).
+Pass tool instances to `DSPy::ReAct.new(MySignature, tools: [WeatherLookup.new, AnotherTool.new])`. Access output with dot notation (`result.answer`), not hash access.
 
 ---
 
@@ -88,62 +44,31 @@ Access output fields with dot notation (`result.answer`), not hash access (`resu
 ```ruby
 class DatabaseToolset < DSPy::Tools::Toolset
   extend T::Sig
-
   toolset_name "db"
-
   tool :query,  description: "Run a read-only SQL query"
   tool :insert, description: "Insert a record into a table"
   tool :delete, description: "Delete a record by ID"
 
   sig { params(sql: String).returns(String) }
-  def query(sql:)
-    # Execute read query
-  end
+  def query(sql:) = # Execute read query
 
   sig { params(table: String, data: T::Hash[String, String]).returns(String) }
-  def insert(table:, data:)
-    # Insert record
-  end
+  def insert(table:, data:) = # Insert record
 
   sig { params(table: String, id: Integer).returns(String) }
-  def delete(table:, id:)
-    # Delete record
-  end
+  def delete(table:, id:) = # Delete record
 end
 ```
 
 ### DSL Methods
 
-**`toolset_name(name)`** -- Set the prefix for all generated tool names. If omitted, the class name minus `Toolset` suffix is lowercased (e.g., `DatabaseToolset` becomes `database`).
+**`toolset_name(name)`** -- Prefix for generated tool names. Default: class name minus `Toolset`, lowercased (e.g., `"db"` makes `tool :query` produce `"db_query"`).
 
-```ruby
-toolset_name "db"
-# tool :query produces a tool named "db_query"
-```
-
-**`tool(method_name, tool_name:, description:)`** -- Expose a method as a tool.
-
-- `method_name` (Symbol, required) -- the instance method to expose.
-- `tool_name:` (String, optional) -- override the default `<toolset_name>_<method_name>` naming.
-- `description:` (String, optional) -- description shown to the LLM. Defaults to a humanized version of the method name.
-
-```ruby
-tool :word_count, tool_name: "text_wc", description: "Count lines, words, and characters"
-# Produces a tool named "text_wc" instead of "text_word_count"
-```
+**`tool(method_name, tool_name:, description:)`** -- Expose a method as a tool. Optional `tool_name:` overrides default naming; `description:` is shown to the LLM.
 
 ### Converting to a Tool Array
 
-Call `to_tools` on the class (not an instance) to get an array of `ToolProxy` objects compatible with `DSPy::Tools::Base`:
-
-```ruby
-agent = DSPy::ReAct.new(
-  AnalyzeText,
-  tools: DatabaseToolset.to_tools
-)
-```
-
-Each `ToolProxy` wraps one method, delegates `call` to the underlying toolset instance, and generates its own JSON schema from the method's Sorbet signature.
+`DatabaseToolset.to_tools` returns `ToolProxy` objects compatible with `DSPy::Tools::Base`. Each wraps one method and generates its own JSON schema from the Sorbet signature. Usage: `DSPy::ReAct.new(AnalyzeText, tools: DatabaseToolset.to_tools)`.
 
 ### Shared State
 
@@ -152,9 +77,7 @@ All tool proxies from a single `to_tools` call share one toolset instance. Store
 ```ruby
 class ApiToolset < DSPy::Tools::Toolset
   extend T::Sig
-
   toolset_name "api"
-
   tool :get,  description: "Make a GET request"
   tool :post, description: "Make a POST request"
 
@@ -165,14 +88,10 @@ class ApiToolset < DSPy::Tools::Toolset
   end
 
   sig { params(path: String).returns(String) }
-  def get(path:)
-    @client.get("#{@base_url}#{path}").body.to_s
-  end
+  def get(path:) = @client.get("#{@base_url}#{path}").body.to_s
 
   sig { params(path: String, body: String).returns(String) }
-  def post(path:, body:)
-    @client.post("#{@base_url}#{path}", body: body).body.to_s
-  end
+  def post(path:, body:) = @client.post("#{@base_url}#{path}", body: body).body.to_s
 end
 ```
 
@@ -184,25 +103,11 @@ Sorbet signatures on tool methods drive both JSON schema generation and automati
 
 ### Basic Types
 
-```ruby
-sig { params(
-  text: String,
-  count: Integer,
-  score: Float,
-  enabled: T::Boolean,
-  threshold: Numeric
-).returns(String) }
-def analyze(text:, count:, score:, enabled:, threshold:)
-  # ...
-end
-```
-
 | Sorbet Type      | JSON Schema                                        |
 |------------------|----------------------------------------------------|
 | `String`         | `{"type": "string"}`                               |
 | `Integer`        | `{"type": "integer"}`                              |
-| `Float`          | `{"type": "number"}`                               |
-| `Numeric`        | `{"type": "number"}`                               |
+| `Float`/`Numeric`| `{"type": "number"}`                               |
 | `T::Boolean`     | `{"type": "boolean"}`                              |
 | `T::Enum`        | `{"type": "string", "enum": [...]}`                |
 | `T::Struct`      | `{"type": "object", "properties": {...}}`          |
@@ -219,39 +124,18 @@ Define a `T::Enum` and reference it in a tool signature. DSPy.rb generates a JSO
 ```ruby
 class Priority < T::Enum
   enums do
-    Low = new('low')
-    Medium = new('medium')
-    High = new('high')
-    Critical = new('critical')
+    Low = new('low'); Medium = new('medium'); High = new('high'); Critical = new('critical')
   end
 end
 
-class Status < T::Enum
-  enums do
-    Pending = new('pending')
-    InProgress = new('in-progress')
-    Completed = new('completed')
-  end
+sig { params(priority: Priority).returns(String) }
+def update_task(priority:)
+  "Updated to #{priority.serialize}"
 end
-
-sig { params(priority: Priority, status: Status).returns(String) }
-def update_task(priority:, status:)
-  "Updated to #{priority.serialize} / #{status.serialize}"
-end
+# Schema: { "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] } }
 ```
 
-The generated schema constrains the parameter to valid values:
-
-```json
-{
-  "priority": {
-    "type": "string",
-    "enum": ["low", "medium", "high", "critical"]
-  }
-}
-```
-
-**Case-insensitive matching**: When the LLM returns `"HIGH"` or `"High"` instead of `"high"`, DSPy.rb first tries an exact `try_deserialize`, then falls back to a case-insensitive lookup. This prevents failures caused by LLM casing variations.
+**Case-insensitive matching**: When the LLM returns `"HIGH"` or `"High"` instead of `"high"`, DSPy.rb first tries an exact `try_deserialize`, then falls back to a case-insensitive lookup.
 
 ### T::Struct Parameters
 
@@ -259,68 +143,30 @@ Use `T::Struct` for complex nested objects. DSPy.rb generates nested JSON Schema
 
 ```ruby
 class TaskMetadata < T::Struct
-  prop :id, String
-  prop :priority, Priority
-  prop :tags, T::Array[String]
+  prop :id, String; prop :priority, Priority; prop :tags, T::Array[String]
   prop :estimated_hours, T.nilable(Float), default: nil
 end
 
 class TaskRequest < T::Struct
-  prop :title, String
-  prop :description, String
-  prop :status, Status
-  prop :metadata, TaskMetadata
-  prop :assignees, T::Array[String]
+  prop :title, String; prop :description, String
+  prop :metadata, TaskMetadata; prop :assignees, T::Array[String]
 end
-
-sig { params(task: TaskRequest).returns(String) }
-def create_task(task:)
-  "Created: #{task.title} (#{task.status.serialize})"
-end
+# sig { params(task: TaskRequest).returns(String) } -- LLM sees full nested schema
 ```
 
-The LLM sees the full nested object schema and DSPy.rb reconstructs the struct tree from the JSON response, including enum fields inside nested structs.
+DSPy.rb reconstructs the struct tree from the JSON response, including enum fields inside nested structs.
 
 ### Nilable Parameters
 
-Mark optional parameters with `T.nilable(...)` and provide a default value of `nil` in the method signature. These parameters are excluded from the JSON Schema `required` array.
-
-```ruby
-sig { params(
-  query: String,
-  max_results: T.nilable(Integer),
-  filter: T.nilable(String)
-).returns(String) }
-def search(query:, max_results: nil, filter: nil)
-  # query is required; max_results and filter are optional
-end
-```
+Mark optional parameters with `T.nilable(...)` and provide a default of `nil`. These are excluded from the JSON Schema `required` array: `def search(query:, max_results: nil, filter: nil)`.
 
 ### Collections
 
-Typed arrays and hashes generate precise item/value schemas:
-
-```ruby
-sig { params(
-  tags: T::Array[String],
-  priorities: T::Array[Priority],
-  config: T::Hash[String, T.any(String, Integer, Float)]
-).returns(String) }
-def configure(tags:, priorities:, config:)
-  # Array elements and hash values are validated and coerced
-end
-```
+Typed arrays and hashes generate precise item/value schemas: `T::Array[String]`, `T::Array[Priority]`, `T::Hash[String, T.any(String, Integer)]`. Elements are validated and coerced.
 
 ### Union Types
 
-`T.any(...)` generates a `oneOf` JSON Schema. When one of the union members is a `T::Struct`, DSPy.rb uses the `_type` discriminator field to select the correct struct class during coercion.
-
-```ruby
-sig { params(value: T.any(String, Integer, Float)).returns(String) }
-def handle_flexible(value:)
-  # Accepts multiple types
-end
-```
+`T.any(...)` generates a `oneOf` JSON Schema. When a union member is a `T::Struct`, DSPy.rb uses the `_type` discriminator field for coercion.
 
 ---
 
@@ -341,17 +187,7 @@ end
 | `text_sort_lines`                 | `sort_lines`      | Sort lines alphabetically or numerically   |
 | `text_summarize_text`             | `summarize_text`  | Produce a statistical summary (counts, averages, frequent words) |
 
-Usage:
-
-```ruby
-agent = DSPy::ReAct.new(
-  AnalyzeText,
-  tools: DSPy::Tools::TextProcessingToolset.to_tools
-)
-
-result = agent.call(text: log_contents, question: "How many error lines are there?")
-puts result.answer
-```
+Usage: `DSPy::ReAct.new(AnalyzeText, tools: DSPy::Tools::TextProcessingToolset.to_tools)`.
 
 ### GitHubCLIToolset
 
@@ -367,68 +203,30 @@ puts result.answer
 | `github_traffic_views` | `traffic_views`   | Fetch repository traffic view counts              |
 | `github_traffic_clones`| `traffic_clones`  | Fetch repository traffic clone counts             |
 
-This toolset uses `T::Enum` parameters (`IssueState`, `PRState`, `ReviewState`) for state filters, demonstrating enum-based tool signatures in practice.
-
-```ruby
-agent = DSPy::ReAct.new(
-  RepoAnalysis,
-  tools: DSPy::Tools::GitHubCLIToolset.to_tools
-)
-```
+This toolset uses `T::Enum` parameters (`IssueState`, `PRState`, `ReviewState`) for state filters. Usage: `DSPy::ReAct.new(RepoAnalysis, tools: DSPy::Tools::GitHubCLIToolset.to_tools)`.
 
 ---
 
 ## Testing
 
-### Unit Testing Individual Tools
+### Unit Testing Tools and Toolsets
 
-Test `DSPy::Tools::Base` subclasses by instantiating and calling `call` directly:
-
-```ruby
-RSpec.describe WeatherLookup do
-  subject(:tool) { described_class.new }
-
-  it "returns weather for a city" do
-    result = tool.call(city: "Berlin")
-    expect(result).to include("Berlin")
-  end
-
-  it "exposes the correct tool name" do
-    expect(tool.name).to eq("weather_lookup")
-  end
-
-  it "generates a valid schema" do
-    schema = described_class.call_schema_object
-    expect(schema[:required]).to include("city")
-    expect(schema[:properties]).to have_key(:city)
-  end
-end
-```
-
-### Unit Testing Toolsets
-
-Test toolset methods directly on an instance. Verify tool generation with `to_tools`:
+Test `DSPy::Tools::Base` subclasses by instantiating and calling `call` directly. Test toolsets on an instance and verify tool generation with `to_tools`:
 
 ```ruby
 RSpec.describe DatabaseToolset do
   subject(:toolset) { described_class.new }
 
   it "executes a query" do
-    result = toolset.query(sql: "SELECT 1")
-    expect(result).to be_a(String)
+    expect(toolset.query(sql: "SELECT 1")).to be_a(String)
   end
 
   it "generates tools with correct names" do
-    tools = described_class.to_tools
-    names = tools.map(&:name)
+    names = described_class.to_tools.map(&:name)
     expect(names).to contain_exactly("db_query", "db_insert", "db_delete")
   end
 
-  it "generates tool descriptions" do
-    tools = described_class.to_tools
-    query_tool = tools.find { |t| t.name == "db_query" }
-    expect(query_tool.description).to eq("Run a read-only SQL query")
-  end
+  # Also test: tool.name, described_class.call_schema_object[:required], tool descriptions
 end
 ```
 
@@ -439,58 +237,30 @@ When a tool calls a DSPy predictor internally, stub the predictor to isolate too
 ```ruby
 class SmartSearchTool < DSPy::Tools::Base
   extend T::Sig
-
   tool_name "smart_search"
   tool_description "Search with query expansion"
-
   sig { void }
-  def initialize
-    @expander = DSPy::Predict.new(QueryExpansionSignature)
-  end
-
+  def initialize = @expander = DSPy::Predict.new(QueryExpansionSignature)
   sig { params(query: String).returns(String) }
-  def call(query:)
-    expanded = @expander.call(query: query)
-    perform_search(expanded.expanded_query)
-  end
-
-  private
-
-  def perform_search(query)
-    # actual search logic
-  end
+  def call(query:) = perform_search(@expander.call(query: query).expanded_query)
+  private def perform_search(query) = # actual search logic
 end
 
 RSpec.describe SmartSearchTool do
-  subject(:tool) { described_class.new }
-
   before do
-    expansion_result = double("result", expanded_query: "expanded test query")
-    allow_any_instance_of(DSPy::Predict).to receive(:call).and_return(expansion_result)
+    allow_any_instance_of(DSPy::Predict).to receive(:call)
+      .and_return(double(expanded_query: "expanded test query"))
   end
-
   it "expands the query before searching" do
-    allow(tool).to receive(:perform_search).with("expanded test query").and_return("found 3 results")
-    result = tool.call(query: "test")
-    expect(result).to eq("found 3 results")
+    allow(subject).to receive(:perform_search).with("expanded test query").and_return("found 3 results")
+    expect(subject.call(query: "test")).to eq("found 3 results")
   end
 end
 ```
 
 ### Testing Enum Coercion
 
-Verify that string values from LLM responses deserialize into the correct enum instances:
-
-```ruby
-RSpec.describe "enum coercion" do
-  it "handles case-insensitive enum values" do
-    toolset = GitHubCLIToolset.new
-    # The LLM may return "OPEN" instead of "open"
-    result = toolset.list_issues(state: IssueState::Open)
-    expect(result).to be_a(String)
-  end
-end
-```
+Verify that string values from LLM responses deserialize correctly. The LLM may return `"OPEN"` instead of `"open"` -- DSPy.rb handles case-insensitive matching automatically.
 
 ---
 

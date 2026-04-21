@@ -1,18 +1,24 @@
 ---
 name: ce-debug
-description: 'Systematically find root causes and fix bugs. Use when debugging errors, investigating test failures, reproducing bugs from issue trackers (GitHub, Linear, Jira), or when stuck on a problem after failed fix attempts. Also use when the user says ''debug this'', ''why is this failing'', ''fix this bug'', ''trace this error'', or pastes stack traces, error messages, or issue references.'
+description: "Systematically find root causes and fix bugs through causal-chain investigation. Use when debugging errors, investigating test failures, or reproducing bugs from issue trackers."
 argument-hint: "[issue reference, error message, test path, or description of broken behavior]"
 ---
 
 # Debug and Fix
 
-Find root causes, then fix them. This skill investigates bugs systematically — tracing the full causal chain before proposing a fix — and optionally implements the fix with test-first discipline.
+Find root causes, then fix them.
+
+## When to Use
+
+Activate when the user:
+- Says "debug this", "why is this failing", "fix this bug", or "trace this error"
+- Is debugging errors, investigating test failures, or reproducing bugs from issue trackers (GitHub, Linear, Jira)
+- Is stuck on a problem after failed fix attempts
+- Pastes stack traces, error messages, or issue references
 
 <bug_description> #$ARGUMENTS </bug_description>
 
 ## Core Principles
-
-These principles govern every phase. They are repeated at decision points because they matter most when the pressure to skip them is highest.
 
 1. **Investigate before fixing.** Do not propose a fix until you can explain the full causal chain from trigger to symptom with no gaps. "Somehow X leads to Y" is a gap.
 2. **Predictions for uncertain links.** When the causal chain has uncertain or non-obvious links, form a prediction — something in a different code path or scenario that must also be true. If the prediction is wrong but a fix "works," you found a symptom, not the cause. When the chain is obvious (missing import, clear null reference), the chain explanation itself is sufficient.
@@ -29,7 +35,7 @@ These principles govern every phase. They are repeated at decision points becaus
 | 3 | Fix | Only if user chose to fix. Test-first fix with workspace safety checks |
 | 4 | Close | Structured summary, handoff options |
 
-All phases self-size — a simple bug flows through them in seconds, a complex bug spends more time in each naturally. No complexity classification, no phase skipping.
+All phases self-size. No complexity classification, no phase skipping.
 
 ---
 
@@ -41,16 +47,16 @@ Parse the input and reach a clear problem statement.
 - GitHub (`#123`, `org/repo#123`, github.com URL): Parse the issue reference from `<bug_description>` and fetch with `gh issue view <number> --json title,body,comments,labels`. For URLs, pass the URL directly to `gh`.
 - Other trackers (Linear URL/ID, Jira URL/key, any tracker URL): Attempt to fetch using available MCP tools or by fetching the URL content. If the fetch fails — auth, missing tool, non-public page — ask the user to paste the relevant issue content.
 
-Extract reported symptoms, expected behavior, reproduction steps, and environment details. Then proceed to Phase 1.
+Extract reported symptoms, expected behavior, reproduction steps, and environment details.
 
-**Everything else** (stack traces, test paths, error messages, descriptions of broken behavior): Proceed directly to Phase 1.
+**Everything else** (stack traces, test paths, error messages, descriptions of broken behavior): Proceed to Phase 1.
 
 **Questions:**
 - Do not ask questions by default — investigate first (read code, run tests, trace errors)
 - Only ask when a genuine ambiguity blocks investigation and cannot be resolved by reading code or running tests
 - When asking, ask one specific question
 
-**Prior-attempt awareness:** If the user indicates prior failed attempts ("I've been trying", "keeps failing", "stuck"), ask what they have already tried before investigating. This avoids repeating failed approaches and is one of the few cases where asking first is the right call.
+**Prior-attempt awareness:** If the user indicates prior failed attempts ("I've been trying", "keeps failing", "stuck"), ask what they have already tried before investigating.
 
 ---
 
@@ -61,7 +67,7 @@ Extract reported symptoms, expected behavior, reproduction steps, and environmen
 Confirm the bug exists and understand its behavior. Run the test, trigger the error, follow reported reproduction steps — whatever matches the input.
 
 - **Browser bugs:** Prefer `agent-browser` if installed. Otherwise use whatever works — MCP browser tools, direct URL testing, screenshot capture, etc.
-- **Manual setup required:** If reproduction needs specific conditions the agent cannot create alone (data states, user roles, external services, environment config), document the exact setup steps and guide the user through them. Clear step-by-step instructions save significant time even when the process is fully manual.
+- **Manual setup required:** If reproduction needs specific conditions the agent cannot create alone (data states, user roles, external services, environment config), document the exact setup steps and guide the user through them.
 - **Does not reproduce after 2-3 attempts:** Read `references/investigation-techniques.md` for intermittent-bug techniques.
 - **Cannot reproduce at all in this environment:** Document what was tried and what conditions appear to be missing.
 
@@ -82,7 +88,7 @@ As you trace:
   - Application logs
   - Browser console output
   - Database state
-- Each project has different systems available; use whatever gives a more complete picture
+- Use whatever observability is available in the project
 
 ---
 
@@ -97,7 +103,7 @@ Read `references/anti-patterns.md` before forming hypotheses.
 - The causal chain: how the trigger leads to the observed symptom, step by step
 - **For uncertain links in the chain**: a prediction — something in a different code path or scenario that must also be true if this link is correct
 
-When the causal chain is obvious and has no uncertain links (missing import, clear type error, explicit null dereference), the chain explanation itself is the gate — no prediction required. Predictions are a tool for testing uncertain links, not a ritual for every hypothesis.
+When the causal chain is obvious and has no uncertain links (missing import, clear type error, explicit null dereference), the chain explanation itself is the gate — no prediction required.
 
 Before forming a new hypothesis, review what has already been ruled out and why.
 
@@ -113,13 +119,13 @@ Once the root cause is confirmed, present:
 - Which tests to add or modify to prevent recurrence (specific test file, test case description, what the assertion should verify)
 - Whether existing tests should have caught this and why they did not
 
-Then offer next steps using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini. Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question:
+Then offer next steps (use the platform question tool (AskUserQuestion / request_user_input / ask_user) — or present numbered options and wait):
 
 1. **Fix it now** — proceed to Phase 3
 2. **View in Proof** (`/ce-proof`) — for easy review and sharing with others
 3. **Rethink the design** (`/ce-brainstorm`) — only when the root cause reveals a design problem (see below)
 
-Do not assume the user wants action right now. The test recommendations are part of the diagnosis regardless of which path is chosen.
+Do not assume the user wants action right now.
 
 **When to suggest brainstorm:** Only when investigation reveals the bug cannot be properly fixed within the current design — the design itself needs to change. Concrete signals observable during debugging:
 
@@ -148,7 +154,7 @@ Present the diagnosis to the user before proceeding.
 
 *Reminder: one change at a time. If you are changing multiple things, stop.*
 
-If the user chose Proof or brainstorm at the end of Phase 2, skip this phase — the skill's job was the diagnosis.
+If the user chose Proof or brainstorm at the end of Phase 2, skip this phase.
 
 **Workspace check:** Before editing files, check for uncommitted changes (`git status`). If the user has unstaged work in files that need modification, confirm before editing — do not overwrite in-progress changes.
 
@@ -186,6 +192,6 @@ How was this introduced? What allowed it to survive? If a systemic gap was found
 **Handoff options** (use platform question tool, or present numbered options and wait):
 1. Commit the fix (if Phase 3 ran)
 2. Document as a learning (`/ce-compound`)
-3. Post findings to the issue (if entry came from an issue tracker) — convey: confirmed root cause, verified reproduction steps, relevant code references, and suggested fix direction; keep it concise and useful for whoever picks up the issue next
-4. View in Proof (`/ce-proof`) — for easy review and sharing with others
+3. Post findings to the issue (if entry came from an issue tracker) — convey: confirmed root cause, verified reproduction steps, relevant code references, and suggested fix direction
+4. View in Proof (`/proof`) — for easy review and sharing with others
 5. Done

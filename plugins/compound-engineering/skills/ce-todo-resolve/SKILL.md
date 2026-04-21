@@ -4,9 +4,7 @@ description: Use when batch-resolving approved todos, especially after code revi
 argument-hint: "[optional: specific todo ID or pattern]"
 ---
 
-Resolve approved todos using parallel processing, document lessons learned, then clean up.
-
-Only `ready` todos are resolved. `pending` todos are skipped — they haven't been triaged yet. If pending todos exist, list them at the end so the user knows what was left behind.
+Only resolve `ready` todos. Skip `pending` todos and list them at the end.
 
 ## Workflow
 
@@ -20,13 +18,13 @@ Scan `.context/compound-engineering/todos/*.md` and legacy `todos/*.md`. Partiti
 
 If a specific todo ID or pattern was passed as an argument, filter to matching todos only (still must be `ready`).
 
-Residual actionable work from `ce-code-review mode:autofix` after its `safe_auto` pass will already be `ready`.
+Residual work from `ce:review mode:autofix` (`safe_auto` pass) will already be `ready`.
 
 Skip any todo that recommends deleting, removing, or gitignoring files in `docs/brainstorms/`, `docs/plans/`, or `docs/solutions/` — these are intentional pipeline artifacts.
 
 ### 2. Plan
 
-Create a task list grouped by type (e.g., `TaskCreate` in Claude Code, `update_plan` in Codex). Analyze dependencies -- items that others depend on run first. Output a mermaid diagram showing execution order and parallelism.
+Create a task list grouped by type (e.g., `TaskCreate` in Claude Code, `update_plan` in Codex). Analyze dependencies; resolve depended-on items first. Output a mermaid diagram showing execution order and parallelism.
 
 ### 3. Implement (PARALLEL)
 
@@ -44,7 +42,7 @@ GATE: STOP. Verify todos resolved and changes committed before proceeding.
 
 ### 5. Compound on Lessons Learned
 
-Load the `ce-compound` skill to document what was learned. Todo resolutions often surface patterns and architectural insights worth capturing.
+Load the `ce-compound` skill to document what was learned.
 
 GATE: STOP. Verify the compound skill produced a solution document in `docs/solutions/`. If none (user declined or no learnings), continue.
 
