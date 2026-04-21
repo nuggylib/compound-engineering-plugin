@@ -8,6 +8,7 @@ type: feature
 parent: "01kppn87"
 dependencies: ["01kppjh1"]
 tags: ["token-efficiency", "architecture"]
+touches: ["docs"]
 context: ["docs/brainstorms/2026-04-19-module-unbundling-requirements.md", "docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md"]
 created_at: 2026-04-20
 completed_at: 2026-04-20

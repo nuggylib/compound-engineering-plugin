@@ -1,13 +1,14 @@
 ---
 id: "01kppjv4"
 title: "Brainstorm + Plan Circuit Breaker and Resumption (#16)"
-status: blocked
+status: pending
 priority: low
 effort: medium
 type: feature
 parent: "01kppn8b"
-dependencies: ["01kppjtz"]
+dependencies: []
 tags: ["token-efficiency", "session-lifecycle"]
+touches: ["docs"]
 context: ["docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md"]
 created_at: 2026-04-20
 ---

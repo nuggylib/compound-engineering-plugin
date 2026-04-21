@@ -7,6 +7,7 @@ effort: large
 type: feature
 dependencies: []
 tags: ["token-efficiency", "architecture"]
+touches: ["compound-engineering", "marketplace", "tests"]
 context: ["docs/plans/2026-04-19-003-refactor-queryable-reference-libraries-plan.md"]
 created_at: 2026-04-20
 completed_at: 2026-04-20
@@ -19,11 +20,6 @@ completed_at: 2026-04-20
 Convert 3 encyclopedia-style skills (agent-native-architecture, orchestrating-swarms, dspy-ruby) from inline monoliths into thin routers with queryable reference libraries. Reduces 75KB SKILL.md trigger-time load to ~12.4KB. Batch 5, Phase 4 of the token efficiency roadmap.
 
 ## Tasks
-
-- [x] Unit 1: Convert agent-native-architecture to thin router (01kppj)
-- [x] Unit 2: Convert orchestrating-swarms to thin router (01kppjgr)
-- [x] Unit 3: Convert dspy-ruby to thin router (01kppjgw)
-- [x] Unit 4: Cross-skill validation and measurement (01kppjh1)
 
 - [x] Run `bun test` and `bun run release:validate` after all units complete
 - [x] Update meta-plan tracking table with execution status

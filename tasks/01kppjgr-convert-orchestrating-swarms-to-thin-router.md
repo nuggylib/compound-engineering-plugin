@@ -8,6 +8,7 @@ type: improvement
 parent: "01kppn7z"
 dependencies: []
 tags: ["token-efficiency", "thin-router"]
+touches: ["compound-engineering"]
 context: ["docs/plans/2026-04-19-003-refactor-queryable-reference-libraries-plan.md"]
 created_at: 2026-04-20
 completed_at: 2026-04-20
@@ -21,28 +22,28 @@ Transform `plugins/compound-engineering/skills/orchestrating-swarms/SKILL.md` (3
 
 ## Tasks
 
-- [ ] Read current SKILL.md (35,574B) and map all sections
-- [ ] Create abbreviated Primitives table (~500B, definitions only, no diagrams) for `<essential_principles>`
-- [ ] Create abbreviated Two Ways key difference table (~300B) for `<essential_principles>`
-- [ ] Extract full Primitives with diagrams (lines 13-94, 2,672B) to `references/primitives.md`
-- [ ] Extract Built-in Agent Types (lines 236-312, 2,022B) to `references/builtin-agent-types.md`
-- [ ] Extract Plugin Agent Types (lines 315-421, 3,385B) to `references/plugin-agent-types.md`
-- [ ] Extract Task System Integration (lines 432-519, 2,105B) to `references/task-system.md`
-- [ ] Extract Orchestration Patterns (lines 528-783, 7,769B) to `references/orchestration-patterns.md`
-- [ ] Extract Environment Variables (lines 786-809, 566B) to `references/environment-variables.md`
-- [ ] Extract Spawn Backends (lines 812-1079, 7,402B) to `references/spawn-backends.md`
-- [ ] Extract Error Handling (lines 1082-1141, 1,820B) to `references/error-handling.md`
-- [ ] Extract Best Practices + Quick Reference (lines 1150-1246, 2,322B) to `references/best-practices.md`
-- [ ] Incorporate Core Architecture (lines 114-172) into `references/orchestration-patterns.md`
-- [ ] Build intake menu (12 numbered options covering 9 new + 3 existing reference files)
-- [ ] Build routing table with keyword mappings for each topic
-- [ ] Build section index listing all 12 reference files with rich descriptors
-- [ ] Preserve `disable-model-invocation: true` in frontmatter
-- [ ] Add routing, fallback, and cross-cutting instructions
-- [ ] Verify SKILL.md under 5,000B
-- [ ] Run `bun test` and `bun run release:validate`
-- [ ] Update meta-plan tracking table with execution status
-- [ ] Update plugin README if skill behavior or reference layout changed
+- [x] Read current SKILL.md (35,574B) and map all sections
+- [x] Create abbreviated Primitives table (~500B, definitions only, no diagrams) for `<essential_principles>`
+- [x] Create abbreviated Two Ways key difference table (~300B) for `<essential_principles>`
+- [x] Extract full Primitives with diagrams (lines 13-94, 2,672B) to `references/primitives.md`
+- [x] Extract Built-in Agent Types (lines 236-312, 2,022B) to `references/builtin-agent-types.md`
+- [x] Extract Plugin Agent Types (lines 315-421, 3,385B) to `references/plugin-agent-types.md`
+- [x] Extract Task System Integration (lines 432-519, 2,105B) to `references/task-system.md`
+- [x] Extract Orchestration Patterns (lines 528-783, 7,769B) to `references/orchestration-patterns.md`
+- [x] Extract Environment Variables (lines 786-809, 566B) to `references/environment-variables.md`
+- [x] Extract Spawn Backends (lines 812-1079, 7,402B) to `references/spawn-backends.md`
+- [x] Extract Error Handling (lines 1082-1141, 1,820B) to `references/error-handling.md`
+- [x] Extract Best Practices + Quick Reference (lines 1150-1246, 2,322B) to `references/best-practices.md`
+- [x] Incorporate Core Architecture (lines 114-172) into `references/orchestration-patterns.md`
+- [x] Build intake menu (12 numbered options covering 9 new + 3 existing reference files)
+- [x] Build routing table with keyword mappings for each topic
+- [x] Build section index listing all 12 reference files with rich descriptors
+- [x] Preserve `disable-model-invocation: true` in frontmatter
+- [x] Add routing, fallback, and cross-cutting instructions
+- [x] Verify SKILL.md under 5,000B
+- [x] Run `bun test` and `bun run release:validate`
+- [x] Update meta-plan tracking table with execution status
+- [x] Update plugin README if skill behavior or reference layout changed
 
 ## Acceptance Criteria
 

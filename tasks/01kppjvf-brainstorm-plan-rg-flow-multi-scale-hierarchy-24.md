@@ -8,6 +8,7 @@ type: feature
 parent: "01kppn8b"
 dependencies: ["01kppjvm"]
 tags: ["token-efficiency", "architecture"]
+touches: ["docs"]
 context: ["docs/plans/2026-04-13-meta-token-efficiency-execution-plan.md"]
 created_at: 2026-04-20
 ---

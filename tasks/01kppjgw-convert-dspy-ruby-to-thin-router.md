@@ -8,6 +8,7 @@ type: improvement
 parent: "01kppn7z"
 dependencies: []
 tags: ["token-efficiency", "thin-router"]
+touches: ["compound-engineering"]
 context: ["docs/plans/2026-04-19-003-refactor-queryable-reference-libraries-plan.md"]
 created_at: 2026-04-20
 completed_at: 2026-04-20
@@ -21,24 +22,24 @@ Transform `plugins/compound-engineering/skills/dspy-ruby/SKILL.md` (21,472B) fro
 
 ## Tasks
 
-- [ ] Read current SKILL.md (21,472B) and map all sections
-- [ ] Create abbreviated Core Concepts (~500B, concept names + 1-line descriptions, no code)
-- [ ] Consolidate and extract to `references/getting-started.md` (Quick Start + Provider Adapters + Schema Formats + Storage + Version, ~2.9KB)
-- [ ] Consolidate and extract to `references/runtime.md` (Events System + Lifecycle Callbacks + Fiber-Local LM Context, ~2.4KB)
-- [ ] Consolidate and extract to `references/rails-patterns.md` (Rails Integration + Schema-Driven Signatures + Tool Patterns, ~5.2KB)
-- [ ] Consolidate and extract to `references/evaluation.md` (Evaluation Framework + GEPA Optimization + Typed Context Pattern, ~2.0KB)
-- [ ] Extract to `references/testing.md` (Testing section, ~1.3KB)
-- [ ] Route Observability queries to existing `references/observability.md` (no new file)
-- [ ] Abbreviate "Guidelines for Claude" (2,724B -> ~750B cross-cutting in router, topic-specific to reference files)
-- [ ] Build intake menu (8-10 numbered options)
-- [ ] Build routing table with keyword mappings
-- [ ] Build section index listing all reference files (5 existing + 5 new) and 3 assets
-- [ ] Keep Overview, Key URLs, and Version in router
-- [ ] Add routing, fallback, and cross-cutting instructions
-- [ ] Verify SKILL.md under 5,000B
-- [ ] Run `bun test` and `bun run release:validate`
-- [ ] Update meta-plan tracking table with execution status
-- [ ] Update plugin README if skill behavior or reference layout changed
+- [x] Read current SKILL.md (21,472B) and map all sections
+- [x] Create abbreviated Core Concepts (~500B, concept names + 1-line descriptions, no code)
+- [x] Consolidate and extract to `references/getting-started.md` (Quick Start + Provider Adapters + Schema Formats + Storage + Version, ~2.9KB)
+- [x] Consolidate and extract to `references/runtime.md` (Events System + Lifecycle Callbacks + Fiber-Local LM Context, ~2.4KB)
+- [x] Consolidate and extract to `references/rails-patterns.md` (Rails Integration + Schema-Driven Signatures + Tool Patterns, ~5.2KB)
+- [x] Consolidate and extract to `references/evaluation.md` (Evaluation Framework + GEPA Optimization + Typed Context Pattern, ~2.0KB)
+- [x] Extract to `references/testing.md` (Testing section, ~1.3KB)
+- [x] Route Observability queries to existing `references/observability.md` (no new file)
+- [x] Abbreviate "Guidelines for Claude" (2,724B -> ~750B cross-cutting in router, topic-specific to reference files)
+- [x] Build intake menu (8-10 numbered options)
+- [x] Build routing table with keyword mappings
+- [x] Build section index listing all reference files (5 existing + 5 new) and 3 assets
+- [x] Keep Overview, Key URLs, and Version in router
+- [x] Add routing, fallback, and cross-cutting instructions
+- [x] Verify SKILL.md under 5,000B
+- [x] Run `bun test` and `bun run release:validate`
+- [x] Update meta-plan tracking table with execution status
+- [x] Update plugin README if skill behavior or reference layout changed
 
 ## Acceptance Criteria
 

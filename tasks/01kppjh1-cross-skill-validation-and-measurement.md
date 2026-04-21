@@ -8,6 +8,7 @@ type: chore
 parent: "01kppn7z"
 dependencies: ["01kppj", "01kppjgr", "01kppjgw"]
 tags: ["token-efficiency", "thin-router"]
+touches: ["compound-engineering", "tests"]
 context: ["docs/plans/2026-04-19-003-refactor-queryable-reference-libraries-plan.md"]
 created_at: 2026-04-20
 completed_at: 2026-04-20
@@ -21,17 +22,17 @@ Run comprehensive validation across all three converted skills, measure aggregat
 
 ## Tasks
 
-- [ ] Run `bun test` for full test suite
-- [ ] Run `bun run release:validate` for plugin consistency
-- [ ] Run `bun run skill:stats --json` and compare against pre-refactor baseline
-- [ ] Verify S1: combined SKILL.md trigger-time load under 15,000B (from 75,368B)
-- [ ] Verify S2: no content lost (all extracted content reachable via routing)
-- [ ] Verify S3: routing tables handle 10+ query types per skill (manual inspection)
-- [ ] Verify S4: system cost drops proportionally to SKILL.md size reduction
-- [ ] Verify S5: cross-cutting queries span 2+ topics with multi-reference answers
-- [ ] Document final measurements in plan file
-- [ ] Update meta-plan tracking table with execution status
-- [ ] Update plugin README with aggregate size reduction metrics
+- [x] Run `bun test` for full test suite
+- [x] Run `bun run release:validate` for plugin consistency
+- [x] Run `bun run skill:stats --json` and compare against pre-refactor baseline
+- [x] Verify S1: combined SKILL.md trigger-time load under 15,000B (from 75,368B)
+- [x] Verify S2: no content lost (all extracted content reachable via routing)
+- [x] Verify S3: routing tables handle 10+ query types per skill (manual inspection)
+- [x] Verify S4: system cost drops proportionally to SKILL.md size reduction
+- [x] Verify S5: cross-cutting queries span 2+ topics with multi-reference answers
+- [x] Document final measurements in plan file
+- [x] Update meta-plan tracking table with execution status
+- [x] Update plugin README with aggregate size reduction metrics
 
 ## Acceptance Criteria
 

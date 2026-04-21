@@ -7,6 +7,7 @@ effort: large
 type: improvement
 dependencies: []
 tags: ["config", "infrastructure"]
+touches: ["compound-engineering", "docs"]
 context: ["docs/plans/2026-03-25-002-refactor-config-storage-redesign-plan.md", "docs/brainstorms/2026-03-25-config-storage-redesign-requirements.md"]
 created_at: 2026-04-20
 ---

@@ -8,6 +8,7 @@ type: feature
 parent: "01kppn87"
 dependencies: ["01kppjtp"]
 tags: ["token-efficiency", "architecture"]
+touches: ["compound-engineering", "marketplace", "tests"]
 context: ["docs/brainstorms/2026-04-19-module-unbundling-requirements.md"]
 created_at: 2026-04-20
 cancelled_at: 2026-04-20
