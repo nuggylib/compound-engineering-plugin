@@ -1,7 +1,7 @@
 ---
 id: "01kppn87"
 title: "Module Unbundling (#15)"
-status: pending
+status: cancelled
 priority: high
 effort: large
 type: feature
@@ -9,6 +9,7 @@ dependencies: ["01kppn7z"]
 tags: ["token-efficiency", "architecture"]
 context: ["docs/brainstorms/2026-04-19-module-unbundling-requirements.md"]
 created_at: 2026-04-20
+cancelled_at: 2026-04-20
 ---
 
 # Module Unbundling (#15)
