@@ -13,21 +13,25 @@ describe("ce-work review contract", () => {
     const shipping = await readRepoFile("plugins/compound-engineering/skills/ce-work/references/shipping-workflow.md")
 
     // SKILL.md should not contain extracted content
-    expect(content).not.toContain("2. **Code Review**")
+    expect(content).not.toContain("3. **Code Review**")
     expect(content).not.toContain("Consider Code Review")
     expect(content).not.toContain("Code Review** (Optional)")
 
-    // Phase 3 has a mandatory code review step in the reference file
-    expect(shipping).toContain("2. **Code Review**")
+    // Phase 3 has a Claude-Code-only Simplify step at position 2 (gated on >=30 LOC)
+    // and a mandatory code review at position 3
+    expect(shipping).toContain("2. **Simplify**")
+    expect(shipping).toContain("Claude Code only")
+    expect(shipping).toContain("3. **Code Review**")
 
-    // Two-tier rubric in reference file
-    expect(shipping).toContain("**Tier 1: Inline self-review**")
-    expect(shipping).toContain("**Tier 2: Full review (default)**")
+    // Two-tier rubric in reference file: Tier 1 is harness-native (default),
+    // Tier 2 is ce-code-review (risk-based escalation)
+    expect(shipping).toContain("**Tier 1 -- harness-native code review (default).**")
+    expect(shipping).toContain("**Tier 2 -- `ce-code-review` (escalation).**")
     expect(shipping).toContain("ce-code-review")
     expect(shipping).toContain("mode:autofix")
 
     // Quality checklist includes review
-    expect(shipping).toContain("Code review completed (inline self-review or full `ce-code-review`)")
+    expect(shipping).toContain("Code review completed (Tier 1 harness-native or Tier 2 `ce-code-review`)")
   })
 
   test("delegates commit and PR to dedicated skills", async () => {
@@ -48,8 +52,10 @@ describe("ce-work review contract", () => {
     // Review/commit content extracted to references/shipping-workflow.md
     const shipping = await readRepoFile("plugins/compound-engineering/skills/ce-work-beta/references/shipping-workflow.md")
 
-    // Extracted content in reference file
-    expect(shipping).toContain("2. **Code Review**")
+    // Extracted content in reference file: Simplify step at position 2,
+    // Code Review at position 3
+    expect(shipping).toContain("2. **Simplify**")
+    expect(shipping).toContain("3. **Code Review**")
     expect(shipping).toContain("`ce-commit-push-pr` skill")
     expect(shipping).toContain("`ce-commit` skill")
 
@@ -110,7 +116,7 @@ describe("ce-work review contract", () => {
     expect(content).toContain("`references/shipping-workflow.md`")
 
     // Extracted content is not in SKILL.md
-    expect(content).not.toContain("2. **Code Review**")
+    expect(content).not.toContain("3. **Code Review**")
     expect(content).not.toContain("## Quality Checklist")
     expect(content).not.toContain("## Code Review Tiers")
   })
@@ -122,7 +128,7 @@ describe("ce-work review contract", () => {
     expect(content).toContain("`references/shipping-workflow.md`")
 
     // Extracted content is not in SKILL.md
-    expect(content).not.toContain("2. **Code Review**")
+    expect(content).not.toContain("3. **Code Review**")
     expect(content).not.toContain("## Quality Checklist")
     expect(content).not.toContain("## Code Review Tiers")
   })
@@ -273,22 +279,23 @@ describe("ce:plan remains neutral during ce:work-beta rollout", () => {
 })
 
 describe("ce-brainstorm review contract", () => {
-  test("requires document review before handoff", async () => {
+  test("exposes document review as an opt-in handoff option", async () => {
     const content = await readRepoFile("plugins/compound-engineering/skills/ce-brainstorm/SKILL.md")
+    const handoff = await readRepoFile("plugins/compound-engineering/skills/ce-brainstorm/references/handoff.md")
 
-    // Phase 3.5 exists and runs document-review
-    expect(content).toContain("### Phase 3.5: Document Review")
-    expect(content).toContain("`ce-doc-review` skill")
+    // Document review is no longer a forced Phase 3.5 step. Users opt in from the Phase 4 menu.
+    expect(content).not.toContain("Phase 3.5")
 
     // Phase 3 and Phase 4 are extracted to references for token optimization
     expect(content).toContain("`references/requirements-capture.md`")
     expect(content).toContain("`references/handoff.md`")
 
-    // Additional review passes are surfaced contextually (not as a menu fixture) and still
-    // route through the ce-doc-review skill when requested
-    const handoff = await readRepoFile("plugins/compound-engineering/skills/ce-brainstorm/references/handoff.md")
-    expect(handoff).toContain("Surface additional document review contextually")
+    // Phase 4 menu exposes agent review as a first-class option and routes to ce-doc-review
+    expect(handoff).toContain("Agent review of requirements doc with `ce-doc-review`")
     expect(handoff).toContain("Load the `ce-doc-review` skill")
+
+    // Subsequent-round residual findings are surfaced as a prose nudge, not a separate menu option
+    expect(handoff).toContain("Post-review nudge")
     expect(handoff).not.toContain("**Review and refine**")
   })
 })
@@ -329,24 +336,39 @@ describe("ce-plan review contract", () => {
     expect(content).toContain("Document review is mandatory")
   })
 
-  test("uses headless mode in pipeline context", async () => {
+  test("uses headless mode by default and in pipeline context", async () => {
     const content = await readRepoFile("plugins/compound-engineering/skills/ce-plan/references/plan-handoff.md")
 
-    // Pipeline mode runs document-review headlessly, not skipping it
+    // Default at Phase 5.3.8 is `mode:headless` so users opt into deeper interactive review
+    // explicitly from the post-generation menu rather than being forced through it.
     expect(content).toContain("ce-doc-review` with `mode:headless`")
     expect(content).not.toContain("skip document-review and return control")
+
+    // The interactive walkthrough is opt-in via the post-generation menu, not automatic
+    expect(content).toContain("Run deeper doc review")
   })
 
-  test("handoff options recommend ce-work after review", async () => {
+  test("handoff options expose deeper-review opt-in alongside ce-work", async () => {
     const content = await readRepoFile("plugins/compound-engineering/skills/ce-plan/references/plan-handoff.md")
 
-    // ce-work is recommended (review already happened)
+    // ce-work remains the recommended next-stage action (planning is done; review already ran)
     expect(content).toContain("**Start `/ce-work`** (recommended) - Begin implementing this plan in the current session")
 
-    // Additional review passes are surfaced contextually (not as a menu fixture) and still
-    // route through the ce-doc-review skill when requested
-    expect(content).toContain("Surface additional document review contextually")
-    expect(content).toContain("Load the `ce-doc-review` skill")
+    // Deeper review is a first-class menu fixture so users can engage with surfaced findings
+    // without relying on free-form prompting; routed through ce-doc-review without headless mode.
+    expect(content).toContain("**Run deeper doc review**")
+    expect(content).toContain("`ce-doc-review`")
+    expect(content).toContain("without** `mode:headless`")
+
+    // Deeper-review menu fixture is hidden when no actionable findings remain so the menu
+    // collapses back to a 4-option AskUserQuestion-friendly shape on Claude Code. FYI-only
+    // state also hides the option since ce-doc-review's walkthrough is gated to actionable
+    // findings (anchor 75/100, gated_auto/manual) and FYIs (anchor 50) bypass it.
+    expect(content).toContain("Hide `Run deeper doc review` when no actionable findings remain")
+    expect(content).toContain("proposed_fixes_count + decisions_count > 0")
+
+    // Summary line above the menu surfaces autofix counts and remaining-bucket counts
+    expect(content).toContain("Summary line above the menu")
 
     // No conditional ordering based on plan depth (review already ran)
     expect(content).not.toContain("**Options when ce-doc-review is recommended:**")
@@ -370,6 +392,51 @@ describe("ce-doc-review contract", () => {
     // Old tier names must be gone after the rename
     expect(enumValues).not.toContain("auto")
     expect(enumValues).not.toContain("present")
+  })
+
+  test("findings schema enforces discrete confidence anchors", async () => {
+    const schema = JSON.parse(
+      await readRepoFile("plugins/compound-engineering/skills/ce-doc-review/references/findings-schema.json")
+    )
+    const confidence = schema.properties.findings.items.properties.confidence
+
+    // Anchored integer enum, not continuous float
+    expect(confidence.type).toBe("integer")
+    expect(confidence.enum).toEqual([0, 25, 50, 75, 100])
+
+    // No stale continuous-range properties
+    expect(confidence.minimum).toBeUndefined()
+    expect(confidence.maximum).toBeUndefined()
+
+    // Rubric text embedded in the description so persona agents see it
+    expect(confidence.description).toContain("Absolutely certain")
+    expect(confidence.description).toContain("Highly confident")
+    expect(confidence.description).toContain("Moderately confident")
+    expect(confidence.description).toContain("double-checked")
+    expect(confidence.description).toContain("evidence directly confirms")
+  })
+
+  test("subagent template embeds anchor rubric and bans float confidence", async () => {
+    const template = await readRepoFile(
+      "plugins/compound-engineering/skills/ce-doc-review/references/subagent-template.md"
+    )
+
+    // Rubric section embedded verbatim in the persona-facing template
+    expect(template).toContain("Confidence rubric")
+    expect(template).toContain("`0`")
+    expect(template).toContain("`25`")
+    expect(template).toContain("`50`")
+    expect(template).toContain("`75`")
+    expect(template).toContain("`100`")
+
+    // Example finding uses anchor, not float
+    expect(template).toContain('"confidence": 100')
+    expect(template).not.toMatch(/"confidence":\s*0\.\d+/)
+
+    // Advisory observations route to anchor 50, not to a 0.40-0.59 band
+    expect(template).toContain("`confidence: 50`")
+    expect(template).not.toContain("0.40–0.59 LOW/Advisory band")
+    expect(template).not.toContain("0.40-0.59 LOW/Advisory band")
   })
 
   test("subagent template carries framing guidance and strawman rule", async () => {
@@ -397,30 +464,30 @@ describe("ce-doc-review contract", () => {
     expect(template).toContain("<decision-primer-rules>")
   })
 
-  test("synthesis pipeline routes three tiers with per-severity gates and FYI subsection", async () => {
+  test("synthesis pipeline routes three tiers with anchor-based gating and FYI subsection", async () => {
     const synthesis = await readRepoFile(
       "plugins/compound-engineering/skills/ce-doc-review/references/synthesis-and-presentation.md"
     )
 
-    // Per-severity confidence gate with the specific thresholds
-    expect(synthesis).toContain("Per-Severity")
-    expect(synthesis).toMatch(/P0\s*\|\s*0\.50/)
-    expect(synthesis).toMatch(/P1\s*\|\s*0\.60/)
-    expect(synthesis).toMatch(/P2\s*\|\s*0\.65/)
-    expect(synthesis).toMatch(/P3\s*\|\s*0\.75/)
+    // Anchor-based confidence gate
+    expect(synthesis).toContain("Anchor-Based")
+    expect(synthesis).toMatch(/`0`\s*\|/)
+    expect(synthesis).toMatch(/`25`\s*\|/)
+    expect(synthesis).toMatch(/`50`\s*\|/)
+    expect(synthesis).toMatch(/`75`\s*\|/)
+    expect(synthesis).toMatch(/`100`\s*\|/)
 
-    // FYI floor at 0.40 for low-confidence manual findings
-    expect(synthesis).toContain("0.40")
-    expect(synthesis).toContain("FYI floor")
+    // Anchor 50 routes to FYI, anchors 75/100 enter actionable tier
+    expect(synthesis).toContain("FYI subsection")
 
-    // Three-tier routing table present
+    // Three-tier routing table present (autofix_class)
     expect(synthesis).toContain("`safe_auto`")
     expect(synthesis).toContain("`gated_auto`")
     expect(synthesis).toContain("`manual`")
 
-    // Cross-persona agreement boost (replaces residual-concern promotion)
-    expect(synthesis).toContain("Cross-Persona Agreement Boost")
-    expect(synthesis).toContain("+0.10")
+    // Cross-persona agreement promotion (replaces +0.10 boost)
+    expect(synthesis).toContain("Cross-Persona Agreement Promotion")
+    expect(synthesis).toContain("one anchor step")
 
     // R29 and R30 round-2 rules
     expect(synthesis).toContain("R29 Rejected-Finding Suppression")
@@ -475,6 +542,10 @@ describe("ce-doc-review contract", () => {
     expect(content).toContain("AskUserQuestion")
     expect(content).toContain("ToolSearch")
     expect(content).toContain("numbered-list fallback")
+    expect(content).toContain("bounded parallelism")
+    expect(content).toContain("active-subagent limit")
+    expect(content).toContain("spawn errors as backpressure, not reviewer failure")
+    expect(content).toContain("queue the remainder")
 
     // Decision primer variable in the dispatch table
     expect(content).toContain("{decision_primer}")
@@ -495,7 +566,7 @@ describe("ce-doc-review contract", () => {
 
     // Routing question distinguishing words present (front-loaded per AGENTS.md Interactive Question Tool Design)
     expect(walkthrough).toContain("Review each finding one by one")
-    expect(walkthrough).toContain("LFG")
+    expect(walkthrough).toContain("Auto-resolve with best judgment")
     expect(walkthrough).toContain("Append findings to the doc's Open Questions section")
     expect(walkthrough).toContain("Report only")
 
@@ -503,7 +574,7 @@ describe("ce-doc-review contract", () => {
     expect(walkthrough).toContain("Apply the proposed fix")
     expect(walkthrough).toContain("Defer — append to the doc's Open Questions section")
     expect(walkthrough).toContain("Skip — don't apply, don't append")
-    expect(walkthrough).toContain("LFG the rest")
+    expect(walkthrough).toContain("Auto-resolve with best judgment on the rest")
 
     // Recommended marker mandatory
     expect(walkthrough).toContain("(recommended)")

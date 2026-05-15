@@ -1,6 +1,6 @@
 # Persona Catalog
 
-17 reviewer personas organized into always-on, cross-cutting conditional, and stack-specific conditional layers, plus CE-specific agents. The orchestrator uses this catalog to select which reviewers to spawn for each review.
+18 reviewer personas organized into always-on, cross-cutting conditional, and stack-specific conditional layers, plus CE-specific agents. The orchestrator uses this catalog to select which reviewers to spawn for each review.
 
 ## Always-on (4 personas + 2 CE agents)
 
@@ -22,7 +22,7 @@ Spawned on every review regardless of diff content.
 | `ce-agent-native-reviewer` | Verify new features are agent-accessible |
 | `ce-learnings-researcher` | Search docs/solutions/ for past issues related to this PR's modules and patterns |
 
-## Conditional (8 personas)
+## Conditional (7 personas)
 
 Spawned when the orchestrator identifies relevant patterns in the diff. The orchestrator reads the full diff and reasons about selection -- this is agent judgment, not keyword matching.
 
@@ -34,10 +34,9 @@ Spawned when the orchestrator identifies relevant patterns in the diff. The orch
 | `data-migrations` | `ce-data-migrations-reviewer` | Migration files, schema changes, backfill scripts, data transformations |
 | `reliability` | `ce-reliability-reviewer` | Error handling, retry logic, circuit breakers, timeouts, background jobs, async handlers, health checks |
 | `adversarial` | `ce-adversarial-reviewer` | Diff has >=50 changed non-test, non-generated, non-lockfile lines, OR touches auth, payments, data mutations, external API integrations, or other high-risk domains |
-| `cli-readiness` | `ce-cli-readiness-reviewer` | CLI command definitions, argument parsing, CLI framework usage, command handler implementations |
-| `previous-comments` | `ce-previous-comments-reviewer` | **PR-only.** Reviewing a PR that has existing review comments or review threads from prior review rounds. Skip entirely when no PR metadata was gathered in Stage 1. |
+| `previous-comments` | `ce-previous-comments-reviewer` | **PR-only AND comment-gated.** Reviewing a PR that has existing review comments or review threads from prior review rounds. Skip entirely when no PR metadata was gathered in Stage 1, OR when Stage 1's `hasPriorComments` flag is false (no `reviews` and no `comments` on the PR). |
 
-## Stack-Specific Conditional (5 personas)
+## Stack-Specific Conditional (6 personas)
 
 These reviewers keep their original opinionated lens. They are additive with the cross-cutting personas above, not replacements for them.
 
@@ -48,6 +47,7 @@ These reviewers keep their original opinionated lens. They are additive with the
 | `kieran-python` | `ce-kieran-python-reviewer` | Python modules, endpoints, services, scripts, or typed domain code |
 | `kieran-typescript` | `ce-kieran-typescript-reviewer` | TypeScript components, services, hooks, utilities, or shared types |
 | `julik-frontend-races` | `ce-julik-frontend-races-reviewer` | Stimulus/Turbo controllers, DOM event wiring, timers, async UI flows, animations, or frontend state transitions with race potential |
+| `swift-ios` | `ce-swift-ios-reviewer` | Swift files, SwiftUI views, UIKit controllers, `.entitlements`, `PrivacyInfo.xcprivacy`, `.xcdatamodeld`, `Package.swift`, `Package.resolved`, storyboards, XIBs, or semantic build-setting / target-membership / code-signing changes in `.pbxproj` |
 
 ## CE Conditional Agents (migration-specific)
 

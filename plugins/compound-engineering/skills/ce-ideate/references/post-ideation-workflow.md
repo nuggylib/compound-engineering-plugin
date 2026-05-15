@@ -18,8 +18,14 @@ Rejection criteria:
 - too expensive relative to likely value
 - already covered by existing workflows or docs
 - interesting but better handled as a brainstorm variant, not a product improvement
+- **unjustified — no articulated basis** (sub-agent failed to provide `direct:`, `external:`, or `reasoned:` justification, or the stated basis does not actually support the claimed move)
+- **below ambition floor** (fails the meeting-test: would not warrant team discussion — except when Phase 0.5 detected tactical focus signals, in which case this criterion is waived)
+- **subject-replacement** (abandons or replaces the subject of ideation rather than operating on it — e.g., "pivot to an unrelated domain," "become a different organization")
+- **scope overrun** (expands beyond the asked scope rather than ideating within it — e.g., proposes changes to the whole product when the user asked about one flow, stage, or section). Allowed only when the basis explicitly justifies the expansion; default is reject or downgrade.
 
-Score survivors using a consistent rubric weighing: groundedness in stated context, expected value, novelty, pragmatism, leverage on future work, implementation burden, and overlap with stronger ideas.
+Score survivors using a consistent rubric weighing: groundedness in stated context, **basis strength** (`direct:` > `external:` > `reasoned:`; none excluded, but direct-evidence ideas score higher all else equal), expected value, novelty, pragmatism, leverage on future work, implementation burden, overlap with stronger ideas, and **axis spread** (when Phase 1.5 produced an axis list) — survivor sets that cover the topic's surface outscore sets that cluster on one axis, all else equal.
+
+**Axis coverage as a list-level concern.** When axes were defined, axis spread is evaluated across the survivor set, not per-idea. After per-idea filtering, check the survivor set: if axis coverage is uneven and stronger candidates exist on under-represented axes, prefer the spread when promoting borderline candidates. Phase 2's recovery dispatch should already have surfaced candidates for empty axes; this is a polish step on the survivor selection. If an axis ends up with zero survivors despite recovery (or because recovery hit the 2-axis cap), note it in the rejection summary as a deliberate gap rather than an oversight.
 
 Target output:
 - keep 5-7 survivors by default
@@ -36,7 +42,9 @@ Present only the surviving ideas in structured form:
 
 - title
 - description
-- rationale
+- **axis** (when Phase 1.5 produced an axis list)
+- **basis** (tagged `direct:` / `external:` / `reasoned:`, with the quoted evidence, cited source, or written-out argument)
+- rationale (how the basis connects to the move's significance)
 - downsides
 - confidence score
 - estimated complexity
@@ -85,11 +93,16 @@ mode: <repo-grounded | elsewhere-software | elsewhere-non-software>
 ## Grounding Context
 [Grounding summary from Phase 1 — labeled "Codebase Context" in repo mode, "Topic Context" in elsewhere mode]
 
+## Topic Axes
+[3-5 axes from Phase 1.5, one per line, OR a single line `Decomposition skipped — atomic subject` / `Decomposition skipped — surprise-me mode` when Phase 1.5 was skipped. Omit this section entirely if not applicable.]
+
 ## Ranked Ideas
 
 ### 1. <Idea Title>
 **Description:** [Concrete explanation]
-**Rationale:** [Why this idea is strong in the stated context]
+**Axis:** [Topic axis this idea targets — omit when decomposition was skipped]
+**Basis:** [`direct:` / `external:` / `reasoned:` — quoted, cited, or written-out argument]
+**Rationale:** [How the basis connects to the move's significance]
 **Downsides:** [Tradeoffs or costs]
 **Confidence:** [0-100%]
 **Complexity:** [Low / Medium / High]
@@ -100,6 +113,9 @@ mode: <repo-grounded | elsewhere-software | elsewhere-non-software>
 | # | Idea | Reason Rejected |
 |---|------|-----------------|
 | 1 | <Idea> | <Reason rejected> |
+
+[When applicable, append axis-coverage gaps as their own rows so the gap is visible:]
+| - | axis: <name> | recovery skipped (cap reached) — no survivors on this axis |
 ```
 
 If resuming:
@@ -136,11 +152,11 @@ When the proof skill returns control:
 
 ## Phase 6: Refine or Hand Off
 
-Ask what should happen next using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini. Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
+Ask what should happen next using the platform's blocking question tool: `AskUserQuestion` in Claude Code (call `ToolSearch` with `select:AskUserQuestion` first if its schema isn't loaded), `request_user_input` in Codex, `ask_user` in Gemini, `ask_user` in Pi (requires the `pi-ask-user` extension). Fall back to numbered options in chat only when no blocking tool exists in the harness or the call errors (e.g., Codex edit modes) — not because a schema load is required. Never silently skip the question.
 
 **Question:** "What should the agent do next?"
 
-Offer these four options (each label is self-contained per the Interactive Question Tool Design rules in the plugin AGENTS.md — the distinguishing word is front-loaded so options stay distinct when truncated):
+Offer these four options (labels are self-contained with the distinguishing word front-loaded so options stay distinct when truncated):
 
 1. **Refine the ideation in conversation (or stop here — no save)** — add ideas, re-evaluate, or deepen analysis. No file or network side effects; ending the conversation at any point after this pick is a valid no-save exit.
 2. **Open and iterate in Proof** — save the ideation to Proof and enter the proof skill's HITL review loop: iterate via comments in the Proof editor; reviewed edits sync back to `docs/ideation/` in repo mode.
@@ -221,7 +237,11 @@ After the fallback completes (any path), continue back to the Phase 6 menu so th
 
 Before finishing, check:
 
-- the idea set is grounded in the stated context (codebase in repo mode; user-supplied topic in elsewhere mode)
+- the idea set is grounded in the stated context (codebase in repo mode; user-supplied context in elsewhere mode)
+- **every surviving idea has an articulated basis** (`direct:`, `external:`, or `reasoned:`) that actually supports the claimed move — speculation dressed as ambition was rejected, with reasons
+- **every surviving idea passes the meeting-test** unless Phase 0.5 detected tactical focus signals that waived the floor
+- **no surviving idea replaces the subject** rather than operating on it
+- when Phase 1.5 produced an axis list, the survivor set spreads across axes rather than clustering on one — and any axis with zero survivors is noted as a deliberate gap in the rejection summary, not silently absent
 - the candidate list was generated before filtering
 - the original many-ideas -> critique -> survivors mechanism was preserved
 - if sub-agents were used, they improved diversity without replacing the core workflow
